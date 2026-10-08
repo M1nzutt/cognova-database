@@ -2,6 +2,26 @@
 
 Fecha: 2026-10-08. Fase: separación y estabilización; corte backend pendiente.
 
+## Referencia concreta de entrega
+
+- Bootstrap e historial: `7158cb4`.
+- Código y suite de aceptación: `f7b6fa57d9ffec07100897088ea61323bc681f84`.
+- Archivo local generado: `artifacts/cognova-database-handoff.zip` (ignorado por Git).
+- SHA-256: `f8a7bd35a725f2cd5f5b22c4b87cc8f3c62800bb69575e60aa90be791f28950f`.
+- Head de esquema: `0002_auth_sessions`; no hay revisiones adicionales.
+
+El ZIP corresponde al commit de código anterior, no al commit documental que
+registra este digest. Se generó con:
+
+```sh
+git archive --format=zip --output=artifacts/cognova-database-handoff.zip f7b6fa57d9ffec07100897088ea61323bc681f84
+```
+
+No está publicado ni se ha hecho push. La huella identifica el ZIP local exacto;
+si otro Git genera bytes distintos, verificar contenido/commit y registrar la
+huella del artefacto que realmente se publique. Backend debe fijar ambos.
+La entrega está preparada para pruebas coordinadas, **no certificada para corte**.
+
 ## Implementado
 
 - Historial copiado desde backend y preservado: 0001_create_users → 0002_auth_sessions.
@@ -38,6 +58,10 @@ se han probado localmente. No se ha ejecutado auditoría de vulnerabilidades.
 No hay TEST_DATABASE_URL configurada, herramientas psql/pg_isready/docker en PATH
 ni servicio PostgreSQL encontrado. Integración real, grants y recuperación no
 validados. No se modifican backend, frontend ni producción.
+Se extrajo el ZIP y se ejecutaron heads y generación SQL offline desde esa copia:
+ambos correctos; SHA-256 de las dos revisiones extraídas coincide con el original.
+Enlaces Markdown locales y git diff --check correctos; revisión básica de secretos
+sin hallazgos. Backend sigue limpio y sus migraciones/lock no difieren de 06c3d2a.
 
 ## DEPENDENCY BACKEND
 
