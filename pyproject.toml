@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cognova-database"
+version = "0.1.0"
+description = "PostgreSQL schema lifecycle for Cognova"
+requires-python = ">=3.11"
+dependencies = ["alembic>=1.15,<2", "sqlalchemy>=2.0.36,<3", "psycopg[binary]>=3.2,<4"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3,<10", "ruff>=0.11,<1"]
+
+[tool.setuptools.packages.find]
+include = ["cognova_database*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = ["integration: requires an explicitly opted-in local disposable PostgreSQL"]
+
+[tool.ruff]
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
