@@ -63,3 +63,24 @@ idempotencia real, constraints aplicados ni conservación de datos.
 Las pruebas integration requieren TEST_DATABASE_URL local desechable y
 TEST_DATABASE_ALLOW_DDL=yes. Sin URL se omiten; en CI deben ser obligatorias.
 El detalle de lo realmente ejecutado está en [PROJECT_STATE](PROJECT_STATE.md).
+
+La URL de integración admite solo localhost/127.0.0.1/::1, driver
+postgresql+psycopg y ninguna opción de URL; esto evita redirigir el host mediante
+opciones. El operador sigue siendo responsable de que el destino local sea
+desechable y no un túnel a producción. Cada caso crea un esquema test_<uuid>,
+establece search_path únicamente a ese esquema y elimina exclusivamente ese
+esquema al terminar. No usar credenciales o conexiones de producción.
+
+```sh
+# Exportar TEST_DATABASE_URL y TEST_DATABASE_ALLOW_DDL=yes explícitamente.
+python -m pytest -q --junitxml=artifacts/test-results.xml
+python scripts/check_test_results.py artifacts/test-results.xml
+```
+
+El segundo comando rechaza tests omitidos, fallidos o ausencia de integración.
+El workflow usa PostgreSQL 17 desechable, REQUIRE_POSTGRES_TESTS=1 y conserva el
+JUnit y SQL offline como evidencia. Tener el workflow escrito no significa que
+se haya ejecutado. La suite cubre base/esquema vacío, upgrade desde 0001 con datos,
+repetición con hashes/sesiones, constraints/índices, cascada, rollback DDL y
+search_path con conexión propia e inyectada. Los tests con mocks verifican solo
+el contrato de manejo de conexión, nunca comportamiento real del motor.

@@ -8,8 +8,10 @@ Fecha: 2026-10-08. Fase: separación y estabilización; corte backend pendiente.
 - Alembic independiente, sin ORM/backend/JWT; configuración por entorno.
 - Conexión inyectada, search_path, transacciones y advisory lock compartido.
 - CLI con errores sanitizados, dependencias runtime con pins/hashes y docs propias.
-- Pruebas offline: 15 passed. Ruff lint y formato correctos (9 archivos Python);
-  pip check sin incompatibilidades. El editor no descubrió tests: se usó pytest.
+- Primer bloque: 15 pruebas offline aprobadas, Ruff y pip check correctos;
+  commit 7158cb4. El editor no descubrió tests: se usó pytest.
+- Segundo bloque: integración PostgreSQL aislada y workflow CI preparados;
+  contrato de conexiones inyectadas verificado también offline.
 
 ## Evidencia y límites
 
@@ -22,6 +24,17 @@ head:head sin DDL; esto último no equivale a probar idempotencia online.
 Revisión básica de secretos: sin archivos .env privados, dumps o claves versionados
 ni coincidencias de patrones de claves privadas/tokens conocidos. No sustituye
 una auditoría completa de seguridad.
+
+Resultado de suite ampliada: **18 passed, 5 skipped**. Las 5 omisiones corresponden
+a PostgreSQL real (dos variantes de transacción sobre esquema vacío, upgrade con
+datos/repetición, rollback DDL y CLI/search_path). El control de resultados CI
+rechazó correctamente el JUnit local por esas omisiones. No se ha ejecutado CI
+remota. No presentar esos cinco escenarios como validados ni retirar aún la copia
+backend. Las pruebas SQL y mocks no certifican constraints o transacciones reales.
+Ruff lint y formato pasan (13 archivos Python); pip check e instalación editable
+sin dependencias adicionales pasan. Paquetes usados: Alembic 1.20.0, SQLAlchemy
+2.1.3, psycopg 3.3.6, pytest 9.1.1 y Ruff 0.16.10. Otras versiones de Python no
+se han probado localmente. No se ha ejecutado auditoría de vulnerabilidades.
 No hay TEST_DATABASE_URL configurada, herramientas psql/pg_isready/docker en PATH
 ni servicio PostgreSQL encontrado. Integración real, grants y recuperación no
 validados. No se modifican backend, frontend ni producción.
@@ -47,5 +60,6 @@ Después de que database publique una referencia fija y evidencia PostgreSQL rea
 
 ## Siguiente paso
 
-Completar checks offline, añadir integración aislada/CI y registrar resultados.
-No declarar listo el corte operativo mientras falte PostgreSQL real y coordinación.
+Ejecutar la suite completa en PostgreSQL 17 local desechable o CI y adjuntar
+evidencia sin omisiones. Coordinar luego pruebas ORM/auth backend, permisos y
+restauración. No declarar listo el corte operativo mientras falten esos controles.
