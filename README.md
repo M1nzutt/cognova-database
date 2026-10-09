@@ -1,4 +1,4 @@
-# Cognova Database
+#  Cognova Database
 
 Repositorio operativo del esquema PostgreSQL existente de Cognova. No es una API.
 El historial original permanece `0001_create_users` → `0002_auth_sessions`.
