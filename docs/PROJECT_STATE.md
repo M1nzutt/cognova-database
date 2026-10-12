@@ -2,6 +2,14 @@
 
 Fecha: 2026-10-12. Rama: feat/0003-onboarding-questionnaire.
 
+## Entrega publicada
+
+Commit de código que backend debe fijar:
+`232c43130c0fb3eddd32e1dd3707368ba0d87d4c`.
+Incluye migración, tooling, pruebas y contrato físico; publicado en
+origin/feat/0003-onboarding-questionnaire. El commit documental posterior solo
+registra esta referencia y el cierre de validaciones; no cambia el esquema.
+
 ## Estado reconstruido
 
 Inicio limpio en main/origin/main, 3 commits: 7158cb4, f7b6fa5 y 325e7ea.
@@ -36,6 +44,7 @@ artifacts ignorado por Git; cada caso crea/elimina un esquema test_<uuid>.
 TEST_DATABASE_ALLOW_DDL=yes y REQUIRE_POSTGRES_TESTS=1:
 **69 passed, 0 skipped; 51 casos PostgreSQL**. JUnit local:
 artifacts/test-results-0003.xml. El validador CI acepta el reporte sin omisiones.
+Al finalizar quedaron cero esquemas test_<uuid> y la instancia local se detuvo.
 
 Incluye upgrade limpio 0002→0003 y desde base vacía, objetivos legacy normales/
 vacíos/espacios/Unicode, nombres/emails largos sin truncado, usuarios sin onboarding,
@@ -44,7 +53,11 @@ concurrencia, downgrade seguro y rechazo atómico de tres causas de pérdida,
 repetición y search_path. Las pruebas ORM/API/auth backend no se ejecutaron.
 Ruff lint y formato pasan (15 archivos Python), pip check sin incompatibilidades,
 editor sin diagnósticos y git diff --check correcto. Se verifican los blobs
-históricos mediante tests; 0001/0002 no tienen diff. No se ejecutó CI remota aún.
+históricos mediante tests; 0001/0002 no tienen diff. La ejecución de CI remota
+tras el push no está certificada aquí; los resultados son locales reproducibles.
+Revisión básica de secretos sin coincidencias de tokens/claves privadas ni .env,
+dumps o binarios versionados. Enlaces Markdown locales correctos. No se afirma
+auditoría exhaustiva de vulnerabilidades ni pruebas contra otros motores/versiones.
 
 ## Riesgos y límites
 
@@ -60,8 +73,8 @@ históricos mediante tests; 0001/0002 no tienen diff. No se ejecutó CI remota a
 
 ## DEPENDENCY BACKEND
 
-1. Fijar SHA de código database publicado en esta fase; se registra tras cerrar
-   validaciones. No consumir main/latest ni el ZIP del handoff anterior.
+1. Fijar 232c43130c0fb3eddd32e1dd3707368ba0d87d4c. No consumir main/latest ni
+   el ZIP del handoff anterior. Esta referencia contiene 0003 y sus pruebas reales.
 2. Actualizar ORM/DTOs/validación: name <=30, email <=50, password→hash; onboarding
    nullable y academic_goal legacy opcional. No rehacer autenticación.
 3. Leer evidencia previa del archivo, inicial completa revision=1 y actual de la
@@ -76,6 +89,5 @@ históricos mediante tests; 0001/0002 no tienen diff. No se ejecutó CI remota a
 
 ## Próximo paso
 
-Cerrar Ruff/checks, revisar diff/secretos, commits coherentes y publicar rama.
 Backend integra la referencia y prepara pruebas y despliegue coordinados;
 no ejecutar migración de producción sin esa preparación operativa.
