@@ -1,89 +1,81 @@
 # Estado de Cognova Database
 
-Fecha: 2026-10-08. Fase: separación y estabilización; corte backend pendiente.
+Fecha: 2026-10-12. Rama: feat/0003-onboarding-questionnaire.
 
-## Referencia concreta de entrega
+## Estado reconstruido
 
-- Bootstrap e historial: `7158cb4`.
-- Código y suite de aceptación: `f7b6fa57d9ffec07100897088ea61323bc681f84`.
-- Archivo local generado: `artifacts/cognova-database-handoff.zip` (ignorado por Git).
-- SHA-256: `f8a7bd35a725f2cd5f5b22c4b87cc8f3c62800bb69575e60aa90be791f28950f`.
-- Head de esquema: `0002_auth_sessions`; no hay revisiones adicionales.
+Inicio limpio en main/origin/main, 3 commits: 7158cb4, f7b6fa5 y 325e7ea.
+La fase anterior validó offline (18 passed, 5 skipped) y no aplicó DDL en producción.
+La validación real se ejecutó en esta fase. El ZIP anterior corresponde a f7b6fa5
+y ya no representa el head nuevo; no reutilizarlo para esta entrega.
 
-El ZIP corresponde al commit de código anterior, no al commit documental que
-registra este digest. Se generó con:
+## Decisión y revisión
 
-```sh
-git archive --format=zip --output=artifacts/cognova-database-handoff.zip f7b6fa57d9ffec07100897088ea61323bc681f84
-```
+0003_onboarding_questionnaire, down_revision=0002_auth_sessions.
+0001/0002 y sus blobs originales intactos: [PROVENANCE](PROVENANCE.md).
 
-No está publicado ni se ha hecho push. La huella identifica el ZIP local exacto;
-si otro Git genera bytes distintos, verificar contenido/commit y registrar la
-huella del artefacto que realmente se publique. Backend debe fijar ambos.
-La entrega está preparada para pruebas coordinadas, **no certificada para corte**.
+- Registro mínimo con name/email no vacíos y máximos 30/50 mediante checks NOT
+  VALID: conservan anomalías antiguas, restringen nuevas escrituras.
+- degree_program, semester y academic_goal nullable; password_hash sin cambios.
+- user_academic_goal_legacy conserva literalmente el objetivo anterior por usuario;
+  no fabrica las otras nueve respuestas.
+- questionnaire_responses: diez respuestas JSONB completas por snapshot, versión
+  de catálogo y revisiones contiguas por usuario. Primera inicial, última vigente;
+  historia append-only con triggers/FK RESTRICT.
+- Downgrade condicionado a no perder respuestas/goals ni tener que rellenar NULL;
+  aborta antes del DDL dentro de la transacción cuando no es seguro.
 
-## Implementado
+Contrato físico/justificación JSONB: [SCHEMA_0003](SCHEMA_0003.md).
 
-- Historial copiado desde backend y preservado: 0001_create_users → 0002_auth_sessions.
-- Alembic independiente, sin ORM/backend/JWT; configuración por entorno.
-- Conexión inyectada, search_path, transacciones y advisory lock compartido.
-- CLI con errores sanitizados, dependencias runtime con pins/hashes y docs propias.
-- Primer bloque: 15 pruebas offline aprobadas, Ruff y pip check correctos;
-  commit 7158cb4. El editor no descubrió tests: se usó pytest.
-- Segundo bloque: integración PostgreSQL aislada y workflow CI preparados;
-  contrato de conexiones inyectadas verificado también offline.
+## Pruebas reales
 
-## Evidencia y límites
+PostgreSQL 17.11 x64 Windows, instancia desechable propia en 127.0.0.1:55433,
+base cognova_test, sin servicio del sistema ni producción. Binarios EDB en
+artifacts ignorado por Git; cada caso crea/elimina un esquema test_<uuid>.
 
-SHA-256 de las copias coincide con archivos originales. Backend estaba limpio en
-5fa90a3; blobs idénticos a 06c3d2a. Python local 3.14.5 en venv propio; instalación
-runtime con --require-hashes completada. No se ejecutó ninguna conexión PostgreSQL.
-Alembic heads/history confirma una cadena lineal con único head 0002_auth_sessions.
-Los tests verifican blobs originales y SQL completo, upgrade por rango y rango
-head:head sin DDL; esto último no equivale a probar idempotencia online.
-Revisión básica de secretos: sin archivos .env privados, dumps o claves versionados
-ni coincidencias de patrones de claves privadas/tokens conocidos. No sustituye
-una auditoría completa de seguridad.
+TEST_DATABASE_ALLOW_DDL=yes y REQUIRE_POSTGRES_TESTS=1:
+**69 passed, 0 skipped; 51 casos PostgreSQL**. JUnit local:
+artifacts/test-results-0003.xml. El validador CI acepta el reporte sin omisiones.
 
-Resultado de suite ampliada: **18 passed, 5 skipped**. Las 5 omisiones corresponden
-a PostgreSQL real (dos variantes de transacción sobre esquema vacío, upgrade con
-datos/repetición, rollback DDL y CLI/search_path). El control de resultados CI
-rechazó correctamente el JUnit local por esas omisiones. No se ha ejecutado CI
-remota. No presentar esos cinco escenarios como validados ni retirar aún la copia
-backend. Las pruebas SQL y mocks no certifican constraints o transacciones reales.
-Ruff lint y formato pasan (13 archivos Python); pip check e instalación editable
-sin dependencias adicionales pasan. Paquetes usados: Alembic 1.20.0, SQLAlchemy
-2.1.3, psycopg 3.3.6, pytest 9.1.1 y Ruff 0.16.10. Otras versiones de Python no
-se han probado localmente. No se ha ejecutado auditoría de vulnerabilidades.
-No hay TEST_DATABASE_URL configurada, herramientas psql/pg_isready/docker en PATH
-ni servicio PostgreSQL encontrado. Integración real, grants y recuperación no
-validados. No se modifican backend, frontend ni producción.
-Se extrajo el ZIP y se ejecutaron heads y generación SQL offline desde esa copia:
-ambos correctos; SHA-256 de las dos revisiones extraídas coincide con el original.
-Enlaces Markdown locales y git diff --check correctos; revisión básica de secretos
-sin hallazgos. Backend sigue limpio y sus migraciones/lock no difieren de 06c3d2a.
+Incluye upgrade limpio 0002→0003 y desde base vacía, objetivos legacy normales/
+vacíos/espacios/Unicode, nombres/emails largos sin truncado, usuarios sin onboarding,
+diez respuestas y nuevas revisiones, constraints/índices, inmutabilidad/FK,
+concurrencia, downgrade seguro y rechazo atómico de tres causas de pérdida,
+repetición y search_path. Las pruebas ORM/API/auth backend no se ejecutaron.
+Ruff lint y formato pasan (15 archivos Python), pip check sin incompatibilidades,
+editor sin diagnósticos y git diff --check correcto. Se verifican los blobs
+históricos mediante tests; 0001/0002 no tienen diff. No se ejecutó CI remota aún.
+
+## Riesgos y límites
+
+- Faltan opciones/cardinalidades definitivas de las diez preguntas en el contrato
+  documental: backend debe fijarlas; no se inventaron valores de producto.
+- Filas antiguas fuera de 30/50 requieren remediación antes de actualizarse.
+  NOT VALID no certifica conformidad histórica global.
+- Backfill con bloqueo exclusivo: evaluar volumen/ventana antes de producción.
+- FK RESTRICT bloquea borrar usuarios con historia: retención/eliminación de cuenta
+  requieren coordinación explícita; no se borran datos para facilitar ese flujo.
+- Producción, grants reales, backups/restauración y despliegue coordinado no se
+  verificaron ni ejecutaron. Nuevo head requiere release backend compatible.
 
 ## DEPENDENCY BACKEND
 
-Después de que database publique una referencia fija y evidencia PostgreSQL real:
+1. Fijar SHA de código database publicado en esta fase; se registra tras cerrar
+   validaciones. No consumir main/latest ni el ZIP del handoff anterior.
+2. Actualizar ORM/DTOs/validación: name <=30, email <=50, password→hash; onboarding
+   nullable y academic_goal legacy opcional. No rehacer autenticación.
+3. Leer evidencia previa del archivo, inicial completa revision=1 y actual de la
+   última revisión. Insertar snapshots completos; aprobar catálogo versionado,
+   validar opciones/cardinalidades/ownership y manejar concurrencia.
+4. Admitir explícitamente 0003 en readiness/startup con release compatible antes
+   del DDL. Seguir rechazando heads ausentes/desconocidos/múltiples.
+5. Consumir database fijo en fixtures/CI y verificar ORM/API/auth reales. Si aún
+   existe Alembic local/startup DDL, coordinar su retiro; no asumir que ya ocurrió.
+6. Configurar permisos de tablas/funciones y decidir retención/borrado de cuenta,
+   más remediación de anomalías legacy. Detalles en SCHEMA_0003 y OPERATIONS.
 
-1. Fijar commit/artefacto y verificar digest; no consumir main/latest flotantes.
-2. Adaptar CI y fixture de integración para usar esa versión con conexión inyectada
-   y esquema test_<uuid>; conservar pruebas ORM/API/auth completas.
-3. Retirar migrate() del launcher y verificar conectividad y compatibilidad antes
-   de escuchar. Conservar readiness con conjunto exacto {0002_auth_sessions};
-   revisión ausente, distinta o múltiples filas debe seguir rechazándose.
-4. Tras coordinar el corte, retirar alembic.ini, migrations/, tests DDL ya
-   transferidos y dependencia Alembic runtime; actualizar lock, CI y documentación.
-   Las herramientas Alembic de fixtures pueden vivir en un entorno separado.
-5. Reubicar alembic check junto al ORM en las pruebas de compatibilidad; database
-   con metadata=None no puede sustituirlo. Adaptar tests de startup a disponibilidad
-   y compatibilidad; conservar health/readiness/database y auth.
-6. Coordinar recursos Render existentes, roles migrador/runtime, backup probado y
-   eliminación de launchers antiguos capaces de migrar. No recrear base ni Blueprint.
+## Próximo paso
 
-## Siguiente paso
-
-Ejecutar la suite completa en PostgreSQL 17 local desechable o CI y adjuntar
-evidencia sin omisiones. Coordinar luego pruebas ORM/auth backend, permisos y
-restauración. No declarar listo el corte operativo mientras falten esos controles.
+Cerrar Ruff/checks, revisar diff/secretos, commits coherentes y publicar rama.
+Backend integra la referencia y prepara pruebas y despliegue coordinados;
+no ejecutar migración de producción sin esa preparación operativa.

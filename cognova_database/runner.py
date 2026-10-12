@@ -18,7 +18,15 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Cognova PostgreSQL migrations")
     commands = parser.add_subparsers(dest="action", required=True)
     upgrade = commands.add_parser("upgrade")
-    upgrade.add_argument("revision", choices=["0001_create_users", "head"])
+    upgrade.add_argument(
+        "revision",
+        choices=[
+            "0001_create_users",
+            "0002_auth_sessions",
+            "0003_onboarding_questionnaire",
+            "head",
+        ],
+    )
     upgrade.add_argument("--sql", action="store_true", help="Offline SQL only")
     for name in ("heads", "history", "current"):
         commands.add_parser(name)

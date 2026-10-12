@@ -29,8 +29,9 @@ def test_original_blobs_and_single_linear_head():
         blob = b"blob " + str(len(data)).encode() + b"\0" + data
         assert hashlib.sha1(blob).hexdigest() == expected
     script = ScriptDirectory.from_config(migration_config())
-    assert script.get_heads() == ["0002_auth_sessions"]
+    assert script.get_heads() == ["0003_onboarding_questionnaire"]
     assert [(r.revision, r.down_revision) for r in script.walk_revisions()] == [
+        ("0003_onboarding_questionnaire", "0002_auth_sessions"),
         ("0002_auth_sessions", "0001_create_users"),
         ("0001_create_users", None),
     ]
@@ -55,6 +56,10 @@ def test_complete_postgresql_ddl_without_environment(monkeypatch):
         "CREATE TABLE rate_limit_buckets",
         "CREATE INDEX ix_rate_limit_buckets_expires_at",
         "UPDATE alembic_version SET version_num='0002_auth_sessions'",
+        "CREATE TABLE user_academic_goal_legacy",
+        "CREATE TABLE questionnaire_responses",
+        "NOT VALID",
+        "UPDATE alembic_version SET version_num='0003_onboarding_questionnaire'",
     ):
         assert expected in sql
 
@@ -67,7 +72,7 @@ def test_upgrade_range_does_not_recreate_users():
 
 
 def test_same_head_offline_has_no_schema_operations():
-    sql = sql_for("0002_auth_sessions:0002_auth_sessions")
+    sql = sql_for("0003_onboarding_questionnaire:0003_onboarding_questionnaire")
     assert all(word not in sql for word in ("CREATE", "ALTER", "DROP", "INSERT"))
 
 

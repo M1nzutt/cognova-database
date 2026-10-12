@@ -10,6 +10,21 @@ del backend requiere CONNECT a la base, USAGE del esquema, DML necesario sobre
 users/auth_sessions/rate_limit_buckets, USAGE/SELECT de la secuencia users_id_seq,
 y SELECT sobre alembic_version. No debe poseer tablas ni recibir CREATE/ALTER/DROP.
 
+Para 0003 añadir SELECT/INSERT en questionnaire_responses, solo SELECT en
+user_academic_goal_legacy y EXECUTE en cognova_valid_questionnaire_answers.
+No conceder UPDATE/DELETE/TRUNCATE de historia ni capacidad de desactivar triggers.
+No hay secuencias nuevas: PK user_id y (user_id,revision). Triggers SECURITY INVOKER,
+search_path=pg_catalog; referencias internas mediante TG_TABLE_SCHEMA. El bloqueo
+de users requiere SELECT/UPDATE, ya necesarios para onboarding. Revisar privilegios
+de ejecución por defecto de funciones; runtime no debe ser propietario.
+
+FK RESTRICT bloquea borrar usuarios con historia. La política explícita de
+retención/eliminación de cuenta exige coordinación futura; no cambiar a CASCADE
+silenciosamente. 0003 toma ACCESS EXCLUSIVE de users para DDL y backfill: evaluar
+volumen/ventana. Mantiene lock_timeout=30s y statement_timeout=120s; ante timeout,
+rollback y reprogramar. Inventariar nombres/emails legacy fuera de 30/50 con conteos,
+remediar deliberadamente y después VALIDATE CONSTRAINT; no truncar ni loguear PII.
+
 Antes del corte, inventariar roles, ownership y privilegios efectivos (incluidos
 los heredados de PUBLIC). Con nombres reales revisados por operación, conceder
 permisos explícitos sobre objetos actuales y configurar ALTER DEFAULT PRIVILEGES
