@@ -7,7 +7,10 @@
   onboarding y percepción/cuestionario autorizados por el usuario.
 - 0003 autoriza academic_goal nullable con copia histórica inmutable; leer
   SCHEMA_0003. No eliminar valores ni fabricar respuestas faltantes.
-- No ejecutar operaciones contra producción ni leer/copiar secretos del backend.
+- La fase operativa autorizada el 2026-10-13 permite inventario, respaldo,
+  aplicación de 0003 y verificación en el PostgreSQL Render existente. Identificar
+  el recurso y verificar respaldo antes de DDL; no recrear recursos ni borrar datos.
+  No exponer ni versionar credenciales. No modificar backend/frontend.
 - Probar solo con PostgreSQL local desechable y opt-in explícito; nunca SQLite.
 - Mantener conexión inyectada, search_path, transacciones y bloqueo compartido.
 - No retirar migraciones del backend: documentar DEPENDENCY BACKEND.

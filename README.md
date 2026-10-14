@@ -34,7 +34,8 @@ python -m cognova_database current
 ```
 
 No se carga `.env` automáticamente. No se requiere JWT ni código del backend.
-No se ha autorizado ni ejecutado operación contra producción en esta separación.
+El release operativo autorizado de 0003 y su evidencia se registran en
+[RELEASE_0003](docs/RELEASE_0003.md); consultar el estado antes de operar producción.
 
 ## Documentación
 

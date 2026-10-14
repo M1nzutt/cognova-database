@@ -1,6 +1,20 @@
 # Estado de Cognova Database
 
-Fecha: 2026-10-12. Rama: feat/0003-onboarding-questionnaire.
+Fecha de actualización: 2026-10-13. Rama: feat/0003-onboarding-questionnaire.
+
+## Release operativo actual
+
+Autorizado por el usuario sobre el PostgreSQL Render existente. **No aplicado**:
+falta acceso efectivo a Render/PostgreSQL. No se configuró DATABASE_URL ni acceso
+API/UI utilizable; no se consultaron inventario, plan, backups ni permisos reales.
+Se solicitó acceso seguro. Procedimiento y evidencia: [RELEASE_0003](RELEASE_0003.md).
+El backend nuevo espera exactamente 0003 según confirmación del usuario; no se
+declara compatible producción ni se despliega frontend hasta verificar el release.
+Inicio de esta fase: 5 commits y Git limpio. El SHA fijado existe y runner/migraciones
+no difieren de él. No se crean commits artificiales para alcanzar la meta 501.
+Preparación/evidencia agrupadas en un commit documental: total 6 al cerrar,
+faltantes hasta 501: 495. Verificación de enlaces/diff y revisión básica de secretos;
+sin nueva ejecución de tests ni de operaciones productivas.
 
 ## Entrega publicada
 

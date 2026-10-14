@@ -1,7 +1,8 @@
 # Operación futura, permisos y recuperación
 
-No se ha consultado ni modificado producción. No existen seeds o scripts de backup
-originales que trasladar. No crear datos demo o una base sustituta en esta fase.
+El release operativo de 0003 está autorizado desde 2026-10-13. Su ejecución real
+y bloqueos se registran en [RELEASE_0003](RELEASE_0003.md). No crear recursos nuevos,
+datos demo ni una base sustituta. No asumir que autorización equivale a aplicación.
 
 ## Roles y grants pendientes de aplicar
 
