@@ -26,6 +26,20 @@ Se solicitó habilitar acceso por entorno seguro y nombre/ID del recurso, o una
 sesión Render accesible. No enviar contraseñas por chat ni incluirlas en Git.
 No se puede identificar el recurso real a partir de un nombre de Blueprint antiguo.
 
+### Reintento tras aviso de DATABASE_URL configurada
+
+El usuario indicó que configuró DATABASE_URL. Se comprobó nuevamente su presencia
+sin imprimir el valor: no aparece en el proceso sandbox ni, fuera del sandbox, en
+los ámbitos Windows Process, User o Machine. No existe .env local ni otro archivo
+.env de conexión en la raíz (solo .env.example). .env y .env.local están ignorados.
+Esto no demuestra que falte en una terminal independiente: una variable definida
+solo en esa terminal no se hereda por los procesos ya abiertos del agente.
+
+Se solicitó la ubicación o cargarla mediante el .env ignorado, sin enviar el secreto
+por chat. No se intentó conectar a un host alternativo, ni se ejecutaron consultas,
+backup o migración. El bloqueo sigue siendo acceso a la configuración efectiva,
+no un fallo PostgreSQL ni un riesgo de pérdida de datos observado.
+
 ## Secuencia operativa preparada (pendiente de ejecutar)
 
 1. Correlacionar el PostgreSQL Render real (ID/nombre/estado/región/versión/plan)
@@ -96,6 +110,8 @@ fase. Separar cambios documentales/operativos reales, sin squash ni historial
 artificial. Registrar conteo final y diferencia 501 menos total al cerrar.
 Este bloque de preparación/evidencia añade un commit documental: total 6,
 faltantes hasta 501: 495. No se usa esta cifra para afirmar que el release se aplicó.
+El reintento posterior parte de 6 y añade un commit de evidencia: total 7,
+faltantes hasta 501: 494. Ninguna revisión Alembic fue modificada.
 
 Checks de esta fase: enlaces Markdown locales y git diff --check correctos;
 revisión del diff y patrones básicos de secretos sin hallazgos. No se repitieron

@@ -16,6 +16,14 @@ Preparación/evidencia agrupadas en un commit documental: total 6 al cerrar,
 faltantes hasta 501: 495. Verificación de enlaces/diff y revisión básica de secretos;
 sin nueva ejecución de tests ni de operaciones productivas.
 
+Reintento tras aviso del usuario: DATABASE_URL continúa ausente en los procesos
+disponibles, incluso fuera del sandbox y consultando Process/User/Machine. Tampoco
+hay .env local. Se solicitó ubicación/carga segura; no se imprimió ningún secreto
+ni se intentó otro recurso. No hubo conectividad, inventario, backup o DDL que
+certificar. Este reintento parte de 6 commits y añade evidencia documental:
+total 7, faltantes hasta 501: 494. Sigue pendiente habilitar la configuración
+efectiva del mismo PostgreSQL existente; detalles en RELEASE_0003.
+
 ## Entrega publicada
 
 Commit de código que backend debe fijar:
