@@ -10,6 +10,10 @@ verifica descifrado por SHA-256 y publica únicamente .dump.gpg; nunca dump plan
 La clave se pasa por stdin y no se guarda ni imprime. 11 pruebas offline de la
 adaptación pasan. Registro en main, ejecución y evidencia real todavía pendientes.
 No se aplica 0003. Ver [RELEASE_0003](RELEASE_0003.md).
+Primer dispatch real: run 38766220897 terminó failure con ValueError en validación
+previa; instalación cliente 18.6/GnuPG correcta, upload omitido y cero artifacts.
+Se añade validación manual sin conexión para diagnosticar sin repetir el backup,
+con errores constantes que no imprimen secretos. Resultado pendiente.
 
 ### Historial: versión anterior con bloqueo de privacidad
 

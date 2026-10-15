@@ -5,6 +5,13 @@ Estado: **cifrado autorizado e implementado; ejecución y evidencia pendientes**
 
 ## Adaptación a artifact cifrado
 
+Primer run real: [38766220897](https://github.com/M1nzutt/cognova-database/actions/runs/38766220897),
+commit 151d407a9fdd90b2af6005ed23d66c5cc9dee368. Resultado failure; PostgreSQL
+18.6 (Ubuntu 18.6-1.pgdg24.04+2) instalado, validación previa terminó ValueError;
+upload skipped y lista de artifacts vacía. No se repite backup hasta diagnosticar.
+Se agrega input validate_only que solo valida configuración en memoria, no conecta
+a PostgreSQL ni crea archivos/artifacts. No confundir su éxito con backup exitoso.
+
 El usuario autorizó usar BACKUP_ENCRYPTION_KEY junto a DATABASE_URL como secrets.
 La nueva versión elimina el requisito de repositorio privado y conserva únicamente
 el archivo cognova-pre-0003.dump.gpg en el artifact. No sube dump plano, manifest,

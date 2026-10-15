@@ -30,6 +30,7 @@ def backup_code(monkeypatch, tmp_path):
         "GITHUB_RUN_ID": "123",
         "GITHUB_RUN_ATTEMPT": "1",
         "GITHUB_SHA": "test-commit",
+        "VALIDATE_ONLY": "false",
     }.items():
         monkeypatch.setenv(name, value)
     # Synthetic credential; never use the local .env in workflow tests.
@@ -146,3 +147,14 @@ def test_invalid_encryption_key_never_connects(backup_code, monkeypatch, key):
     with pytest.raises(ValueError):
         backup_code["backup"]()
     assert not calls
+
+
+def test_preflight_only_never_connects_or_creates_artifact(
+    backup_code, monkeypatch, tmp_path
+):
+    calls = fake_commands(monkeypatch, backup_code)
+    monkeypatch.setenv("VALIDATE_ONLY", "true")
+    backup_code["backup"]()
+    assert not calls
+    assert not (tmp_path / "outputs").exists()
+    assert not (tmp_path / "cognova-pre-0003").exists()
