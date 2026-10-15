@@ -1,9 +1,35 @@
 # Release operativo 0003 — procedimiento y evidencia
 
 Actualización: 2026-10-15. Objetivo actual: backup manual pre-0003, sin DDL.
-Estado: **workflow preparado; ejecución bloqueada por privacidad del artifact**.
+Estado: **cifrado autorizado e implementado; ejecución y evidencia pendientes**.
 
-## Backup manual mediante GitHub Actions
+## Adaptación a artifact cifrado
+
+El usuario autorizó usar BACKUP_ENCRYPTION_KEY junto a DATABASE_URL como secrets.
+La nueva versión elimina el requisito de repositorio privado y conserva únicamente
+el archivo cognova-pre-0003.dump.gpg en el artifact. No sube dump plano, manifest,
+TOC ni SHA256SUMS: tamaños, fechas y hashes se registran como metadata no sensible
+en el resumen/log del run. La URL y clave no se imprimen.
+
+GnuPG simétrico AES-256, S2K iterado con SHA-512 y count=65011712; clave aleatoria
+de al menos 32 bytes y una línea, enviada por stdin (passphrase-fd=0), sin archivo
+de clave ni argumento visible. BACKUP_ENCRYPTION_KEY no se propaga a procesos
+PostgreSQL; la conexión no se propaga a GnuPG. Primero pg_restore --list y lectura
+completa del dump, después cifrado y descifrado temporal con comparación SHA-256.
+Se eliminan ambos archivos planos antes del upload; limpieza siempre al terminar.
+El output de upload solo se habilita tras verificar el roundtrip completo.
+
+El artifact cifrado puede ser descargable en el repo público: su confidencialidad
+depende de la clave. Custodiar una copia de recuperación fuera de GitHub y conservar
+la versión de clave correspondiente a cada backup, incluso si el secret se rota.
+La verificación de descifrado no equivale a restauración ejecutada en una base.
+
+Validación offline de la adaptación: 11 pruebas sintéticas cubren fallos de dump,
+revisión, TOC, cifrado y roundtrip, ausencia/forma de clave y metadata sin secretos.
+Registro inicial en main y dispatch manual autorizados como parte de ejecutar el
+workflow; solo se registra ese YAML, sin migrar ni desplegar aplicaciones.
+
+## Primera versión del workflow (histórica, sustituida por cifrado)
 
 [backup-pre-0003.yml](../.github/workflows/backup-pre-0003.yml) usa solo
 workflow_dispatch, sin push, cron ni triggers PR. Solo DATABASE_URL es un secret

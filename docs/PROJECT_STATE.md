@@ -4,6 +4,15 @@ Fecha de actualización: 2026-10-15. Rama: feat/0003-onboarding-questionnaire.
 
 ## Fase actual: backup manual en GitHub Actions
 
+Actualización: el usuario autorizó el artifact cifrado usando el secret
+BACKUP_ENCRYPTION_KEY. El workflow genera/verifica el dump, cifra con GnuPG AES-256,
+verifica descifrado por SHA-256 y publica únicamente .dump.gpg; nunca dump plano.
+La clave se pasa por stdin y no se guarda ni imprime. 11 pruebas offline de la
+adaptación pasan. Registro en main, ejecución y evidencia real todavía pendientes.
+No se aplica 0003. Ver [RELEASE_0003](RELEASE_0003.md).
+
+### Historial: versión anterior con bloqueo de privacidad
+
 Creado [backup-pre-0003.yml](../.github/workflows/backup-pre-0003.yml): únicamente
 workflow_dispatch, secret DATABASE_URL, cliente PostgreSQL 18 en runner Ubuntu,
 dump custom, pg_restore --list/decodificación, tamaño/fecha/versiones/SHA-256 y

@@ -54,13 +54,16 @@ Este runbook no acredita backup, restauración, retención o grants ya configura
 ## Backup pre-0003 en Actions
 
 El workflow manual [backup-pre-0003.yml](../.github/workflows/backup-pre-0003.yml)
-exige repositorio privado. Un artifact no tiene ACL privada independiente en un
-repo público: no subir dumps sin resolver la confidencialidad. Retención: siete
-días; planificar custodia restringida y expiración antes del release. No publicar
-el repositorio mientras conserve artifacts con datos sensibles.
+publica exclusivamente un .dump.gpg cifrado mediante BACKUP_ENCRYPTION_KEY. El repo
+puede seguir público, pero la clave debe ser aleatoria, secreta, de al menos 32 bytes
+y una línea. Guardar la clave de recuperación fuera de GitHub; rotar el secret no
+debe eliminar la clave de backups aún retenidos. Retención: siete días.
 
-Después de habilitar privacidad y registrar el workflow en main, dispararlo
+Después de registrar el workflow en main, dispararlo
 manualmente sobre un commit revisado, verificar status=completed/conclusion=success
-y artifact no expirado. Contrastar manifest con SHA256SUMS y digest del dump al
-descargarlo. El digest ZIP de GitHub es distinto del SHA-256 del archivo .dump.
+y artifact no expirado. Comparar SHA-256 del .gpg descargado con el resumen del run;
+descifrar en entorno protegido con GnuPG y la clave correspondiente, comparar SHA-256
+del dump con el resumen y ejecutar pg_restore --list. No pasar la clave en argumentos
+ni escribirla en logs. El digest ZIP de GitHub es distinto de los SHA-256 .gpg/.dump.
+El workflow prueba este roundtrip antes del upload; no hace restauración a una base.
 Revisar fecha y cambios posteriores antes de migrar. No ejecutar 0003 en este flujo.
