@@ -1,7 +1,60 @@
 # Release operativo 0003 — procedimiento y evidencia
 
-Fecha: 2026-10-13. Objetivo: migrar exclusivamente el PostgreSQL Render existente.
-Estado: **bloqueado por acceso; no aplicado**.
+Actualización: 2026-10-14. Objetivo: migrar exclusivamente el PostgreSQL Render existente.
+Estado: **bloqueado por respaldo no verificable; 0003 no aplicado**.
+
+## Inventario productivo confirmado — 2026-10-14
+
+El .env se cargó explícitamente en memoria, sin mostrar su contenido. SQLAlchemy
+2.1.3 está instalado sin extensiones nativas; importación y pip check correctos.
+No cambió el lock, runner ni las migraciones fijadas por backend. El inventario
+revisado solo ejecutó transacciones READ ONLY, con timeout de sentencia de 15s.
+
+- Etiqueta de recurso derivada del host Render: dpg-db2iojc9v7es7387i2ig-a.
+- Base cognova, esquema public, PostgreSQL 18.6, TLS confirmado por pg_stat_ssl.
+- Rol conectado cognova_user; recurso fijado por fingerprint sin credenciales.
+- alembic_version: exactamente una fila 0002_auth_sessions en ambas lecturas.
+- Conteos: users=1, auth_sessions=3, rate_limit_buckets=2 en ambas lecturas.
+- Cero anomalías detectadas para name/email vacíos o fuera de máximos 30/50.
+- Solo existen las cuatro tablas de 0002; las dos tablas nuevas aún no existen.
+- users conserva NOT NULL en degree_program/semester/academic_goal.
+- uq_users_email_lower UNIQUE sobre lower(email), ck_users_semester_positive,
+  índices ix_auth_sessions_user_id/ix_auth_sessions_expires_at/
+  ix_rate_limit_buckets_expires_at y FK de sesiones ON DELETE CASCADE presentes.
+
+Evidencia sin datos de usuarios ni credenciales:
+[inventario JSON](evidence/0003-preflight-2026-10-14.json).
+Última observación: 2026-10-15T02:59:10Z (2026-10-14 en America/Bogota).
+La igualdad de conteos no se presenta como prueba de igualdad de contenido.
+
+### Permisos observados
+
+cognova_user es propietario de las cuatro tablas y tiene USAGE/CREATE en public;
+no es superusuario, pero tiene CREATEROLE/CREATEDB y privilegios DML/TRUNCATE/TRIGGER
+sobre las tablas. El acceso es apto para administración del esquema, no evidencia
+de un rol runtime separado de mínimo privilegio. No se conoce la identidad efectiva
+del rol usado por el backend desplegado. Si usa cognova_user, conserva capacidad
+DDL/ownership y requiere separación coordinada. No se cambiaron roles ni grants.
+Los permisos de objetos nuevos no pueden certificarse porque todavía no existen.
+
+### Respaldo: bloqueo real antes de DDL
+
+El cliente local anterior era PostgreSQL 17, incompatible para pg_dump de un
+servidor 18. Se descargó el paquete oficial EDB PostgreSQL 18.6 y se extrajeron
+únicamente clientes en artifacts/postgres18-client (ignorado por Git). No se creó
+otra base, servidor ni servicio. Windows Application Control bloqueó pg_dump.exe
+al ejecutar --version, antes de cualquier conexión de respaldo. pg_restore sí
+reportó versión 18.6, pero no hay archivo de backup que validar/restaurar.
+
+No se deshabilitó ni evadió la política de Windows. Tampoco existe acceso al panel/API
+Render para verificar plan, snapshot/PITR, fecha, estado o procedimiento recuperable.
+No se afirma que el servicio carezca de backups: su disponibilidad no se pudo
+comprobar. No se generó un dump ni se ejecutó un ensayo de restauración.
+
+**Decisión: detenerse antes de migrar.** Sin backup/mecanismo recuperable verificado,
+no se cumple el prerrequisito del usuario. Se solicitó un backup reciente verificable,
+acceso al respaldo Render o ejecución de pg_dump 18 en un entorno autorizado.
+La base sigue en 0002. No se realizaron upgrade, downgrade, stamp ni escrituras.
 
 ## Identidad y código comprobado
 
@@ -14,7 +67,7 @@ Estado: **bloqueado por acceso; no aplicado**.
 - git ls-remote confirmó ese mismo SHA en la rama publicada. Las revisiones y
   tooling coinciden con 232c431; la diferencia hasta 28fa023 es documental.
 
-## Acceso comprobado
+## Historial del bloqueo de acceso (superado)
 
 No están configuradas DATABASE_URL, RENDER_API_KEY, RENDER_API_TOKEN ni variables
 PGHOST/PGDATABASE/PGUSER/PGPASSWORD/PGSERVICE en el proceso disponible. No hay .env
@@ -88,13 +141,13 @@ no un fallo PostgreSQL ni un riesgo de pérdida de datos observado.
 
 | Control | Resultado |
 | --- | --- |
-| Identidad del PostgreSQL Render efectivo | No accesible; no confirmado |
-| Revisión/conteos/constraints/índices previos | No consultados |
+| Identidad del PostgreSQL Render efectivo | dpg-db2iojc9v7es7387i2ig-a, cognova/public, TLS |
+| Revisión/conteos/constraints/índices previos | 0002; 1 usuario, 3 sesiones, 2 buckets; JSON adjunto |
 | Plan y mecanismo de respaldo del servicio | No consultados |
-| Backup o restauración verificados | No ejecutados; falta conexión/acceso |
+| Backup o restauración verificados | No; pg_dump 18 bloqueado por Windows y backup Render no verificable |
 | Aplicación 0003 | No ejecutada |
 | Preservación posterior y queries operativas | No verificadas |
-| Roles/grants runtime y migrador | No consultados |
+| Roles/grants runtime y migrador | cognova_user propietario; separación runtime pendiente de confirmar |
 | Producción/frontend/backend modificados | No |
 
 ## DEPENDENCY BACKEND
@@ -102,6 +155,10 @@ no un fallo PostgreSQL ni un riesgo de pérdida de datos observado.
 No hay evidencia de 0003 en producción. El backend que exige exactamente 0003
 permanece bloqueado para su compatibilidad operativa hasta verificar este release.
 No desplegar frontend por asumir que el push del esquema aplicó la migración.
+La lectura productiva ahora confirma expresamente 0002_auth_sessions. No hay tablas
+de 0003 ni evidencia de compatibilidad con el backend nuevo que exige 0003.
+Resolver primero el respaldo verificable y confirmar el rol runtime efectivo;
+después repetir el inventario sobre el mismo fingerprint y ejecutar el release.
 
 ## Política Git
 
@@ -112,7 +169,12 @@ Este bloque de preparación/evidencia añade un commit documental: total 6,
 faltantes hasta 501: 495. No se usa esta cifra para afirmar que el release se aplicó.
 El reintento posterior parte de 6 y añade un commit de evidencia: total 7,
 faltantes hasta 501: 494. Ninguna revisión Alembic fue modificada.
+Este intento con conexión funcional parte de 7 y añade un commit de inventario,
+permisos y bloqueo de respaldo: total 8, faltantes hasta 501: 493.
 
 Checks de esta fase: enlaces Markdown locales y git diff --check correctos;
 revisión del diff y patrones básicos de secretos sin hallazgos. No se repitieron
-tests Python/PostgreSQL: solo cambió documentación y no hubo conexión productiva.
+tests Python/PostgreSQL en los intentos iniciales: solo cambió documentación y no
+hubo conexión productiva entonces. En el intento actual: pip check, import/version
+de SQLAlchemy 2.1.3 sin extensiones, dos inventarios productivos READ ONLY,
+validación del JSON, enlaces locales y diff. No se ejecutó la suite contra producción.

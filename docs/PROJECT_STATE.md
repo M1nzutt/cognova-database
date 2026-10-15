@@ -1,10 +1,31 @@
 # Estado de Cognova Database
 
-Fecha de actualización: 2026-10-13. Rama: feat/0003-onboarding-questionnaire.
+Fecha de actualización: 2026-10-14. Rama: feat/0003-onboarding-questionnaire.
 
 ## Release operativo actual
 
-Autorizado por el usuario sobre el PostgreSQL Render existente. **No aplicado**:
+Conectividad confirmada con carga explícita del .env. Recurso Render
+dpg-db2iojc9v7es7387i2ig-a, cognova/public, PostgreSQL 18.6, TLS. Estado productivo
+verificado: **0002_auth_sessions; 0003 todavía no aplicado**. Dos inventarios
+READ ONLY confirman 1 usuario, 3 sesiones y 2 buckets. SQLAlchemy 2.1.3 sin
+extensiones nativas y pip check correctos; código fijado sin cambios.
+Ver [evidencia productiva](evidence/0003-preflight-2026-10-14.json) y
+[release](RELEASE_0003.md). Rol conectado cognova_user propietario; identidad y
+separación del runtime real no confirmadas. No se modificaron roles ni datos.
+**Bloqueo vigente: respaldo recuperable no verificado.** pg_dump 18.6 fue bloqueado
+por Windows Application Control antes de ejecutarse; pg_restore 18.6 funciona pero
+no hay dump. El plan/snapshots/PITR de Render no son accesibles para verificarlos.
+Se detuvo el release antes del DDL; backend que exige 0003 sigue bloqueado y no se
+desplegaron backend/frontend. Se necesita backup verificable o un cliente pg_dump
+18 autorizado, conservando el mismo destino. No eludir protecciones de Windows.
+Inicio de este intento: 7 commits, Git limpio. Evidencia/estado agrupados en un
+commit útil: total 8 al cerrar, 493 faltantes hasta 501. Validaciones actuales:
+pip check, import/version de SQLAlchemy, inventarios READ ONLY, JSON, enlaces y
+git diff --check; no hay pruebas de upgrade productivo ni respaldo exitoso.
+
+### Historial de intentos previos
+
+En los intentos anteriores, el release estaba autorizado pero no aplicado:
 falta acceso efectivo a Render/PostgreSQL. No se configuró DATABASE_URL ni acceso
 API/UI utilizable; no se consultaron inventario, plan, backups ni permisos reales.
 Se solicitó acceso seguro. Procedimiento y evidencia: [RELEASE_0003](RELEASE_0003.md).
