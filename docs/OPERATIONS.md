@@ -50,3 +50,17 @@ DDL. El rol migrador y su secreto no se entregan al runtime backend.
    exige una revisión admitida; no ejecutar downgrade destructivo automáticamente.
 
 Este runbook no acredita backup, restauración, retención o grants ya configurados.
+
+## Backup pre-0003 en Actions
+
+El workflow manual [backup-pre-0003.yml](../.github/workflows/backup-pre-0003.yml)
+exige repositorio privado. Un artifact no tiene ACL privada independiente en un
+repo público: no subir dumps sin resolver la confidencialidad. Retención: siete
+días; planificar custodia restringida y expiración antes del release. No publicar
+el repositorio mientras conserve artifacts con datos sensibles.
+
+Después de habilitar privacidad y registrar el workflow en main, dispararlo
+manualmente sobre un commit revisado, verificar status=completed/conclusion=success
+y artifact no expirado. Contrastar manifest con SHA256SUMS y digest del dump al
+descargarlo. El digest ZIP de GitHub es distinto del SHA-256 del archivo .dump.
+Revisar fecha y cambios posteriores antes de migrar. No ejecutar 0003 en este flujo.

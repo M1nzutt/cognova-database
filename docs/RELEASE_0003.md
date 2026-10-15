@@ -1,7 +1,55 @@
 # Release operativo 0003 — procedimiento y evidencia
 
-Actualización: 2026-10-14. Objetivo: migrar exclusivamente el PostgreSQL Render existente.
-Estado: **bloqueado por respaldo no verificable; 0003 no aplicado**.
+Actualización: 2026-10-15. Objetivo actual: backup manual pre-0003, sin DDL.
+Estado: **workflow preparado; ejecución bloqueada por privacidad del artifact**.
+
+## Backup manual mediante GitHub Actions
+
+[backup-pre-0003.yml](../.github/workflows/backup-pre-0003.yml) usa solo
+workflow_dispatch, sin push, cron ni triggers PR. Solo DATABASE_URL es un secret
+de configuración; github.token es el token efímero de plataforma para comprobar
+visibilidad, no una credencial PostgreSQL alternativa. No carga el .env local.
+
+Instala postgresql-client-18 desde PGDG en ubuntu-24.04, utiliza sesiones de solo
+lectura/TLS y rechaza un recurso diferente o una revisión distinta de 0002.
+Genera pg_dump custom y verifica pg_restore --list, presencia de los datos de las
+cuatro tablas y decodificación completa a /dev/null (sin ejecutar SQL). Calcula
+SHA-256, tamaño, fecha UTC y versiones. Solo tras éxito publica dump, manifest.json
+y SHA256SUMS, con retención de siete días. No publica errores nativos, TOC, filas,
+credenciales ni datos en logs. Limpia archivos locales al finalizar. Ningún paso
+aplica migraciones ni ejecuta DDL. Verificar el archivo no acredita un ensayo de
+restauración, que debe registrarse separadamente.
+
+### Bloqueo comprobado en GitHub
+
+La API de GitHub confirmó visibility=public/private=false para
+M1nzutt/cognova-database, con rama predeterminada main. GitHub no ofrece privacidad
+individual por artifact: usuarios autenticados con lectura del repo pueden
+descargarlos. No se puede llamar privado a un dump subido a este repositorio público.
+El workflow verifica la privacidad antes de acceder al secret/base y nuevamente
+antes del upload; aborta si el repositorio es público.
+
+Se solicitó elegir entre repositorio privado o autorización de artifact cifrado
+con clave de recuperación fuera de GitHub. No se cambió visibilidad ni se creó una
+clave. La versión preparada exige repo privado; la alternativa cifrada requiere
+adaptación explícita. Hasta resolverlo no se ejecuta el backup ni se suben datos.
+
+Además, workflow_dispatch exige registrar el workflow en la rama predeterminada
+para activarlo por primera vez. El archivo se prepara/publica en la rama de trabajo;
+su registro en main y dispatch quedan pendientes junto con la decisión de privacidad.
+
+Evidencia real de esta fase: workflow escrito y validado offline; **sin run de
+backup ni artifact, tamaño, digest o versión cliente ejecutada que certificar**.
+Seis pruebas sintéticas cubren fallos de dump/revisión/TOC, destino distinto/secret
+ausente y manifest sin filtraciones. No constituyen un backup de producción.
+
+Fuentes oficiales:
+- [Acceso a artifacts](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/download-workflow-artifacts).
+- [Requisito de rama predeterminada](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow).
+- [Cliente PostgreSQL en Ubuntu](https://www.postgresql.org/download/linux/ubuntu/).
+
+Esta fase parte de 8 commits. El commit de workflow, pruebas y documentación deja
+9 commits en esta rama (492 faltantes hasta 501), sin commits vacíos ni squash.
 
 ## Inventario productivo confirmado — 2026-10-14
 

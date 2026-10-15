@@ -1,6 +1,22 @@
 # Estado de Cognova Database
 
-Fecha de actualización: 2026-10-14. Rama: feat/0003-onboarding-questionnaire.
+Fecha de actualización: 2026-10-15. Rama: feat/0003-onboarding-questionnaire.
+
+## Fase actual: backup manual en GitHub Actions
+
+Creado [backup-pre-0003.yml](../.github/workflows/backup-pre-0003.yml): únicamente
+workflow_dispatch, secret DATABASE_URL, cliente PostgreSQL 18 en runner Ubuntu,
+dump custom, pg_restore --list/decodificación, tamaño/fecha/versiones/SHA-256 y
+artifact con retención de siete días. Sin DDL ni migraciones. Seis pruebas offline
+con datos sintéticos pasan; todavía no existe evidencia de un backup real.
+
+**Bloqueo nuevo confirmado:** GitHub indica que el repositorio es público. Los
+artifacts heredan acceso de lectura y no pueden marcarse privados individualmente.
+Se solicitó decisión entre repo privado y artifact cifrado; no se cambió visibilidad.
+El workflow aborta antes de conectar y antes de subir si no es privado. Ejecución,
+registro inicial del workflow en main, artifact y evidencia productiva pendientes;
+no se reporta run success. Detalles en [RELEASE_0003](RELEASE_0003.md).
+Inicio: 8 commits; cierre documental y workflow: 9, faltantes hasta 501: 492.
 
 ## Release operativo actual
 
