@@ -1,0 +1,180 @@
+name: Production backup pre-0003
+run-name: Backup pre-0003 · ${{ github.run_id }}
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-backup-pre-0003
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Install PostgreSQL 18 client and GnuPG
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          if ! apt-cache show postgresql-client-18 >/dev/null 2>&1; then
+            sudo install -d /usr/share/postgresql-common/pgdg
+            sudo curl --fail --silent --show-error --location \
+              https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+              -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
+            echo 'deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt noble-pgdg main' | sudo tee /etc/apt/sources.list.d/cognova-pgdg.list >/dev/null
+            sudo apt-get update -qq
+          fi
+          sudo apt-get install --yes --no-install-recommends postgresql-client-18 gnupg
+          /usr/lib/postgresql/18/bin/pg_dump --version
+          /usr/lib/postgresql/18/bin/pg_restore --version
+
+      - name: Create verify and encrypt custom-format backup
+        id: backup
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          import subprocess
+          from datetime import datetime, timezone
+          from pathlib import Path
+          from urllib.parse import parse_qsl, urlsplit
+
+          def run(args, env, input_data=None):
+              result = subprocess.run(args, env=env, input=input_data, capture_output=True, timeout=600)
+              if result.returncode:
+                  # Never print native errors: they can contain connection details.
+                  raise RuntimeError('Backup operation failed; no artifact published')
+              return result.stdout
+
+          def backup():
+              key = os.environ.get('BACKUP_ENCRYPTION_KEY', '')
+              if len(key.encode('utf-8')) < 32 or any(c in key for c in '\r\n\0'):
+                  raise ValueError('Encryption key must be at least 32 bytes and single-line')
+              raw = os.environ.get('DATABASE_URL', '')
+              if not raw:
+                  raise ValueError('Required database secret is unavailable')
+              url = raw.replace('postgresql+psycopg://', 'postgresql://', 1)
+              parsed = urlsplit(url)
+              if (parsed.scheme not in ('postgresql', 'postgres')
+                  or not parsed.hostname
+                  or parsed.hostname.split('.')[0] != 'dpg-db2iojc9v7es7387i2ig-a'
+                  or not parsed.hostname.endswith('.render.com')
+                  or parsed.path != '/cognova' or parsed.fragment):
+                  raise ValueError('Unexpected database target')
+              options = parse_qsl(parsed.query, keep_blank_values=True)
+              if any(k not in ('sslmode', 'channel_binding', 'connect_timeout') for k, _ in options):
+                  raise ValueError('Unsupported connection options')
+              if any(k == 'sslmode' and v not in ('require', 'verify-ca', 'verify-full') for k, v in options):
+                  raise ValueError('TLS is required')
+              env = {k: v for k, v in os.environ.items()
+                     if not k.startswith('PG') and k not in ('DATABASE_URL', 'BACKUP_ENCRYPTION_KEY')}
+              env.update(PGDATABASE=url, PGSSLMODE='require', PGCONNECT_TIMEOUT='15',
+                         PGOPTIONS='-c default_transaction_read_only=on -c statement_timeout=120000 -c lock_timeout=15000')
+              binaries = Path('/usr/lib/postgresql/18/bin')
+              psql = [str(binaries / 'psql'), '--no-psqlrc', '--no-password', '-At', '-v', 'ON_ERROR_STOP=1', '-c']
+              revision = run(psql + ['SELECT version_num FROM public.alembic_version ORDER BY version_num'], env).decode().strip()
+              if revision != '0002_auth_sessions':
+                  raise ValueError('Expected exactly revision 0002 before backup')
+              if run(psql + ['SELECT ssl FROM pg_stat_ssl WHERE pid=pg_backend_pid()'], env).strip() != b't':
+                  raise ValueError('TLS session could not be verified')
+              dump_version = run([str(binaries / 'pg_dump'), '--version'], env).decode().strip()
+              restore_version = run([str(binaries / 'pg_restore'), '--version'], env).decode().strip()
+              if not dump_version.startswith('pg_dump (PostgreSQL) 18.'):
+                  raise ValueError('PostgreSQL client 18 required')
+              destination = Path(os.environ['RUNNER_TEMP']) / 'cognova-pre-0003'
+              destination.mkdir(mode=0o700, exist_ok=False)
+              dump = destination / 'cognova-pre-0003.dump'
+              started = datetime.now(timezone.utc).isoformat()
+              run([str(binaries / 'pg_dump'), '--no-password', '--format=custom',
+                   '--lock-wait-timeout=15s', '--file', str(dump)], env)
+              if dump.stat().st_size == 0:
+                  raise ValueError('Empty backup')
+              toc = run([str(binaries / 'pg_restore'), '--list', str(dump)], env)
+              for table in ('users', 'auth_sessions', 'rate_limit_buckets', 'alembic_version'):
+                  if f'TABLE DATA public {table} '.encode() not in toc:
+                      raise ValueError('Required table data missing from backup')
+              # Decode the complete archive, without connecting or executing SQL.
+              run([str(binaries / 'pg_restore'), '--file=/dev/null', str(dump)], env)
+              if run(psql + ['SELECT version_num FROM public.alembic_version ORDER BY version_num'], env).decode().strip() != revision:
+                  raise ValueError('Schema revision changed during backup')
+              with dump.open('rb') as stream:
+                  digest = hashlib.file_digest(stream, 'sha256').hexdigest()
+              size_bytes = dump.stat().st_size
+              encrypted = destination / 'cognova-pre-0003.dump.gpg'
+              recovered = destination / 'roundtrip.dump'
+              gpg_home = destination / 'gnupg'
+              gpg_home.mkdir(mode=0o700)
+              crypto_env = {k: v for k, v in env.items() if not k.startswith('PG')}
+              gpg = ['gpg', '--no-options', '--homedir', str(gpg_home), '--batch',
+                     '--yes', '--no-tty', '--pinentry-mode', 'loopback',
+                     '--no-symkey-cache', '--passphrase-fd', '0']
+              passphrase = key.encode('utf-8') + b'\n'
+              gpg_version = run(['gpg', '--version'], crypto_env).decode().splitlines()[0]
+              run(gpg + ['--symmetric', '--cipher-algo', 'AES256', '--s2k-mode', '3',
+                         '--s2k-digest-algo', 'SHA512', '--s2k-count', '65011712',
+                         '--compress-algo', 'none', '--output', str(encrypted), str(dump)],
+                  crypto_env, passphrase)
+              if encrypted.stat().st_size == 0:
+                  raise ValueError('Empty encrypted backup')
+              run(gpg + ['--output', str(recovered), '--decrypt', str(encrypted)],
+                  crypto_env, passphrase)
+              with recovered.open('rb') as stream:
+                  if hashlib.file_digest(stream, 'sha256').hexdigest() != digest:
+                      raise ValueError('Decrypted backup differs from verified dump')
+              with encrypted.open('rb') as stream:
+                  encrypted_digest = hashlib.file_digest(stream, 'sha256').hexdigest()
+              # Only ciphertext survives to the upload step.
+              dump.unlink()
+              recovered.unlink()
+              manifest = dict(
+                  file=dump.name, format='custom', size_bytes=size_bytes,
+                  sha256=digest, started_at_utc=started,
+                  encrypted_file=encrypted.name, encrypted_size_bytes=encrypted.stat().st_size,
+                  encrypted_sha256=encrypted_digest, encryption='GnuPG symmetric AES256',
+                  gpg_version=gpg_version, encryption_roundtrip='passed',
+                  verified_at_utc=datetime.now(timezone.utc).isoformat(),
+                  pg_dump_version=dump_version, pg_restore_version=restore_version,
+                  revision_before=revision, revision_after=revision,
+                  pg_restore_list='passed', full_archive_decode='passed',
+                  restore_rehearsal='not_performed',
+                  run_id=os.environ['GITHUB_RUN_ID'], attempt=os.environ['GITHUB_RUN_ATTEMPT'],
+                  source_commit=os.environ['GITHUB_SHA'],
+              )
+              with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+                  output.write(f'encrypted_file={encrypted}\n')
+              with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
+                  summary.write('### Verified pre-0003 backup\n```json\n' + json.dumps(manifest, indent=2) + '\n```\n')
+              print(json.dumps(manifest))
+
+          try:
+              backup()
+          except Exception as error:
+              print('::error::Backup stopped; exception_type=' + type(error).__name__)
+              raise SystemExit(1) from None
+          PY
+
+      - name: Upload only encrypted pre-0003 backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: cognova-production-pre-0003-encrypted-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ steps.backup.outputs.encrypted_file }}
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+
+      - name: Remove runner-local backup files
+        if: always()
+        shell: bash
+        run: rm -rf -- "$RUNNER_TEMP/cognova-pre-0003"
