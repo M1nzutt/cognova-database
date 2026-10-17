@@ -1,7 +1,7 @@
 # Release operativo 0003 — procedimiento y evidencia
 
 Actualización: 2026-10-17. Objetivo actual: backup manual pre-0003, sin DDL.
-Estado: **adaptación libpq implementada; validación remota pendiente**.
+Estado: **backup cifrado verificado y descargado; 0003 no aplicada**.
 
 ## Corrección del entorno libpq
 
@@ -12,9 +12,41 @@ require por defecto; mantiene verify-ca/verify-full y opciones admitidas explíc
 Se eliminan variables PG heredadas antes de construir el entorno y GnuPG no
 recibe ninguna. Validate-only también construye estos parámetros sin conectar.
 41 tests offline passed, 51 integration deselected; Ruff y diff correctos.
-Ejecuciones remotas pendientes. No cambia comandos de backup/cifrado ni 0003.
+No cambia comandos de backup/cifrado ni 0003.
 
-## Diagnóstico exclusivo de conexión
+### Evidencia del backup exitoso
+
+- [Validate-only 39047961450](https://github.com/M1nzutt/cognova-database/actions/runs/39047961450): success.
+- [Backup real 39048024551](https://github.com/M1nzutt/cognova-database/actions/runs/39048024551): success;
+  job 117440594998, intento 1, commit 05d234bfc75aeb511943d25d68f2f0b1aa1fe248.
+- Inicio 2026-10-17T16:07:39.651899Z; verificado 2026-10-17T16:07:43.215486Z.
+- psql_revision y consulta posterior: 0002_auth_sessions. TLS comprobado por pg_stat_ssl.
+- pg_dump custom y pg_restore 18.6 (Ubuntu 18.6-1.pgdg24.04+2).
+  pg_restore --list aprobado, incluye datos de las cuatro tablas requeridas;
+  decodificación completa a /dev/null aprobada sin ejecutar SQL.
+- Dump: 10107 bytes. SHA-256:
+  `b948f181b98fdfe6e370c2d65ec959166e13c0b6f9ad026bfcd4df55906ae7e2`.
+- GnuPG 2.4.4, AES-256 simétrico; descifrado roundtrip con SHA-256 idéntico aprobado.
+- Archivo cifrado: cognova-pre-0003.dump.gpg, 10199 bytes. SHA-256:
+  `1023594a429d1af8a0b7cf0a3376cbca0e94b4bc864ead17f8a4e4e1114c2670`.
+- Artifact `cognova-production-pre-0003-encrypted-39048024551-1`, ID 12106388644,
+  no expirado al verificar; vence 2026-10-24T16:07:43Z.
+- ZIP descargado en memoria: 10363 bytes; contiene exclusivamente el .gpg anterior.
+  SHA-256 del .gpg descargado coincide con el resumen del run. SHA-256 del ZIP:
+  `17159205fc89cf7a3f442a8ed12dbfa8eef08068d71bce86e412fc8c3b2cff19`,
+  coincidente con digest de GitHub. Dump plano y manifest no subidos.
+- Limpieza del runner: success. No se guardaron backups ni secretos en Git.
+
+El bloqueo de respaldo no verificado queda resuelto para este snapshot. El usuario
+confirmó custodia de la clave; preservarla junto al backup durante su retención.
+No hubo ensayo de restauración en base aislada: el roundtrip/decodificación no lo
+sustituye. No se ejecutó 0003 ni se certifican sus objetos/permisos o compatibilidad
+backend. Antes del release revisar vigencia del respaldo, recuperación según
+OPERATIONS, ventana sin escrituras y controles previos/posteriores. No se declara
+seguridad incondicional para migrar por el solo éxito del backup.
+Inicio 20 commits; corrección y evidencia separadas: 22 finales, 479 hasta 501.
+
+## Historial: diagnóstico exclusivo de conexión
 
 Input manual diagnose_connection: ejecuta la misma consulta inicial con
 default_transaction_read_only=on y locale C, captura stdout/stderr en memoria y

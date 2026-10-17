@@ -8,7 +8,17 @@ Corrección libpq implementada: PGHOST/PGPORT/PGDATABASE/PGUSER/PGPASSWORD se
 derivan de la URI en memoria, decodificando credenciales; PGDATABASE solo contiene
 el nombre de base. TLS require por defecto (preserva opciones más estrictas),
 timeouts y read-only conservados. 41 pruebas offline pasan; Ruff/diff correctos.
-Validate-only y backup real pendientes de esta versión; 0003 no se aplica.
+Validate-only 39047961450 y backup real 39048024551: success, commit 05d234b.
+Revisión 0002 antes/después y TLS confirmados. pg_dump/pg_restore 18.6, lista y
+decodificación completa aprobadas, GnuPG 2.4.4 AES-256 y roundtrip SHA-256 aprobado.
+Artifact 12106388644 descargado y comprobado: solo cognova-pre-0003.dump.gpg,
+10199 bytes; dump original 10107 bytes. Hashes/fechas en RELEASE_0003.
+Respaldo verificado; vence 2026-10-24T16:07:43Z. Clave custodiada por usuario.
+No se ensayó restauración en base aislada ni se aplicó 0003. Antes de migrar,
+revisar vigencia del backup, ventana y controles operativos pendientes; no declarar
+compatibilidad backend/0003 por este éxito. 20 commits iniciales; cierre 22, faltan 479.
+
+### Historial anterior al backup exitoso
 
 Diagnóstico de conexión preparado con input diagnose_connection: solo SELECT de
 revisión y retorno antes de pg_dump. Clasifica en memoria DNS, TCP/puerto,
