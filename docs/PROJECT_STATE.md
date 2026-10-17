@@ -4,6 +4,12 @@ Fecha de actualización: 2026-10-17. Rama: feat/0003-onboarding-questionnaire.
 
 ## Fase actual: backup manual en GitHub Actions
 
+Diagnóstico de conexión preparado con input diagnose_connection: solo SELECT de
+revisión y retorno antes de pg_dump. Clasifica en memoria DNS, TCP/puerto,
+autenticación, TLS, base inexistente u otro psql; nunca muestra errores nativos.
+Incluye indicación constante si psql intenta un socket local. No cambia backup,
+cifrado ni 0003. 40 pruebas offline pasan; ejecución remota pendiente.
+
 Diagnóstico por operación implementado: las once llamadas del helper reciben
 etiquetas literales. Fallos de salida, timeout o arranque solo muestran la etiqueta,
 sin stdout/stderr nativos ni traceback. 33 pruebas offline pasan, 51 integration

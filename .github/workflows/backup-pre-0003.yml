@@ -4,6 +4,10 @@ run-name: Backup pre-0003 · ${{ github.run_id }}
 on:
   workflow_dispatch:
     inputs:
+      diagnose_connection:
+        description: Diagnose only the read-only psql revision query; never run backup
+        type: boolean
+        default: false
       validate_only:
         description: Validate secret configuration without contacting PostgreSQL
         type: boolean
@@ -44,6 +48,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
           VALIDATE_ONLY: ${{ inputs.validate_only }}
+          DIAGNOSE_CONNECTION: ${{ inputs.diagnose_connection }}
         shell: bash
         run: |
           set -euo pipefail
@@ -63,6 +68,37 @@ jobs:
 
           class BackupOperationError(RuntimeError):
               pass
+
+          def classify_connection_error(stderr):
+              message = stderr.decode('utf-8', errors='replace').lower()
+              # Match known client diagnostics in memory; return constants only.
+              if 'could not translate host name' in message or 'name or service not known' in message:
+                  return 'DNS'
+              if 'connection to server on socket' in message:
+                  return 'OTHER_PSQL: default_local_socket'
+              if any(token in message for token in ('connection refused', 'connection timed out', 'timeout expired', 'network is unreachable', 'no route to host')):
+                  return 'TCP_PORT'
+              if any(token in message for token in ('password authentication failed', 'no password supplied', 'authentication failed', 'no pg_hba.conf entry')):
+                  return 'AUTHENTICATION'
+              if any(token in message for token in ('ssl error', 'ssl connection', 'certificate verify failed', 'does not support ssl', 'root certificate file', 'private key file')):
+                  return 'TLS'
+              if 'fatal:  database ' in message and 'does not exist' in message:
+                  return 'DATABASE_NOT_FOUND'
+              return 'OTHER_PSQL'
+
+          def diagnose_connection(psql, env):
+              diagnostic_env = dict(env, LC_ALL='C')
+              try:
+                  result = subprocess.run(
+                      psql + ['SELECT version_num FROM public.alembic_version ORDER BY version_num'],
+                      env=diagnostic_env, capture_output=True, timeout=45,
+                  )
+              except Exception:
+                  # A process timeout/spawn failure does not prove a network cause.
+                  print('Connection diagnostic: OTHER_PSQL')
+                  return
+              category = classify_connection_error(result.stderr) if result.returncode else 'SUCCESS'
+              print('Connection diagnostic: ' + category)
 
           def run(operation, args, env, input_data=None):
               try:
@@ -103,6 +139,9 @@ jobs:
                          PGOPTIONS='-c default_transaction_read_only=on -c statement_timeout=120000 -c lock_timeout=15000')
               binaries = Path('/usr/lib/postgresql/18/bin')
               psql = [str(binaries / 'psql'), '--no-psqlrc', '--no-password', '-At', '-v', 'ON_ERROR_STOP=1', '-c']
+              if os.environ.get('DIAGNOSE_CONNECTION') == 'true':
+                  diagnose_connection(psql, env)
+                  return
               revision = run('psql_revision', psql + ['SELECT version_num FROM public.alembic_version ORDER BY version_num'], env).decode().strip()
               if revision != '0002_auth_sessions':
                   raise BackupValidationError('Expected exactly revision 0002 before backup')

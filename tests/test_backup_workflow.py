@@ -31,6 +31,7 @@ def backup_code(monkeypatch, tmp_path):
         "GITHUB_RUN_ATTEMPT": "1",
         "GITHUB_SHA": "test-commit",
         "VALIDATE_ONLY": "false",
+        "DIAGNOSE_CONNECTION": "false",
     }.items():
         monkeypatch.setenv(name, value)
     # Synthetic credential; never use the local .env in workflow tests.
@@ -205,3 +206,49 @@ def test_operation_errors_print_only_constant_label(
         captured = capsys.readouterr()
         assert captured.out == f"::error::Backup stopped at: {label}\n"
         assert captured.err == ""
+
+
+@pytest.mark.parametrize(
+    ("native", "category"),
+    [
+        ('could not translate host name "sensitive-host"', "DNS"),
+        ("connection refused", "TCP_PORT"),
+        ("password authentication failed", "AUTHENTICATION"),
+        ("SSL error: certificate verify failed", "TLS"),
+        ('FATAL:  database "sensitive-db" does not exist', "DATABASE_NOT_FOUND"),
+        (
+            "connection to server on socket sensitive-path failed",
+            "OTHER_PSQL: default_local_socket",
+        ),
+        ("unrecognized native failure", "OTHER_PSQL"),
+    ],
+)
+def test_connection_diagnostic_is_read_only_and_never_leaks(
+    backup_code, monkeypatch, tmp_path, capsys, native, category
+):
+    monkeypatch.setenv("DIAGNOSE_CONNECTION", "true")
+    calls = []
+
+    def execute(args, **kwargs):
+        calls.append(args)
+        assert Path(args[0]).name == "psql"
+        assert args[-1] == (
+            "SELECT version_num FROM public.alembic_version ORDER BY version_num"
+        )
+        assert "default_transaction_read_only=on" in kwargs["env"]["PGOPTIONS"]
+        assert kwargs["env"]["LC_ALL"] == "C"
+        assert kwargs["capture_output"]
+        return SimpleNamespace(
+            returncode=2,
+            stdout=KEY.encode(),
+            stderr=(native + " synthetic-password " + KEY).encode(),
+        )
+
+    monkeypatch.setattr(backup_code["subprocess"], "run", execute)
+    backup_code["backup"]()
+    assert len(calls) == 1
+    captured = capsys.readouterr()
+    assert captured.out == f"Connection diagnostic: {category}\n"
+    assert captured.err == ""
+    assert not (tmp_path / "outputs").exists()
+    assert not (tmp_path / "cognova-pre-0003").exists()

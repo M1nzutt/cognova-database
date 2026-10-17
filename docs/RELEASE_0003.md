@@ -3,6 +3,18 @@
 Actualización: 2026-10-17. Objetivo actual: backup manual pre-0003, sin DDL.
 Estado: **configuración validada; backup detenido en psql_revision, sin artifact**.
 
+## Diagnóstico exclusivo de conexión
+
+Input manual diagnose_connection: ejecuta la misma consulta inicial con
+default_transaction_read_only=on y locale C, captura stdout/stderr en memoria y
+emite solo una categoría constante. Distingue DNS, TCP/puerto, autenticación, TLS,
+base inexistente u otro psql. Si el cliente intenta socket local, informa esa
+subcausa sin ruta. Timeout del proceso/arranque desconocido se conserva como otro
+psql, sin inferir fallo de red. Un resultado SUCCESS significa que la consulta
+pasó, no que se ejecutó backup. Siempre retorna antes de pg_dump/cifrado/upload.
+40 pruebas offline pasan; siete casos cubren clasificación sin filtraciones y
+garantizan una sola consulta SELECT sin generar archivos. Run pendiente.
+
 ## Diagnóstico por operación
 
 El helper ahora recibe etiquetas literales para las once operaciones: consultas
