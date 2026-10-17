@@ -1,19 +1,37 @@
 # Estado de Cognova Database
 
-Fecha de actualización: 2026-10-15. Rama: feat/0003-onboarding-questionnaire.
+Fecha de actualización: 2026-10-17. Rama: feat/0003-onboarding-questionnaire.
 
 ## Fase actual: backup manual en GitHub Actions
 
 Actualización: el usuario autorizó el artifact cifrado usando el secret
 BACKUP_ENCRYPTION_KEY. El workflow genera/verifica el dump, cifra con GnuPG AES-256,
 verifica descifrado por SHA-256 y publica únicamente .dump.gpg; nunca dump plano.
-La clave se pasa por stdin y no se guarda ni imprime. 11 pruebas offline de la
-adaptación pasan. Registro en main, ejecución y evidencia real todavía pendientes.
+La clave se pasa por stdin y no se guarda ni imprime. El workflow está registrado
+en main y publicado en la rama de trabajo. Todavía no existe backup verificable.
 No se aplica 0003. Ver [RELEASE_0003](RELEASE_0003.md).
 Primer dispatch real: run 38766220897 terminó failure con ValueError en validación
 previa; instalación cliente 18.6/GnuPG correcta, upload omitido y cero artifacts.
 Se añade validación manual sin conexión para diagnosticar sin repetir el backup,
-con errores constantes que no imprimen secretos. Resultado pendiente.
+con errores constantes que no imprimen secretos.
+
+Validate-only anterior: run 38766608404, commit f996b936bf834bd10539e14295d983bbbbe3ab48,
+completed/failure. Falló la condición de BACKUP_ENCRYPTION_KEY: mínimo 32 bytes
+UTF-8 y ausencia de CR/LF/NUL. El error conjunto no permite distinguir cuál de
+esas condiciones falló; tampoco acredita ausencia del secret. No se evaluó la
+URL ni se conectó a PostgreSQL. Upload skipped y cero artifacts confirmados.
+El usuario confirmó actualización del secret y custodia de la clave. Nuevo
+validate-only 39046801431: success; configuración aceptada sin conexión ni backup.
+Run real posterior 39046879415: failure con RuntimeError; upload skipped y cero
+artifacts. Ambos ejecutaron f996b936bf834bd10539e14295d983bbbbe3ab48.
+El wrapper oculta errores nativos y no identifica la operación que falló; no se
+pueden certificar pg_dump, pg_restore, cifrado ni hashes. No inferir credenciales
+incorrectas ni fallo de red sin evidencia. Se detuvieron los reintentos.
+Siguiente paso: diagnóstico por etapa con mensajes constantes sin secretos,
+antes de reintentar el backup. No se aplicó 0003. Backend continúa bloqueado.
+Validación local: 30 tests offline passed, 51 integration deselected; Ruff y
+git diff --check correctos. No se ejecutaron tests contra producción.
+Esta continuación parte de 15 commits; cierre documental: 16, faltantes a 501: 485.
 
 ### Historial: versión anterior con bloqueo de privacidad
 

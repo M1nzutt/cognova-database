@@ -1,7 +1,56 @@
 # Release operativo 0003 — procedimiento y evidencia
 
-Actualización: 2026-10-15. Objetivo actual: backup manual pre-0003, sin DDL.
-Estado: **cifrado autorizado e implementado; ejecución y evidencia pendientes**.
+Actualización: 2026-10-17. Objetivo actual: backup manual pre-0003, sin DDL.
+Estado: **configuración validada; backup real falló sin artifact**.
+
+## Validación y ejecución del 2026-10-17
+
+El usuario confirmó que actualizó BACKUP_ENCRYPTION_KEY y guardó la clave de
+recuperación. No se modificó código ni se redujeron las condiciones de seguridad.
+
+- [Validate-only 39046801431](https://github.com/M1nzutt/cognova-database/actions/runs/39046801431):
+  success, job 117437036137. Mensaje: `Secret configuration accepted; no database connection or backup performed`.
+  Pasaron formato de clave, destino fijado y opciones TLS. No acredita conectividad.
+- [Run real 39046879415](https://github.com/M1nzutt/cognova-database/actions/runs/39046879415):
+  failure, job 117437259175. Instalación exitosa; etapa de backup falló con
+  `Backup stopped; RuntimeError`. Upload skipped, limpieza success, artifacts=[].
+- Ambos ejecutaron el commit f996b936bf834bd10539e14295d983bbbbe3ab48.
+
+El wrapper de subprocess oculta los errores nativos; no indica qué operación
+falló. No se certifican pg_dump, pg_restore --list, AES-256, descifrado, tamaños
+ni hashes a partir de este run. Ningún dump plano o cifrado fue subido. Detenidos
+los reintentos conforme a la regla de parar si falla backup/verificación.
+Para continuar se necesita diagnóstico por etapa con etiquetas constantes,
+sin imprimir argumentos, entorno, stderr ni secretos. No atribuir el fallo a
+red, credenciales o PostgreSQL sin evidencia. 0003 no aplicada; respaldo pendiente.
+
+Checks locales de esta continuación: 30 pruebas offline passed, 51 integration
+deselected, Ruff y git diff --check correctos. No hubo suite contra producción.
+Conteo inicial 15; commit documental de cierre deja 16, faltantes hasta 501: 485.
+
+### Bloqueo anterior del secret, resuelto
+
+[Run 38766608404](https://github.com/M1nzutt/cognova-database/actions/runs/38766608404),
+commit f996b936bf834bd10539e14295d983bbbbe3ab48 en
+feat/0003-onboarding-questionnaire: completed/failure. Job 116531356199.
+El mensaje constante fue `Encryption key must be at least 32 bytes and single-line`.
+La condición exige al menos 32 bytes UTF-8 y no contener CR, LF ni NUL. El mensaje
+no distingue longitud insuficiente de caracteres prohibidos ni demuestra que
+falte el secret. No se inspeccionó ni imprimió su valor.
+
+La instalación del cliente pasó; la validación falló antes de evaluar DATABASE_URL,
+conectar, ejecutar pg_dump o crear archivos. Upload skipped; API de artifacts
+devuelve lista vacía. No hay tamaños, hashes, pg_restore ni cifrado real exitoso
+que certificar en ese intento. Fue el último validate-only al comenzar esta
+continuación; los nuevos resultados están registrados arriba.
+
+Corrección solicitada y posteriormente confirmada: actualizar BACKUP_ENCRYPTION_KEY con una clave
+aleatoria de una línea y longitud válida, guardando una copia de recuperación
+fuera de GitHub. No cambiar DATABASE_URL ni reducir las validaciones. Se solicitó
+confirmar la actualización sin compartir la clave. Después ejecutar validate-only
+en esta rama; únicamente tras success, ejecutar el workflow real y verificar
+metadata, roundtrip y artifact. Workflow registrado en main en 3974ee3.
+0003 no se aplica en esta tarea. El prerrequisito de respaldo sigue incumplido.
 
 ## Adaptación a artifact cifrado
 
