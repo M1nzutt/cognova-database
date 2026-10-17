@@ -4,15 +4,23 @@ Fecha de actualización: 2026-10-17. Rama: feat/0003-onboarding-questionnaire.
 
 ## Fase actual: aplicación operativa de 0003
 
-Preflight 2026-10-17: producción en 0002, TLS, users=1, auth_sessions=3,
-rate_limit_buckets=2, cero anomalías de registro. Artifact 12106388644 disponible
-y no expirado. Aplicación autorizada explícitamente tras el backup verificado.
-Helper scripts/release_0003.py usa migration_config del runner y la API oficial
-de conexión inyectada: bloqueo compartido/advisory y exclusivo de tablas durante
-snapshot, upgrade y comprobaciones; commit solo si preservación/esquema pasan.
-Comparación de todos los valores en memoria sin persistir PII. Aplicación pendiente.
-41 pruebas offline pasan; Ruff/diff correctos. Runner/migraciones sin diff frente
-al SHA backend. Runtime real no identificado; migrador propietario confirmado.
+**0003_onboarding_questionnaire aplicada y commit confirmado** el 2026-10-17,
+verificación a las 16:13:38Z, reconfirmada a las 16:13:59Z. Antes: 0002 exactamente.
+Mismo PostgreSQL, TLS. users=1, auth_sessions=3, rate_limit_buckets=2 preservados:
+comparación de todas las filas/columnas dentro de bloqueos exclusivos, no solo
+conteos. Legacy=1 con academic_goal idéntico; questionnaire_responses=0.
+Ver [evidencia](evidence/0003-release-2026-10-17.json) y [release](RELEASE_0003.md).
+Nullable onboarding/goal, checks, PK/FK, índices y cinco triggers comprobados.
+Función validadora acepta diez respuestas sintéticas y rechaza objeto vacío por
+SELECT sin insertar datos. Verificación READ ONLY tras commit e inventario pasan.
+Artifact 12106388644 sigue vigente; no se repitió backup ni se ensayó restauración.
+API oficial de conexión inyectada con migration_config del runner y Alembic;
+runner/migraciones no difieren del SHA backend. No downgrade ni pérdida de datos.
+41 pruebas offline, Ruff/formato/diff pasan; no suite DDL ni pruebas API en producción.
+Migrador cognova_user propietario de las seis tablas, con permisos amplios y
+EXECUTE del validador. No se modificaron grants. Identidad/permisos runtime reales
+siguen pendientes: si backend usa otro rol, debe comprobarlos antes de desplegar.
+Inicio 22 commits; preparación y evidencia dejan 24 (477 faltantes hasta 501).
 
 ### Backup previo verificado
 
@@ -213,10 +221,14 @@ auditoría exhaustiva de vulnerabilidades ni pruebas contra otros motores/versio
 - Backfill con bloqueo exclusivo: evaluar volumen/ventana antes de producción.
 - FK RESTRICT bloquea borrar usuarios con historia: retención/eliminación de cuenta
   requieren coordinación explícita; no se borran datos para facilitar ese flujo.
-- Producción, grants reales, backups/restauración y despliegue coordinado no se
-  verificaron ni ejecutaron. Nuevo head requiere release backend compatible.
+- Producción ya está en 0003 y el respaldo está verificado. Runtime real,
+  ensayo aislado de restauración y pruebas backend continúan pendientes.
 
 ## DEPENDENCY BACKEND
+
+El bloqueo de revisión de base está resuelto: producción está en 0003. Antes de
+desplegar, confirmar rol efectivo y permisos de OPERATIONS y ejecutar readiness/
+smoke tests del backend compatible. No se certifica ese despliegue desde database.
 
 1. Fijar 232c43130c0fb3eddd32e1dd3707368ba0d87d4c. No consumir main/latest ni
    el ZIP del handoff anterior. Esta referencia contiene 0003 y sus pruebas reales.
@@ -234,5 +246,5 @@ auditoría exhaustiva de vulnerabilidades ni pruebas contra otros motores/versio
 
 ## Próximo paso
 
-Backend integra la referencia y prepara pruebas y despliegue coordinados;
-no ejecutar migración de producción sin esa preparación operativa.
+Backend confirma su rol/permisos, integra la referencia y realiza readiness/smoke
+tests de su release compatible. No volver a aplicar ni revertir 0003 para ese paso.

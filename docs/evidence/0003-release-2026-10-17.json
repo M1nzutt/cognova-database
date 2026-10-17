@@ -1,0 +1,464 @@
+{
+  "revision": "0003_onboarding_questionnaire",
+  "constraints": [
+    {
+      "conname": "alembic_version_pkc",
+      "contype": "p",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "alembic_version",
+      "definition": "PRIMARY KEY (version_num)"
+    },
+    {
+      "conname": "alembic_version_version_num_not_null",
+      "contype": "n",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "alembic_version",
+      "definition": "NOT NULL version_num"
+    },
+    {
+      "conname": "auth_sessions_created_at_not_null",
+      "contype": "n",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "auth_sessions",
+      "definition": "NOT NULL created_at"
+    },
+    {
+      "conname": "auth_sessions_csrf_token_hash_not_null",
+      "contype": "n",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "auth_sessions",
+      "definition": "NOT NULL csrf_token_hash"
+    },
+    {
+      "conname": "auth_sessions_expires_at_not_null",
+      "contype": "n",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "auth_sessions",
+      "definition": "NOT NULL expires_at"
+    },
+    {
+      "conname": "auth_sessions_id_not_null",
+      "contype": "n",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "auth_sessions",
+      "definition": "NOT NULL id"
+    },
+    {
+      "conname": "auth_sessions_last_used_at_not_null",
+      "contype": "n",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "auth_sessions",
+      "definition": "NOT NULL last_used_at"
+    },
+    {
+      "conname": "auth_sessions_pkey",
+      "contype": "p",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "auth_sessions",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "conname": "auth_sessions_refresh_token_hash_not_null",
+      "contype": "n",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "auth_sessions",
+      "definition": "NOT NULL refresh_token_hash"
+    },
+    {
+      "conname": "auth_sessions_user_id_fkey",
+      "contype": "f",
+      "convalidated": true,
+      "confdeltype": "c",
+      "table_name": "auth_sessions",
+      "definition": "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"
+    },
+    {
+      "conname": "auth_sessions_user_id_not_null",
+      "contype": "n",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "auth_sessions",
+      "definition": "NOT NULL user_id"
+    },
+    {
+      "conname": "ck_questionnaire_revision_positive",
+      "contype": "c",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "questionnaire_responses",
+      "definition": "CHECK ((revision > 0))"
+    },
+    {
+      "conname": "ck_questionnaire_ten_answers",
+      "contype": "c",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "questionnaire_responses",
+      "definition": "CHECK (cognova_valid_questionnaire_answers(answers))"
+    },
+    {
+      "conname": "ck_questionnaire_version_positive",
+      "contype": "c",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "questionnaire_responses",
+      "definition": "CHECK ((questionnaire_version > 0))"
+    },
+    {
+      "conname": "questionnaire_responses_answers_not_null",
+      "contype": "n",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "questionnaire_responses",
+      "definition": "NOT NULL answers"
+    },
+    {
+      "conname": "questionnaire_responses_pkey",
+      "contype": "p",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "questionnaire_responses",
+      "definition": "PRIMARY KEY (user_id, revision)"
+    },
+    {
+      "conname": "questionnaire_responses_questionnaire_version_not_null",
+      "contype": "n",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "questionnaire_responses",
+      "definition": "NOT NULL questionnaire_version"
+    },
+    {
+      "conname": "questionnaire_responses_recorded_at_not_null",
+      "contype": "n",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "questionnaire_responses",
+      "definition": "NOT NULL recorded_at"
+    },
+    {
+      "conname": "questionnaire_responses_revision_not_null",
+      "contype": "n",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "questionnaire_responses",
+      "definition": "NOT NULL revision"
+    },
+    {
+      "conname": "questionnaire_responses_user_id_fkey",
+      "contype": "f",
+      "convalidated": true,
+      "confdeltype": "r",
+      "table_name": "questionnaire_responses",
+      "definition": "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT"
+    },
+    {
+      "conname": "questionnaire_responses_user_id_not_null",
+      "contype": "n",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "questionnaire_responses",
+      "definition": "NOT NULL user_id"
+    },
+    {
+      "conname": "rate_limit_buckets_expires_at_not_null",
+      "contype": "n",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "rate_limit_buckets",
+      "definition": "NOT NULL expires_at"
+    },
+    {
+      "conname": "rate_limit_buckets_hits_not_null",
+      "contype": "n",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "rate_limit_buckets",
+      "definition": "NOT NULL hits"
+    },
+    {
+      "conname": "rate_limit_buckets_key_hash_not_null",
+      "contype": "n",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "rate_limit_buckets",
+      "definition": "NOT NULL key_hash"
+    },
+    {
+      "conname": "rate_limit_buckets_pkey",
+      "contype": "p",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "rate_limit_buckets",
+      "definition": "PRIMARY KEY (key_hash)"
+    },
+    {
+      "conname": "user_academic_goal_legacy_captured_at_not_null",
+      "contype": "n",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "user_academic_goal_legacy",
+      "definition": "NOT NULL captured_at"
+    },
+    {
+      "conname": "user_academic_goal_legacy_pkey",
+      "contype": "p",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "user_academic_goal_legacy",
+      "definition": "PRIMARY KEY (user_id)"
+    },
+    {
+      "conname": "user_academic_goal_legacy_user_id_fkey",
+      "contype": "f",
+      "convalidated": true,
+      "confdeltype": "r",
+      "table_name": "user_academic_goal_legacy",
+      "definition": "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT"
+    },
+    {
+      "conname": "user_academic_goal_legacy_user_id_not_null",
+      "contype": "n",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "user_academic_goal_legacy",
+      "definition": "NOT NULL user_id"
+    },
+    {
+      "conname": "ck_users_email_registration",
+      "contype": "c",
+      "convalidated": false,
+      "confdeltype": " ",
+      "table_name": "users",
+      "definition": "CHECK (((char_length(btrim(email)) > 0) AND (char_length(email) <= 50))) NOT VALID"
+    },
+    {
+      "conname": "ck_users_name_registration",
+      "contype": "c",
+      "convalidated": false,
+      "confdeltype": " ",
+      "table_name": "users",
+      "definition": "CHECK (((char_length(btrim(name)) > 0) AND (char_length(name) <= 30))) NOT VALID"
+    },
+    {
+      "conname": "ck_users_semester_positive",
+      "contype": "c",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "users",
+      "definition": "CHECK ((semester > 0))"
+    },
+    {
+      "conname": "users_created_at_not_null",
+      "contype": "n",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "users",
+      "definition": "NOT NULL created_at"
+    },
+    {
+      "conname": "users_email_not_null",
+      "contype": "n",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "users",
+      "definition": "NOT NULL email"
+    },
+    {
+      "conname": "users_id_not_null",
+      "contype": "n",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "users",
+      "definition": "NOT NULL id"
+    },
+    {
+      "conname": "users_name_not_null",
+      "contype": "n",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "users",
+      "definition": "NOT NULL name"
+    },
+    {
+      "conname": "users_password_hash_not_null",
+      "contype": "n",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "users",
+      "definition": "NOT NULL password_hash"
+    },
+    {
+      "conname": "users_pkey",
+      "contype": "p",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "users",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "conname": "users_updated_at_not_null",
+      "contype": "n",
+      "convalidated": true,
+      "confdeltype": " ",
+      "table_name": "users",
+      "definition": "NOT NULL updated_at"
+    }
+  ],
+  "indexes": [
+    {
+      "tablename": "alembic_version",
+      "indexname": "alembic_version_pkc",
+      "indexdef": "CREATE UNIQUE INDEX alembic_version_pkc ON public.alembic_version USING btree (version_num)"
+    },
+    {
+      "tablename": "auth_sessions",
+      "indexname": "auth_sessions_pkey",
+      "indexdef": "CREATE UNIQUE INDEX auth_sessions_pkey ON public.auth_sessions USING btree (id)"
+    },
+    {
+      "tablename": "auth_sessions",
+      "indexname": "ix_auth_sessions_expires_at",
+      "indexdef": "CREATE INDEX ix_auth_sessions_expires_at ON public.auth_sessions USING btree (expires_at)"
+    },
+    {
+      "tablename": "auth_sessions",
+      "indexname": "ix_auth_sessions_user_id",
+      "indexdef": "CREATE INDEX ix_auth_sessions_user_id ON public.auth_sessions USING btree (user_id)"
+    },
+    {
+      "tablename": "rate_limit_buckets",
+      "indexname": "ix_rate_limit_buckets_expires_at",
+      "indexdef": "CREATE INDEX ix_rate_limit_buckets_expires_at ON public.rate_limit_buckets USING btree (expires_at)"
+    },
+    {
+      "tablename": "questionnaire_responses",
+      "indexname": "questionnaire_responses_pkey",
+      "indexdef": "CREATE UNIQUE INDEX questionnaire_responses_pkey ON public.questionnaire_responses USING btree (user_id, revision)"
+    },
+    {
+      "tablename": "rate_limit_buckets",
+      "indexname": "rate_limit_buckets_pkey",
+      "indexdef": "CREATE UNIQUE INDEX rate_limit_buckets_pkey ON public.rate_limit_buckets USING btree (key_hash)"
+    },
+    {
+      "tablename": "users",
+      "indexname": "uq_users_email_lower",
+      "indexdef": "CREATE UNIQUE INDEX uq_users_email_lower ON public.users USING btree (lower(email))"
+    },
+    {
+      "tablename": "user_academic_goal_legacy",
+      "indexname": "user_academic_goal_legacy_pkey",
+      "indexdef": "CREATE UNIQUE INDEX user_academic_goal_legacy_pkey ON public.user_academic_goal_legacy USING btree (user_id)"
+    },
+    {
+      "tablename": "users",
+      "indexname": "users_pkey",
+      "indexdef": "CREATE UNIQUE INDEX users_pkey ON public.users USING btree (id)"
+    }
+  ],
+  "triggers": [
+    {
+      "relname": "questionnaire_responses",
+      "tgname": "preserve_history",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER preserve_history BEFORE DELETE OR UPDATE ON public.questionnaire_responses FOR EACH ROW EXECUTE FUNCTION cognova_reject_history_change()"
+    },
+    {
+      "relname": "questionnaire_responses",
+      "tgname": "preserve_history_truncate",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER preserve_history_truncate BEFORE TRUNCATE ON public.questionnaire_responses FOR EACH STATEMENT EXECUTE FUNCTION cognova_reject_history_change()"
+    },
+    {
+      "relname": "questionnaire_responses",
+      "tgname": "questionnaire_append",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER questionnaire_append BEFORE INSERT ON public.questionnaire_responses FOR EACH ROW EXECUTE FUNCTION cognova_append_questionnaire()"
+    },
+    {
+      "relname": "user_academic_goal_legacy",
+      "tgname": "preserve_history",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER preserve_history BEFORE INSERT OR DELETE OR UPDATE ON public.user_academic_goal_legacy FOR EACH ROW EXECUTE FUNCTION cognova_reject_history_change()"
+    },
+    {
+      "relname": "user_academic_goal_legacy",
+      "tgname": "preserve_history_truncate",
+      "tgenabled": "O",
+      "definition": "CREATE TRIGGER preserve_history_truncate BEFORE TRUNCATE ON public.user_academic_goal_legacy FOR EACH STATEMENT EXECUTE FUNCTION cognova_reject_history_change()"
+    }
+  ],
+  "migrator_permissions": {
+    "users": {
+      "select": true,
+      "insert": true,
+      "update": true,
+      "delete": true,
+      "truncate": true
+    },
+    "auth_sessions": {
+      "select": true,
+      "insert": true,
+      "update": true,
+      "delete": true,
+      "truncate": true
+    },
+    "rate_limit_buckets": {
+      "select": true,
+      "insert": true,
+      "update": true,
+      "delete": true,
+      "truncate": true
+    },
+    "user_academic_goal_legacy": {
+      "select": true,
+      "insert": true,
+      "update": true,
+      "delete": true,
+      "truncate": true
+    },
+    "questionnaire_responses": {
+      "select": true,
+      "insert": true,
+      "update": true,
+      "delete": true,
+      "truncate": true
+    }
+  },
+  "validator_read_only_checks": "passed",
+  "runtime_identity": "not_confirmed",
+  "revision_before": "0002_auth_sessions",
+  "counts_before": {
+    "users": 1,
+    "auth_sessions": 3,
+    "rate_limit_buckets": 2
+  },
+  "rows_preserved": {
+    "users": true,
+    "auth_sessions": true,
+    "rate_limit_buckets": true
+  },
+  "academic_goal_preserved": true,
+  "tls": true,
+  "preservation_scope": "all rows/columns under exclusive transaction locks",
+  "counts_after_commit": {
+    "users": 1,
+    "auth_sessions": 3,
+    "rate_limit_buckets": 2,
+    "user_academic_goal_legacy": 1,
+    "questionnaire_responses": 0
+  },
+  "committed": true,
+  "post_commit_checks": "passed",
+  "observed_at_utc": "2026-10-17T16:13:38.729312+00:00"
+}

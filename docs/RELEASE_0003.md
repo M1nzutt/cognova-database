@@ -1,7 +1,7 @@
 # Release operativo 0003 — procedimiento y evidencia
 
 Actualización: 2026-10-17. Objetivo actual: aplicación autorizada de 0003.
-Estado: **preflight aprobado; aplicación pendiente**.
+Estado: **0003 aplicada y verificada; permisos del runtime backend pendientes**.
 
 ## Aplicación operativa autorizada
 
@@ -22,6 +22,45 @@ sin downgrade. Después verifica desde otra conexión READ ONLY y guarda evidenc
 sin filas/secretos. El rol runtime no está identificado; no se inventan grants.
 Checks previos: 41 tests offline passed, 51 integration deselected, Ruff/diff pasan;
 runner y revisiones idénticos a 232c43130c0fb3eddd32e1dd3707368ba0d87d4c.
+
+### Resultado definitivo del release
+
+Ejecutado con helper del commit 21b2684; runner/migraciones del SHA fijado intactos.
+Commit productivo confirmado; verificación posterior 2026-10-17T16:13:38.729312Z.
+Segundo inventario READ ONLY a 16:13:59Z confirma exactamente una revisión 0003.
+Antes: 0002_auth_sessions; después: 0003_onboarding_questionnaire.
+
+[Evidencia completa sin datos personales](evidence/0003-release-2026-10-17.json).
+
+- users=1, auth_sessions=3, rate_limit_buckets=2 antes/después. Comparación exacta
+  de todas las columnas/filas en memoria bajo locks exclusivos antes del commit.
+- user_academic_goal_legacy=1: unión completa y comparación IS DISTINCT FROM
+  confirman copia literal y ausencia de filas faltantes/extra; valor original
+  conservado también en users. questionnaire_responses=0, sin respuestas inventadas.
+- degree_program, semester, academic_goal nullable; name/email/password_hash
+  siguen NOT NULL. Checks de registro NOT VALID como diseñado; checks de
+  semestre y cuestionario validados. PK legacy y PK compuesta de respuestas,
+  ambas FK RESTRICT, índices originales y nuevos índices PK presentes.
+- Cinco triggers habilitados: append y protección de modificación/truncate.
+  Definiciones reales registradas en JSON. SELECT del validador con diez respuestas
+  devuelve true y con objeto vacío false; sin inserciones de prueba productivas.
+- Verificaciones críticas dentro de transacción y después del commit aprobadas.
+  No hubo downgrade, recreación ni borrado. La única escritura de datos fue el
+  backfill histórico definido por 0003, además de alembic_version.
+
+Permisos: cognova_user sigue propietario de las seis tablas; SELECT/INSERT/UPDATE/
+DELETE/TRUNCATE efectivos y EXECUTE del validador comprobados. Los triggers
+protegen historia pese a permisos DML amplios; el propietario puede modificar DDL,
+por lo que no equivale a runtime de mínimo privilegio. No se cambiaron grants ni
+se conoce la identidad efectiva del backend: no se certificaron queries con ese
+rol ni rechazo de DDL bajo él. Si usa otro rol, verificar/conceder los permisos
+precisos documentados antes del despliegue, sin asumir herencia de ownership.
+
+Backup cifrado vigente confirmado antes de aplicar; no se repitió ni se ensayó
+restauración aislada. API/auth/ORM/readiness backend no probados ni desplegados.
+Bloqueo de revisión DB resuelto; autorización técnica final del backend depende
+de su rol/permisos y smoke tests. Inicio 22 commits; preparación/evidencia dejan
+24, faltan 477 hasta 501. 41 tests offline y Ruff/formato/diff correctos.
 
 ## Corrección del entorno libpq
 
@@ -400,7 +439,7 @@ no un fallo PostgreSQL ni un riesgo de pérdida de datos observado.
 10. Registrar resultados reales, commits/push y limitaciones. Nunca convertir
     pruebas locales de 2026-10-12 en evidencia de producción.
 
-## Resultados de esta ejecución
+## Resultados históricos del inventario anterior al release
 
 | Control | Resultado |
 | --- | --- |
@@ -415,13 +454,12 @@ no un fallo PostgreSQL ni un riesgo de pérdida de datos observado.
 
 ## DEPENDENCY BACKEND
 
-No hay evidencia de 0003 en producción. El backend que exige exactamente 0003
-permanece bloqueado para su compatibilidad operativa hasta verificar este release.
-No desplegar frontend por asumir que el push del esquema aplicó la migración.
-La lectura productiva ahora confirma expresamente 0002_auth_sessions. No hay tablas
-de 0003 ni evidencia de compatibilidad con el backend nuevo que exige 0003.
-Resolver primero el respaldo verificable y confirmar el rol runtime efectivo;
-después repetir el inventario sobre el mismo fingerprint y ejecutar el release.
+Producción confirma 0003 con preservación y esquema verificados. El bloqueo de
+revisión del backend que espera exactamente 0003 queda resuelto. Backend debe
+seguir fijando 232c43130c0fb3eddd32e1dd3707368ba0d87d4c, confirmar identidad y
+permisos del rol runtime y pasar readiness/smoke tests antes de declarar despliegue
+compatible. No se ha tocado ni desplegado backend/frontend. No volver a migrar ni
+asumir que se validaron permisos de un rol no identificado.
 
 ## Política Git
 
