@@ -1,7 +1,27 @@
 # Release operativo 0003 — procedimiento y evidencia
 
-Actualización: 2026-10-17. Objetivo actual: backup manual pre-0003, sin DDL.
-Estado: **backup cifrado verificado y descargado; 0003 no aplicada**.
+Actualización: 2026-10-17. Objetivo actual: aplicación autorizada de 0003.
+Estado: **preflight aprobado; aplicación pendiente**.
+
+## Aplicación operativa autorizada
+
+Preflight de solo lectura 2026-10-17T16:11:04Z: 0002_auth_sessions exactamente,
+TLS, users=1/auth_sessions=3/rate_limit_buckets=2, cero anomalías name/email.
+Mismo fingerprint/recurso documentado. API confirma artifact 12106388644 vigente.
+Sin repetir backup ni cambiar recursos. El usuario ordena aplicar tras el respaldo
+verificado; no se presenta como realizado un ensayo aislado de restauración.
+
+scripts/release_0003.py utiliza migration_config del runner oficial y
+command.upgrade con conexión inyectada, conforme a MIGRATIONS. Una transacción
+toma advisory lock 1943187001 y bloqueos exclusivos de las tablas existentes,
+con lock_timeout=30s, para excluir escrituras durante comparación y migración.
+Compara todas las filas/columnas de users, sesiones y buckets en memoria; valida
+copia legacy, revisión, nulabilidad, PK/FK/checks/índices/triggers y función de
+validación antes del commit. Ante fallo previo al commit revierte la transacción,
+sin downgrade. Después verifica desde otra conexión READ ONLY y guarda evidencia
+sin filas/secretos. El rol runtime no está identificado; no se inventan grants.
+Checks previos: 41 tests offline passed, 51 integration deselected, Ruff/diff pasan;
+runner y revisiones idénticos a 232c43130c0fb3eddd32e1dd3707368ba0d87d4c.
 
 ## Corrección del entorno libpq
 

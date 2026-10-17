@@ -2,7 +2,19 @@
 
 Fecha de actualización: 2026-10-17. Rama: feat/0003-onboarding-questionnaire.
 
-## Fase actual: backup manual en GitHub Actions
+## Fase actual: aplicación operativa de 0003
+
+Preflight 2026-10-17: producción en 0002, TLS, users=1, auth_sessions=3,
+rate_limit_buckets=2, cero anomalías de registro. Artifact 12106388644 disponible
+y no expirado. Aplicación autorizada explícitamente tras el backup verificado.
+Helper scripts/release_0003.py usa migration_config del runner y la API oficial
+de conexión inyectada: bloqueo compartido/advisory y exclusivo de tablas durante
+snapshot, upgrade y comprobaciones; commit solo si preservación/esquema pasan.
+Comparación de todos los valores en memoria sin persistir PII. Aplicación pendiente.
+41 pruebas offline pasan; Ruff/diff correctos. Runner/migraciones sin diff frente
+al SHA backend. Runtime real no identificado; migrador propietario confirmado.
+
+### Backup previo verificado
 
 Corrección libpq implementada: PGHOST/PGPORT/PGDATABASE/PGUSER/PGPASSWORD se
 derivan de la URI en memoria, decodificando credenciales; PGDATABASE solo contiene
