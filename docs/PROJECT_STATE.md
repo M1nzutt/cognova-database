@@ -7,7 +7,16 @@ Fecha de actualización: 2026-10-17. Rama: feat/0003-onboarding-questionnaire.
 Diagnóstico por operación implementado: las once llamadas del helper reciben
 etiquetas literales. Fallos de salida, timeout o arranque solo muestran la etiqueta,
 sin stdout/stderr nativos ni traceback. 33 pruebas offline pasan, 51 integration
-deselected; Ruff y diff correctos. Nuevos runs pendientes; 0003 no se ejecuta.
+deselected; Ruff y diff correctos. Validate-only 39047262512: success. Run real
+39047309888: failure, `Backup stopped at: psql_revision`. Ambos ejecutaron
+945e123d31906ec2376a23d7f9cdda882b0c5590. Falla el comando inicial que consulta
+alembic_version, antes de pg_dump; no es un rechazo por revisión distinta.
+No se imprimen errores nativos, por lo que no se determina la causa subyacente.
+Upload skipped, cero artifacts, limpieza success. No hay dump/hashes/cifrado que
+verificar. Reintentos detenidos según instrucción; 0003 no se ejecuta.
+Próximo paso: diagnóstico seguro limitado a psql_revision; no repetir inventario
+ni asumir un problema de secrets, red o permisos sin evidencia. Backend bloqueado
+por ausencia de respaldo. Conteo inicial 16; dos commits útiles dejan 18 (483 a 501).
 
 Actualización: el usuario autorizó el artifact cifrado usando el secret
 BACKUP_ENCRYPTION_KEY. El workflow genera/verifica el dump, cifra con GnuPG AES-256,
@@ -32,8 +41,8 @@ artifacts. Ambos ejecutaron f996b936bf834bd10539e14295d983bbbbe3ab48.
 El wrapper oculta errores nativos y no identifica la operación que falló; no se
 pueden certificar pg_dump, pg_restore, cifrado ni hashes. No inferir credenciales
 incorrectas ni fallo de red sin evidencia. Se detuvieron los reintentos.
-Siguiente paso: diagnóstico por etapa con mensajes constantes sin secretos,
-antes de reintentar el backup. No se aplicó 0003. Backend continúa bloqueado.
+El diagnóstico por etapa solicitado después queda registrado arriba.
+No se aplicó 0003. Backend continúa bloqueado.
 Validación local: 30 tests offline passed, 51 integration deselected; Ruff y
 git diff --check correctos. No se ejecutaron tests contra producción.
 Esta continuación parte de 15 commits; cierre documental: 16, faltantes a 501: 485.

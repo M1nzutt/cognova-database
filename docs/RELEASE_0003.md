@@ -1,7 +1,7 @@
 # Release operativo 0003 — procedimiento y evidencia
 
 Actualización: 2026-10-17. Objetivo actual: backup manual pre-0003, sin DDL.
-Estado: **configuración validada; backup real falló sin artifact**.
+Estado: **configuración validada; backup detenido en psql_revision, sin artifact**.
 
 ## Diagnóstico por operación
 
@@ -12,7 +12,30 @@ Salida no cero, timeout y errores de arranque producen únicamente
 traceback. No cambia el orden ni los comandos del backup. Pruebas con errores,
 stdout/stderr y argumentos sintéticos sensibles cubren las once etiquetas en los
 tres modos de fallo. Resultado: 33 tests offline passed, 51 integration deselected;
-Ruff y git diff --check correctos. Validate-only y run real pendientes de ejecutar.
+Ruff y git diff --check correctos.
+
+### Resultado del diagnóstico
+
+- [Validate-only 39047262512](https://github.com/M1nzutt/cognova-database/actions/runs/39047262512):
+  success; job 117438388400. Upload omitido como corresponde a validación sin backup.
+- [Run real 39047309888](https://github.com/M1nzutt/cognova-database/actions/runs/39047309888):
+  failure; job 117438533870. Mensaje exacto: `Backup stopped at: psql_revision`.
+  Upload skipped, limpieza success; API de artifacts devuelve lista vacía.
+- Commit ejecutado en ambos: 945e123d31906ec2376a23d7f9cdda882b0c5590.
+
+La operación es la primera llamada a psql, que intenta
+`SELECT version_num FROM public.alembic_version ORDER BY version_num`.
+Falló la ejecución del comando, antes de validar su resultado y antes de pg_dump;
+no equivale a observar una revisión diferente. La etiqueta cubre salida no cero,
+timeout o error de arranque, sin distinguirlos ni publicar stdout/stderr nativos.
+No se atribuye causa a conexión, credenciales, permisos o SQL sin evidencia.
+
+La corrección realizada mejora únicamente el diagnóstico; no repara ni oculta
+el fallo operativo. Se detienen nuevos intentos como pidió el usuario. No se
+generó dump, no se ejecutaron pg_restore ni cifrado/descifrado y no existen
+tamaños/hashes que certificar. 0003 no se aplicó. El siguiente trabajo debe
+limitarse a diagnosticar psql_revision de forma segura. Inicio 16 commits;
+implementación y evidencia se separan en dos commits: total 18, faltantes 483.
 
 ## Validación y ejecución del 2026-10-17
 
