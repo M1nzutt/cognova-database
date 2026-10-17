@@ -8,7 +8,14 @@ Diagnóstico de conexión preparado con input diagnose_connection: solo SELECT d
 revisión y retorno antes de pg_dump. Clasifica en memoria DNS, TCP/puerto,
 autenticación, TLS, base inexistente u otro psql; nunca muestra errores nativos.
 Incluye indicación constante si psql intenta un socket local. No cambia backup,
-cifrado ni 0003. 40 pruebas offline pasan; ejecución remota pendiente.
+cifrado ni 0003. 40 pruebas offline pasan; Ruff/formato/diff correctos.
+Run 39047675514 completado: `OTHER_PSQL: default_local_socket`. psql intenta un
+socket Unix del runner: el helper entrega la URI completa en PGDATABASE pero no
+establece PGHOST. El destino remoto no fue alcanzado; no demuestra fallo de
+secret, red/Render, autenticación ni TLS. Corrección pendiente en el adaptador
+de conexión: pasar los componentes libpq explícitamente, sin secretos en argv/logs,
+conservando destino y TLS. Se detiene aquí según instrucción. Sin backup, artifacts,
+escrituras ni 0003. Dos commits de diagnóstico/evidencia: 18 iniciales, 20 finales.
 
 Diagnóstico por operación implementado: las once llamadas del helper reciben
 etiquetas literales. Fallos de salida, timeout o arranque solo muestran la etiqueta,
@@ -20,7 +27,7 @@ alembic_version, antes de pg_dump; no es un rechazo por revisión distinta.
 No se imprimen errores nativos, por lo que no se determina la causa subyacente.
 Upload skipped, cero artifacts, limpieza success. No hay dump/hashes/cifrado que
 verificar. Reintentos detenidos según instrucción; 0003 no se ejecuta.
-Próximo paso: diagnóstico seguro limitado a psql_revision; no repetir inventario
+Próximo paso de aquel intento: diagnóstico seguro limitado a psql_revision; no repetir inventario
 ni asumir un problema de secrets, red o permisos sin evidencia. Backend bloqueado
 por ausencia de respaldo. Conteo inicial 16; dos commits útiles dejan 18 (483 a 501).
 

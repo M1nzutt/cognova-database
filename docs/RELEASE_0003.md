@@ -1,7 +1,7 @@
 # Release operativo 0003 — procedimiento y evidencia
 
 Actualización: 2026-10-17. Objetivo actual: backup manual pre-0003, sin DDL.
-Estado: **configuración validada; backup detenido en psql_revision, sin artifact**.
+Estado: **causa identificada: psql intenta socket local; adaptación de conexión pendiente**.
 
 ## Diagnóstico exclusivo de conexión
 
@@ -13,7 +13,31 @@ subcausa sin ruta. Timeout del proceso/arranque desconocido se conserva como otr
 psql, sin inferir fallo de red. Un resultado SUCCESS significa que la consulta
 pasó, no que se ejecutó backup. Siempre retorna antes de pg_dump/cifrado/upload.
 40 pruebas offline pasan; siete casos cubren clasificación sin filtraciones y
-garantizan una sola consulta SELECT sin generar archivos. Run pendiente.
+garantizan una sola consulta SELECT sin generar archivos. Ruff/formato/diff pasan.
+
+### Evidencia y corrección necesaria
+
+[Run 39047675514](https://github.com/M1nzutt/cognova-database/actions/runs/39047675514),
+job 117439582405, commit c6499729b53d578c6df983feddcd41111e3ba094:
+diagnóstico completed/success; resultado `OTHER_PSQL: default_local_socket`.
+Success indica que el diagnóstico terminó, no que PostgreSQL conectó.
+Upload skipped, artifacts vacíos y limpieza success.
+
+psql reportó un intento de conexión por socket local del runner. El helper limpia
+las variables PG*, coloca la URI completa en PGDATABASE y no define PGHOST;
+esa forma de invocar psql no seleccionó el host remoto. El problema observado es
+la entrega de parámetros del helper, no evidencia de secret incorrecto ni de
+bloqueo de red/Render. Autenticación/TLS/base remotos no llegaron a comprobarse.
+
+Corrección necesaria, todavía no aplicada por la instrucción de detenerse tras
+identificar: traducir la URI validada a parámetros libpq explícitos (host, puerto,
+base, usuario y credencial), conservando opciones TLS y destino; nunca introducir
+URL o credenciales en argumentos/logs. PGDATABASE debe representar la base y
+PGHOST el destino. Ver [variables libpq oficiales](https://www.postgresql.org/docs/18/libpq-envars.html).
+Después validar solo conexión antes de considerar otro backup. No modificar el
+secret ni la red basándose en este fallo. No se tocaron pg_dump, cifrado o 0003,
+ni se ejecutó backup, inventario o escrituras. Conteo: 18 iniciales, dos commits
+de implementación/evidencia, 20 finales; faltan 481 hasta 501.
 
 ## Diagnóstico por operación
 
