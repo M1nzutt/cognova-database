@@ -55,6 +55,11 @@ def fake_commands(monkeypatch, namespace, failure=None):
         binary = Path(args[0]).name
         if binary != "gpg":
             assert kwargs["env"]["PGSSLMODE"] == "require"
+            assert kwargs["env"]["PGDATABASE"] == "cognova"
+            assert kwargs["env"]["PGHOST"].startswith("dpg-db2iojc9v7es7387i2ig-a.")
+            assert kwargs["env"]["PGPORT"] == "5432"
+            assert kwargs["env"]["PGUSER"] == "test"
+            assert kwargs["env"]["PGPASSWORD"] == "synthetic-password"
         else:
             assert not any(k.startswith("PG") for k in kwargs["env"])
         if failure == "dump" and binary == "pg_dump" and "--version" not in args:
@@ -159,6 +164,40 @@ def test_preflight_only_never_connects_or_creates_artifact(
     assert not calls
     assert not (tmp_path / "outputs").exists()
     assert not (tmp_path / "cognova-pre-0003").exists()
+
+
+def test_libpq_parameters_decode_credentials_and_preserve_options(
+    backup_code, monkeypatch, capsys
+):
+    monkeypatch.setenv(
+        "DATABASE_URL",
+        (
+            "postgresql://test%40user:p%40ss%3Aword@"
+            "dpg-db2iojc9v7es7387i2ig-a.oregon-postgres.render.com:5433/cognova"
+            "?sslmode=verify-full&channel_binding=require&connect_timeout=12"
+        ),
+    )
+    monkeypatch.setenv("PGHOST", "unwanted-host")
+    monkeypatch.setenv("PGSERVICE", "unwanted-service")
+    monkeypatch.setenv("DIAGNOSE_CONNECTION", "true")
+
+    def execute(args, **kwargs):
+        env = kwargs["env"]
+        assert env["PGDATABASE"] == "cognova"
+        assert env["PGPORT"] == "5433"
+        assert env["PGUSER"] == "test@user"
+        assert env["PGPASSWORD"] == "p@ss:word"
+        assert env["PGSSLMODE"] == "verify-full"
+        assert env["PGCHANNELBINDING"] == "require"
+        assert env["PGCONNECT_TIMEOUT"] == "12"
+        assert "PGSERVICE" not in env
+        assert "DATABASE_URL" not in env
+        assert not any("p@ss:word" in arg or "postgresql://" in arg for arg in args)
+        return SimpleNamespace(returncode=0, stdout=b"0002_auth_sessions", stderr=b"")
+
+    monkeypatch.setattr(backup_code["subprocess"], "run", execute)
+    backup_code["backup"]()
+    assert capsys.readouterr().out == "Connection diagnostic: SUCCESS\n"
 
 
 @pytest.mark.parametrize("failure", ["exit", "timeout", "spawn"])

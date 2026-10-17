@@ -1,7 +1,18 @@
 # Release operativo 0003 — procedimiento y evidencia
 
 Actualización: 2026-10-17. Objetivo actual: backup manual pre-0003, sin DDL.
-Estado: **causa identificada: psql intenta socket local; adaptación de conexión pendiente**.
+Estado: **adaptación libpq implementada; validación remota pendiente**.
+
+## Corrección del entorno libpq
+
+La URI validada se separa en PGHOST, PGPORT (5432 por defecto), PGDATABASE,
+PGUSER y PGPASSWORD, decodificando componentes escapados. No viaja en argumentos
+ni logs; PGDATABASE deja de contener la URL. Conserva read-only, timeouts y TLS
+require por defecto; mantiene verify-ca/verify-full y opciones admitidas explícitas.
+Se eliminan variables PG heredadas antes de construir el entorno y GnuPG no
+recibe ninguna. Validate-only también construye estos parámetros sin conectar.
+41 tests offline passed, 51 integration deselected; Ruff y diff correctos.
+Ejecuciones remotas pendientes. No cambia comandos de backup/cifrado ni 0003.
 
 ## Diagnóstico exclusivo de conexión
 

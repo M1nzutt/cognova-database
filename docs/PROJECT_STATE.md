@@ -4,6 +4,12 @@ Fecha de actualización: 2026-10-17. Rama: feat/0003-onboarding-questionnaire.
 
 ## Fase actual: backup manual en GitHub Actions
 
+Corrección libpq implementada: PGHOST/PGPORT/PGDATABASE/PGUSER/PGPASSWORD se
+derivan de la URI en memoria, decodificando credenciales; PGDATABASE solo contiene
+el nombre de base. TLS require por defecto (preserva opciones más estrictas),
+timeouts y read-only conservados. 41 pruebas offline pasan; Ruff/diff correctos.
+Validate-only y backup real pendientes de esta versión; 0003 no se aplica.
+
 Diagnóstico de conexión preparado con input diagnose_connection: solo SELECT de
 revisión y retorno antes de pg_dump. Clasifica en memoria DNS, TCP/puerto,
 autenticación, TLS, base inexistente u otro psql; nunca muestra errores nativos.
