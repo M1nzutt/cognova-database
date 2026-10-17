@@ -4,6 +4,11 @@ Fecha de actualización: 2026-10-17. Rama: feat/0003-onboarding-questionnaire.
 
 ## Fase actual: backup manual en GitHub Actions
 
+Diagnóstico por operación implementado: las once llamadas del helper reciben
+etiquetas literales. Fallos de salida, timeout o arranque solo muestran la etiqueta,
+sin stdout/stderr nativos ni traceback. 33 pruebas offline pasan, 51 integration
+deselected; Ruff y diff correctos. Nuevos runs pendientes; 0003 no se ejecuta.
+
 Actualización: el usuario autorizó el artifact cifrado usando el secret
 BACKUP_ENCRYPTION_KEY. El workflow genera/verifica el dump, cifra con GnuPG AES-256,
 verifica descifrado por SHA-256 y publica únicamente .dump.gpg; nunca dump plano.

@@ -158,3 +158,50 @@ def test_preflight_only_never_connects_or_creates_artifact(
     assert not calls
     assert not (tmp_path / "outputs").exists()
     assert not (tmp_path / "cognova-pre-0003").exists()
+
+
+@pytest.mark.parametrize("failure", ["exit", "timeout", "spawn"])
+def test_operation_errors_print_only_constant_label(
+    backup_code, monkeypatch, capsys, failure
+):
+    source = WORKFLOW.read_text(encoding="utf-8")
+    script = source.split("python3 - <<'PY'\n", 1)[1].split("          PY\n", 1)[0]
+    tree = ast.parse("\n".join(line[10:] for line in script.splitlines()))
+    calls = [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "run"
+    ]
+    assert len(calls) == 11
+    labels = []
+    for call in calls:
+        assert isinstance(call.args[0], ast.Constant)
+        labels.append(call.args[0].value)
+    assert len(set(labels)) == len(labels)
+    native = "native-error synthetic-password " + KEY
+
+    def fail(args, **kwargs):
+        if failure == "timeout":
+            raise backup_code["subprocess"].TimeoutExpired(
+                args, 600, output=native.encode(), stderr=native.encode()
+            )
+        if failure == "spawn":
+            raise OSError(native)
+        return SimpleNamespace(
+            returncode=1, stdout=native.encode(), stderr=native.encode()
+        )
+
+    monkeypatch.setattr(backup_code["subprocess"], "run", fail)
+    entry = ast.Module(body=[tree.body[-1]], type_ignores=[])
+    for label in labels:
+        backup_code["backup"] = lambda label=label: backup_code["run"](
+            label, [native], {}, KEY.encode()
+        )
+        with pytest.raises(SystemExit) as stopped:
+            exec(compile(entry, str(WORKFLOW), "exec"), backup_code)
+        assert stopped.value.code == 1
+        captured = capsys.readouterr()
+        assert captured.out == f"::error::Backup stopped at: {label}\n"
+        assert captured.err == ""

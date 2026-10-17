@@ -3,6 +3,17 @@
 Actualización: 2026-10-17. Objetivo actual: backup manual pre-0003, sin DDL.
 Estado: **configuración validada; backup real falló sin artifact**.
 
+## Diagnóstico por operación
+
+El helper ahora recibe etiquetas literales para las once operaciones: consultas
+de revisión/TLS, versiones, dump, inspección/decodificación y cifrado/descifrado.
+Salida no cero, timeout y errores de arranque producen únicamente
+`Backup stopped at: <etiqueta>`, sin imprimir argumentos, errores nativos ni
+traceback. No cambia el orden ni los comandos del backup. Pruebas con errores,
+stdout/stderr y argumentos sintéticos sensibles cubren las once etiquetas en los
+tres modos de fallo. Resultado: 33 tests offline passed, 51 integration deselected;
+Ruff y git diff --check correctos. Validate-only y run real pendientes de ejecutar.
+
 ## Validación y ejecución del 2026-10-17
 
 El usuario confirmó que actualizó BACKUP_ENCRYPTION_KEY y guardó la clave de
