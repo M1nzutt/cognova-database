@@ -1,6 +1,39 @@
 # Estado de Cognova Database
 
-## Release Materias en preparación — 2026-10-19
+## Release Materias aplicado — 2026-10-19
+
+**Producción exactamente en 0004_subjects**, commit de transacción verificado
+17:34:03Z y reconfirmado READ ONLY 17:34:32Z. Antes: exactamente 0003.
+[Evidencia del release](evidence/0004-release-2026-10-19.json).
+users=4, auth_sessions=9, rate_limit_buckets=5, legacy=1 y respuestas=5:
+preservación de todas las filas/columnas bajo locks exclusivos, más estructura y
+cinco triggers anteriores idénticos. subjects vacía, PK/FK RESTRICT, seis checks,
+unicidad por usuario/nombre y usuario/slot, índice usuario/estado válidos.
+Slots 1–5 limitan activas concurrentes; archivadas usan NULL y no consumen cupo.
+No se añadieron triggers a subjects ni se cambiaron revisiones 0001–0003.
+
+cognova_runtime tiene SELECT/INSERT/UPDATE en subjects y USAGE/SELECT de su
+secuencia; DELETE/TRUNCATE, DDL persistente y escrituras de historia/alembic_version
+rechazados. SELECT real y autorización INSERT/UPDATE mediante EXPLAIN verificados
+en producción; DML real/capacidad/concurrencia probados en PostgreSQL desechable.
+Membresía migrador→runtime reconfirmada tras commit: ADMIN=true, INHERIT=false,
+SET=false, grantor postgres; ninguna habilitación temporal persistió.
+TEMP heredado se conserva: no se certifica ausencia de DDL temporal.
+Backend Materias puede desplegarse desde el punto de vista de esquema/grants,
+usando su secreto cognova_runtime existente y readiness 0004. No se despliega
+Backend desde este repositorio ni se prueba aquí su secreto/login o API.
+
+Post-release: 131 pruebas pasan, 0 omitidas (42 offline, 89 PostgreSQL), JUnit
+artifacts/test-results-release-0004.xml validado sin omisiones. Ruff lint/formato,
+pip check y git diff --check correctos; revisión básica sin secretos nuevos.
+Cero esquemas test_*, tablas public o rol runtime de ensayo residuales en la base
+local; instancia detenida. No se ejecutó DML de prueba contra producción.
+
+Entrega: 96929e2 backup, 3d08f06 helper/preflight y este cierre documental;
+3 commits granulares nuevos, 30 totales, sin squash. El SHA fijado por Backend
+sigue siendo c3394c38c55a8cd466d10f02fe7c80d7c1e1980f.
+
+### Preparación y evidencia previa al commit productivo
 
 Autorizado por el usuario para el Backend final
 `06f6c4b1c94ddf6da4c78b518b2f7ccc0d2ad63c`, que fija database

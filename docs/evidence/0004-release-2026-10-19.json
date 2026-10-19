@@ -1,0 +1,321 @@
+{
+  "revision": "0004_subjects",
+  "subjects": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": "nextval('\"public\".subjects_id_seq'::regclass)",
+        "autoincrement": true,
+        "comment": null
+      },
+      {
+        "name": "user_id",
+        "type": "INTEGER",
+        "nullable": false,
+        "default": null,
+        "autoincrement": false,
+        "comment": null
+      },
+      {
+        "name": "name",
+        "type": "TEXT",
+        "nullable": false,
+        "default": null,
+        "autoincrement": false,
+        "comment": null
+      },
+      {
+        "name": "status",
+        "type": "TEXT",
+        "nullable": false,
+        "default": null,
+        "autoincrement": false,
+        "comment": null
+      },
+      {
+        "name": "difficulty",
+        "type": "TEXT",
+        "nullable": false,
+        "default": null,
+        "autoincrement": false,
+        "comment": null
+      },
+      {
+        "name": "color_base",
+        "type": "TEXT",
+        "nullable": false,
+        "default": null,
+        "autoincrement": false,
+        "comment": null
+      },
+      {
+        "name": "color_shade",
+        "type": "SMALLINT",
+        "nullable": false,
+        "default": null,
+        "autoincrement": false,
+        "comment": null
+      },
+      {
+        "name": "active_slot",
+        "type": "SMALLINT",
+        "nullable": true,
+        "default": null,
+        "autoincrement": false,
+        "comment": null
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMP",
+        "nullable": false,
+        "default": "now()",
+        "autoincrement": false,
+        "comment": null
+      },
+      {
+        "name": "updated_at",
+        "type": "TIMESTAMP",
+        "nullable": false,
+        "default": "now()",
+        "autoincrement": false,
+        "comment": null
+      }
+    ],
+    "checks": [
+      {
+        "name": "ck_subjects_active_slot",
+        "sqltext": "status = 'active'::text AND active_slot IS NOT NULL AND active_slot >= 1 AND active_slot <= 5 OR status = 'archived'::text AND active_slot IS NULL",
+        "comment": null
+      },
+      {
+        "name": "ck_subjects_color_base",
+        "sqltext": "color_base ~ '^[a-z][a-z0-9_-]{0,31}$'::text",
+        "comment": null
+      },
+      {
+        "name": "ck_subjects_color_shade",
+        "sqltext": "color_shade >= 0 AND color_shade <= 1000",
+        "comment": null
+      },
+      {
+        "name": "ck_subjects_difficulty",
+        "sqltext": "difficulty = ANY (ARRAY['easy'::text, 'medium'::text, 'hard'::text])",
+        "comment": null
+      },
+      {
+        "name": "ck_subjects_name",
+        "sqltext": "char_length(name) >= 1 AND char_length(name) <= 20 AND name = btrim(name) AND name !~ '^[[:space:]]*$'::text",
+        "comment": null
+      },
+      {
+        "name": "ck_subjects_status",
+        "sqltext": "status = ANY (ARRAY['active'::text, 'archived'::text])",
+        "comment": null
+      }
+    ],
+    "indexes": [
+      {
+        "name": "ix_subjects_user_status",
+        "unique": false,
+        "column_names": [
+          "user_id",
+          "status"
+        ],
+        "dialect_options": {
+          "postgresql_include": []
+        }
+      },
+      {
+        "name": "uq_subjects_active_slot",
+        "unique": true,
+        "column_names": [
+          "user_id",
+          "active_slot"
+        ],
+        "duplicates_constraint": "uq_subjects_active_slot",
+        "dialect_options": {
+          "postgresql_include": []
+        }
+      },
+      {
+        "name": "uq_subjects_user_name_lower",
+        "unique": true,
+        "column_names": [
+          "user_id",
+          null
+        ],
+        "expressions": [
+          "user_id",
+          "lower(name)"
+        ],
+        "dialect_options": {
+          "postgresql_include": []
+        }
+      }
+    ],
+    "pk": {
+      "constrained_columns": [
+        "id"
+      ],
+      "name": "subjects_pkey",
+      "comment": null,
+      "dialect_options": {
+        "postgresql_include": []
+      }
+    },
+    "fk": [
+      {
+        "name": "fk_subjects_user_id_users",
+        "constrained_columns": [
+          "user_id"
+        ],
+        "referred_schema": "public",
+        "referred_table": "users",
+        "referred_columns": [
+          "id"
+        ],
+        "options": {
+          "ondelete": "RESTRICT"
+        },
+        "comment": null
+      }
+    ],
+    "unique": [
+      {
+        "column_names": [
+          "user_id",
+          "active_slot"
+        ],
+        "name": "uq_subjects_active_slot",
+        "comment": null,
+        "dialect_options": {
+          "postgresql_include": [],
+          "postgresql_nulls_not_distinct": false
+        }
+      }
+    ]
+  },
+  "triggers": [
+    {
+      "relname": "questionnaire_responses",
+      "tgname": "preserve_history",
+      "tgenabled": "O",
+      "def": "CREATE TRIGGER preserve_history BEFORE DELETE OR UPDATE ON public.questionnaire_responses FOR EACH ROW EXECUTE FUNCTION cognova_reject_history_change()"
+    },
+    {
+      "relname": "questionnaire_responses",
+      "tgname": "preserve_history_truncate",
+      "tgenabled": "O",
+      "def": "CREATE TRIGGER preserve_history_truncate BEFORE TRUNCATE ON public.questionnaire_responses FOR EACH STATEMENT EXECUTE FUNCTION cognova_reject_history_change()"
+    },
+    {
+      "relname": "questionnaire_responses",
+      "tgname": "questionnaire_append",
+      "tgenabled": "O",
+      "def": "CREATE TRIGGER questionnaire_append BEFORE INSERT ON public.questionnaire_responses FOR EACH ROW EXECUTE FUNCTION cognova_append_questionnaire()"
+    },
+    {
+      "relname": "user_academic_goal_legacy",
+      "tgname": "preserve_history",
+      "tgenabled": "O",
+      "def": "CREATE TRIGGER preserve_history BEFORE INSERT OR DELETE OR UPDATE ON public.user_academic_goal_legacy FOR EACH ROW EXECUTE FUNCTION cognova_reject_history_change()"
+    },
+    {
+      "relname": "user_academic_goal_legacy",
+      "tgname": "preserve_history_truncate",
+      "tgenabled": "O",
+      "def": "CREATE TRIGGER preserve_history_truncate BEFORE TRUNCATE ON public.user_academic_goal_legacy FOR EACH STATEMENT EXECUTE FUNCTION cognova_reject_history_change()"
+    }
+  ],
+  "runtime": {
+    "role": {
+      "rolname": "cognova_runtime",
+      "rolsuper": false,
+      "rolcreaterole": false,
+      "rolcreatedb": false,
+      "rolcanlogin": true,
+      "rolreplication": false,
+      "rolbypassrls": false
+    },
+    "memberships": [],
+    "owned_objects": [],
+    "schema_create": [],
+    "temporary_ddl_existing": true,
+    "table_privileges": {
+      "alembic_version": {
+        "SELECT": true,
+        "INSERT": false,
+        "UPDATE": false,
+        "DELETE": false,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      },
+      "user_academic_goal_legacy": {
+        "SELECT": true,
+        "INSERT": false,
+        "UPDATE": false,
+        "DELETE": false,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      },
+      "questionnaire_responses": {
+        "SELECT": true,
+        "INSERT": true,
+        "UPDATE": false,
+        "DELETE": false,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      },
+      "subjects": {
+        "SELECT": true,
+        "INSERT": true,
+        "UPDATE": true,
+        "DELETE": false,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      }
+    }
+  },
+  "runtime_probes": {
+    "select": "passed",
+    "insert_update": "EXPLAIN authorized, no writes",
+    "denied_statements": 9,
+    "ddl_history_delete": "42501"
+  },
+  "revision_before": "0003_onboarding_questionnaire",
+  "rows_preserved": {
+    "users": true,
+    "auth_sessions": true,
+    "rate_limit_buckets": true,
+    "user_academic_goal_legacy": true,
+    "questionnaire_responses": true
+  },
+  "counts_before": {
+    "users": 4,
+    "auth_sessions": 9,
+    "rate_limit_buckets": 5,
+    "user_academic_goal_legacy": 1,
+    "questionnaire_responses": 5
+  },
+  "old_schema_and_triggers_preserved": true,
+  "preservation_scope": "all rows/columns under exclusive locks",
+  "counts_after_commit": {
+    "users": 4,
+    "auth_sessions": 9,
+    "rate_limit_buckets": 5,
+    "user_academic_goal_legacy": 1,
+    "questionnaire_responses": 5,
+    "subjects": 0
+  },
+  "committed": true,
+  "post_commit_checks": "passed",
+  "tls": true,
+  "backup_run": "39294218069",
+  "observed_at_utc": "2026-10-19T17:34:03.142708+00:00"
+}

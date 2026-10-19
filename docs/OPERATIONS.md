@@ -2,6 +2,17 @@
 
 ## Release autorizado de 0004 — 2026-10-19
 
+**Aplicado y confirmado** 2026-10-19 17:34:03Z; reconfirmación READ ONLY
+17:34:32Z. [Evidencia](evidence/0004-release-2026-10-19.json).
+Revisión anterior 0003, actual 0004; datos, estructura y triggers previos intactos.
+Backup fresco run 39294218069 / artifact 12206263488, recuperado en ensayo
+aislado; [manifest y hashes](evidence/0004-backup-2026-10-19.json).
+Expira 2026-10-26T17:27:44Z. Clave custodiada por el usuario; no rotada.
+Grants subjects/secuencia ya aplicados a cognova_runtime, sin DELETE/TRUNCATE;
+no repetir el helper de aplicación (exige 0003). Para operación posterior usar
+inventario READ ONLY y readiness 0004. El siguiente procedimiento se conserva
+como trazabilidad/reproducción controlada, no como instrucción de reaplicación.
+
 El usuario autoriza aplicar 0004 y habilitar cognova_runtime para Backend Materias
 06f6c4b1c94ddf6da4c78b518b2f7ccc0d2ad63c (database fijado c3394c3).
 El workflow registrado backup-pre-0003.yml admite subjects_release=true para este
@@ -36,10 +47,10 @@ No se utiliza ni rota la contraseña runtime. TEMP heredado existente permite
 objetos temporales propios; no hay DDL sobre objetos persistentes. Revocar TEMP
 de PUBLIC afectaría otros roles y queda fuera de los grants de esta entrega.
 
-## Preparación de 0004 Materias
+## Contrato operativo de 0004 Materias
 
-Contrato: [DATA_MODEL](DATA_MODEL.md). Esta entrega implementa y prueba la migración;
-no autoriza por sí sola aplicar DDL productivo. Antes del release, respaldo vigente,
+Contrato: [DATA_MODEL](DATA_MODEL.md). El código por sí solo no autoriza aplicar
+DDL productivo; el release autorizado y aplicado figura arriba. Antes de releases, respaldo vigente,
 inventario y Backend compatible con 0004 explícitamente admitida en readiness.
 Runtime: SELECT/INSERT/UPDATE en subjects y USAGE/SELECT en subjects_id_seq, además
 de SELECT/UPDATE de users para el bloqueo de asignación. Sin DELETE/TRUNCATE de
@@ -52,7 +63,7 @@ El release operativo de 0003 está autorizado desde 2026-10-13. Su ejecución re
 y bloqueos se registran en [RELEASE_0003](RELEASE_0003.md). No crear recursos nuevos,
 datos demo ni una base sustituta. No asumir que autorización equivale a aplicación.
 
-## Roles y grants pendientes de aplicar
+## Contrato de roles y grants
 
 El rol migrador debe poseer el esquema/tablas y poder ejecutar DDL. El rol runtime
 del backend requiere CONNECT a la base, USAGE del esquema, DML necesario sobre
