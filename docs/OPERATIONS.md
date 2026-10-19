@@ -14,6 +14,28 @@ del artifact se conserva; identificar alcance por el manifest y archivo interior
 Sin subjects_release conserva el procedimiento pre-0003. Verificar éxito, fecha,
 SHA del ciphertext descargado y restauración antes de autorizar el helper DDL.
 
+Aplicación autorizada con DATABASE_URL/ENVIRONMENT inyectados explícitamente:
+`python scripts/release_0004.py --apply --backup-evidence
+docs/evidence/0004-backup-2026-10-19.json --evidence
+docs/evidence/0004-release-2026-10-19.json` (una línea).
+Requiere backup verificado menor de 24 horas y revisión exacta 0003 bajo locks.
+La API migration_config/conexión inyectada aplica exactamente 0004 y concede
+SELECT/INSERT/UPDATE en subjects y USAGE/SELECT en subjects_id_seq. Verifica
+preservación de todas las filas/columnas, estructura y triggers anteriores antes
+del commit. Cualquier fallo aborta toda la transacción. Tras commit repite los
+checks en READ ONLY; si reporta committed=true con fallo posterior, investigar
+sin repetir --apply ni ejecutar downgrade.
+
+El migrador tiene ADMIN, INHERIT=false y SET=false sobre cognova_runtime.
+El helper habilita SET solo dentro de un savepoint para comprobar current_user,
+SELECT y autorización INSERT/UPDATE mediante EXPLAIN sin ANALYZE; ensaya rechazo
+42501 de DELETE, ALTER/CREATE y modificación de historia/alembic_version.
+Rollback del savepoint revierte toda habilitación de membresía, sin cambio
+permanente. DML real y reglas de capacidad se prueban solo en PostgreSQL local.
+No se utiliza ni rota la contraseña runtime. TEMP heredado existente permite
+objetos temporales propios; no hay DDL sobre objetos persistentes. Revocar TEMP
+de PUBLIC afectaría otros roles y queda fuera de los grants de esta entrega.
+
 ## Preparación de 0004 Materias
 
 Contrato: [DATA_MODEL](DATA_MODEL.md). Esta entrega implementa y prueba la migración;

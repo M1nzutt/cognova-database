@@ -15,6 +15,22 @@ exige 0003, incluye las seis tablas y restaura en PostgreSQL 18 aislado antes de
 publicar ciphertext. 42 pruebas offline pasan; producción todavía no modificada.
 DELETE/TRUNCATE de subjects siguen prohibidos por DATA_MODEL/OPERATIONS.
 
+Backup fresco verificado: run 39294218069, artifact 12206263488, 17:27:44Z;
+restauración aislada PostgreSQL 18 exitosa, conteos iguales al preflight,
+roundtrip de cifrado y SHA-256 descargado correctos. Evidencia:
+[backup](evidence/0004-backup-2026-10-19.json) y
+[preflight](evidence/0004-preflight-2026-10-19.json).
+Helper scripts/release_0004.py preparado: runner oficial, locks compartidos,
+comparación de las cinco tablas previas y estructura/triggers, grants mínimos y
+pruebas de autorización bajo SET ROLE con rollback de la habilitación temporal.
+131 pruebas locales pasan, 0 omitidas (42 offline, 89 PostgreSQL), incluyendo
+ensayo completo del helper con permisos y DML real en base desechable.
+Runtime tiene TEMP heredado preexistente; no CREATE en esquemas ni CREATE de
+base/esquemas, ownership, privilegios elevados o membresías salientes.
+La certificación sin DDL se refiere a objetos persistentes; TEMP no permite
+alterar el esquema productivo. No se revoca TEMP de PUBLIC, fuera de este alcance.
+Antes de ejecutar: 0004 todavía no aplicada; el siguiente commit registra el helper.
+
 ## Materias — 2026-10-18
 
 Implementada 0004_subjects después de 0003, sin modificar 0001–0003. Contrato:
