@@ -6,7 +6,16 @@ Implementada 0004_subjects después de 0003, sin modificar 0001–0003. Contrato
 [DATA_MODEL](DATA_MODEL.md). Cinco posiciones activas únicas por usuario garantizan
 el límite concurrente; archivadas no consumen posiciones. Downgrade rechaza toda
 tabla con datos. DATA_MODEL no existía al iniciar esta tarea y se crea aquí.
-Primera validación: 41 pruebas offline pasan; integración 0004 pendiente.
+Validación local: 129 pruebas pasan, 0 omitidas (41 offline y 88 PostgreSQL;
+37 casos nuevos de Materias). PostgreSQL 17.11 local desechable en 127.0.0.1:55433.
+Upgrade desde vacío y 0003 con comparación de filas de las cinco tablas previas;
+repetición, constraints/FK/índices, Unicode, archivo/reactivación, límite concurrente
+en READ COMMITTED y REPEATABLE READ, inserción masiva atómica, rollback DDL,
+downgrade vacío y rechazo con activas, archivadas o dependencias futuras.
+JUnit local: artifacts/test-results-0004.xml; validador sin omisiones, Ruff lint/
+formato, pip check, SQL offline, blobs históricos y diff verificados. Primer intento
+de integración falló por usar rol postgres inexistente; repetición con el rol local
+cognova_test comprobado. No se cargó .env ni se conectó a producción.
 Inicio de esta tarea: 24 commits. Entrega/push y SHA Backend pendientes de cierre.
 No se aplicó 0004 a producción; la evidencia operativa previa sigue siendo 0003.
 Las secciones siguientes son historial de la entrega 0003, no el head de código.
