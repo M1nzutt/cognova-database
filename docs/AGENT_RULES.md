@@ -7,6 +7,9 @@
   onboarding y percepción/cuestionario autorizados por el usuario.
 - 0003 autoriza academic_goal nullable con copia histórica inmutable; leer
   SCHEMA_0003. No eliminar valores ni fabricar respuestas faltantes.
+- La fase Materias autorizada el 2026-10-18 agrega 0004_subjects; leer DATA_MODEL.
+  Preservar 0001–0003, probar en PostgreSQL desechable y no implementar Backend,
+  frontend, IA ni actividades. Desarrollo y push no implican despliegue productivo.
 - La fase operativa autorizada el 2026-10-13 permite inventario, respaldo,
   aplicación de 0003 y verificación en el PostgreSQL Render existente. Identificar
   el recurso y verificar respaldo antes de DDL; no recrear recursos ni borrar datos.

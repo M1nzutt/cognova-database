@@ -16,7 +16,17 @@ JUnit local: artifacts/test-results-0004.xml; validador sin omisiones, Ruff lint
 formato, pip check, SQL offline, blobs históricos y diff verificados. Primer intento
 de integración falló por usar rol postgres inexistente; repetición con el rol local
 cognova_test comprobado. No se cargó .env ni se conectó a producción.
-Inicio de esta tarea: 24 commits. Entrega/push y SHA Backend pendientes de cierre.
+Entrega de código y pruebas publicada en origin/feat/0003-onboarding-questionnaire.
+**SHA que Backend debe fijar para Materias: c3394c38c55a8cd466d10f02fe7c80d7c1e1980f.**
+Incluye 0004, runner y todas las pruebas; el cierre posterior es solo documental.
+Inicio: 24 commits; tres commits granulares de esta entrega dejan 27, sin squash.
+Implementación: 63fa96e; pruebas: c3394c3; cierre: commit que incorpora esta sección.
+Instancia local detenida y cero esquemas test_* residuales comprobados.
+CI remota no certificada; los resultados anteriores son de ejecución local.
+Backend debe integrar el contrato de slots/ownership/paleta, fijar este SHA,
+admitir 0004 en readiness y ejecutar sus pruebas ORM/API antes del release.
+No consumir head/latest ni interpretar la referencia histórica 232c431 como
+la entrega de Materias. No se retiran migraciones del Backend desde este repo.
 No se aplicó 0004 a producción; la evidencia operativa previa sigue siendo 0003.
 Las secciones siguientes son historial de la entrega 0003, no el head de código.
 
