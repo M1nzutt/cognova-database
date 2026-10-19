@@ -1,5 +1,17 @@
 # Operación futura, permisos y recuperación
 
+## Preparación de 0004 Materias
+
+Contrato: [DATA_MODEL](DATA_MODEL.md). Esta entrega implementa y prueba la migración;
+no autoriza por sí sola aplicar DDL productivo. Antes del release, respaldo vigente,
+inventario y Backend compatible con 0004 explícitamente admitida en readiness.
+Runtime: SELECT/INSERT/UPDATE en subjects y USAGE/SELECT en subjects_id_seq, además
+de SELECT/UPDATE de users para el bloqueo de asignación. Sin DELETE/TRUNCATE de
+subjects, ownership ni DDL. El flujo destructivo futuro requiere política y grants
+revisados aparte. No se aplican grants a roles desconocidos en la migración.
+Downgrade vía conexión inyectada hacia 0003 solo con subjects vacía; el bloqueo
+exclusivo evita una carrera con escrituras. Nunca vaciarla para facilitar rollback.
+
 El release operativo de 0003 está autorizado desde 2026-10-13. Su ejecución real
 y bloqueos se registran en [RELEASE_0003](RELEASE_0003.md). No crear recursos nuevos,
 datos demo ni una base sustituta. No asumir que autorización equivale a aplicación.

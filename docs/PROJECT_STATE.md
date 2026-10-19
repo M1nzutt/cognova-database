@@ -1,5 +1,16 @@
 # Estado de Cognova Database
 
+## Materias — 2026-10-18
+
+Implementada 0004_subjects después de 0003, sin modificar 0001–0003. Contrato:
+[DATA_MODEL](DATA_MODEL.md). Cinco posiciones activas únicas por usuario garantizan
+el límite concurrente; archivadas no consumen posiciones. Downgrade rechaza toda
+tabla con datos. DATA_MODEL no existía al iniciar esta tarea y se crea aquí.
+Primera validación: 41 pruebas offline pasan; integración 0004 pendiente.
+Inicio de esta tarea: 24 commits. Entrega/push y SHA Backend pendientes de cierre.
+No se aplicó 0004 a producción; la evidencia operativa previa sigue siendo 0003.
+Las secciones siguientes son historial de la entrega 0003, no el head de código.
+
 Fecha de actualización: 2026-10-17. Rama: feat/0003-onboarding-questionnaire.
 
 ## Fase actual: aplicación operativa de 0003

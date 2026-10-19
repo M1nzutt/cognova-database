@@ -51,7 +51,8 @@ lock y ajustes SET LOCAL hasta commit/rollback. No usar autocommit.
   timestamptz NOT NULL; índice ix_rate_limit_buckets_expires_at.
 - alembic_version: una fila `0002_auth_sessions` al completar el upgrade.
 
-El head actual es 0003_onboarding_questionnaire; ver [SCHEMA_0003](SCHEMA_0003.md).
+El head actual es 0004_subjects; ver [DATA_MODEL](DATA_MODEL.md).
+Para onboarding ver [SCHEMA_0003](SCHEMA_0003.md).
 Estas definiciones describen el punto de partida, no la nulabilidad actual.
 
 UUID de sesión y onupdate de users.updated_at son comportamientos del ORM, no
@@ -91,7 +92,7 @@ el contrato de manejo de conexión, nunca comportamiento real del motor.
 ## Operar 0003
 
 El runner acepta destinos explícitos 0001_create_users, 0002_auth_sessions,
-0003_onboarding_questionnaire y head. Backend debe fijar la revisión admitida;
+0003_onboarding_questionnaire, 0004_subjects y head. Backend debe fijar la revisión admitida;
 no inferir compatibilidad por orden numérico de IDs.
 
 Downgrade deliberado vía API Alembic: con conexión inyectada, llamar

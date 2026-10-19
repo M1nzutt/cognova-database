@@ -13,7 +13,7 @@ pytestmark = pytest.mark.integration
 HEAD = "0003_onboarding_questionnaire"
 
 
-def migrate(connection, revision="head", *, down=False):
+def migrate(connection, revision=HEAD, *, down=False):
     config = migration_config()
     config.attributes["connection"] = connection
     (command.downgrade if down else command.upgrade)(config, revision)
@@ -318,7 +318,7 @@ def test_cli_head_preserves_schema_and_is_repeatable(pg_engine, monkeypatch):
     monkeypatch.setenv("DATABASE_URL", engine.url.render_as_string(hide_password=False))
     assert main(["upgrade", "0002_auth_sessions"]) == 0
     assert main(["upgrade", HEAD]) == 0
-    assert main(["upgrade", "head"]) == 0
+    assert main(["upgrade", HEAD]) == 0
     with engine.connect() as connection:
         assert connection.scalar(text("SELECT current_schema()")) == schema
         assert (

@@ -11,6 +11,7 @@ from cognova_database.runner import ROOT, migration_config
 BLOBS = {
     "0001_create_users.py": "847886004b17e4b57723029cd217a63dd063d381",
     "0002_auth_sessions.py": "ef8cd07f0a3482a272c5f62229f51a5390d74ec4",
+    "0003_onboarding_questionnaire.py": "5e6e5c25d631efb6d0015fabce2b64ae9866fba1",
 }
 
 
@@ -29,8 +30,9 @@ def test_original_blobs_and_single_linear_head():
         blob = b"blob " + str(len(data)).encode() + b"\0" + data
         assert hashlib.sha1(blob).hexdigest() == expected
     script = ScriptDirectory.from_config(migration_config())
-    assert script.get_heads() == ["0003_onboarding_questionnaire"]
+    assert script.get_heads() == ["0004_subjects"]
     assert [(r.revision, r.down_revision) for r in script.walk_revisions()] == [
+        ("0004_subjects", "0003_onboarding_questionnaire"),
         ("0003_onboarding_questionnaire", "0002_auth_sessions"),
         ("0002_auth_sessions", "0001_create_users"),
         ("0001_create_users", None),
@@ -60,6 +62,10 @@ def test_complete_postgresql_ddl_without_environment(monkeypatch):
         "CREATE TABLE questionnaire_responses",
         "NOT VALID",
         "UPDATE alembic_version SET version_num='0003_onboarding_questionnaire'",
+        "CREATE TABLE subjects",
+        "CONSTRAINT uq_subjects_active_slot UNIQUE (user_id, active_slot)",
+        "CREATE UNIQUE INDEX uq_subjects_user_name_lower",
+        "UPDATE alembic_version SET version_num='0004_subjects'",
     ):
         assert expected in sql
 

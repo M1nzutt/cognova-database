@@ -24,6 +24,7 @@ def main(argv: list[str] | None = None) -> int:
             "0001_create_users",
             "0002_auth_sessions",
             "0003_onboarding_questionnaire",
+            "0004_subjects",
             "head",
         ],
     )
