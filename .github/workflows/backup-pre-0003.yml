@@ -4,6 +4,10 @@ run-name: Backup pre-0003 · ${{ github.run_id }}
 on:
   workflow_dispatch:
     inputs:
+      subjects_release:
+        description: Back up exactly 0003 before the authorized 0004 release, including isolated restore
+        type: boolean
+        default: false
       diagnose_connection:
         description: Diagnose only the read-only psql revision query; never run backup
         type: boolean
@@ -49,6 +53,7 @@ jobs:
           BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
           VALIDATE_ONLY: ${{ inputs.validate_only }}
           DIAGNOSE_CONNECTION: ${{ inputs.diagnose_connection }}
+          SUBJECTS_RELEASE: ${{ inputs.subjects_release }}
         shell: bash
         run: |
           set -euo pipefail
@@ -111,6 +116,9 @@ jobs:
               return result.stdout
 
           def backup():
+              subjects = os.environ.get('SUBJECTS_RELEASE') == 'true'
+              expected = '0003_onboarding_questionnaire' if subjects else '0002_auth_sessions'
+              label = '0004' if subjects else '0003'
               key = os.environ.get('BACKUP_ENCRYPTION_KEY', '')
               if len(key.encode('utf-8')) < 32 or any(c in key for c in '\r\n\0'):
                   raise BackupValidationError('Encryption key must be at least 32 bytes and single-line')
@@ -153,34 +161,68 @@ jobs:
                   diagnose_connection(psql, env)
                   return
               revision = run('psql_revision', psql + ['SELECT version_num FROM public.alembic_version ORDER BY version_num'], env).decode().strip()
-              if revision != '0002_auth_sessions':
-                  raise BackupValidationError('Expected exactly revision 0002 before backup')
+              if revision != expected:
+                  raise BackupValidationError('Unexpected exact revision before backup')
               if run('psql_tls', psql + ['SELECT ssl FROM pg_stat_ssl WHERE pid=pg_backend_pid()'], env).strip() != b't':
                   raise BackupValidationError('TLS session could not be verified')
               dump_version = run('pg_dump_version', [str(binaries / 'pg_dump'), '--version'], env).decode().strip()
               restore_version = run('pg_restore_version', [str(binaries / 'pg_restore'), '--version'], env).decode().strip()
               if not dump_version.startswith('pg_dump (PostgreSQL) 18.'):
                   raise BackupValidationError('PostgreSQL client 18 required')
-              destination = Path(os.environ['RUNNER_TEMP']) / 'cognova-pre-0003'
+              destination = Path(os.environ['RUNNER_TEMP']) / ('cognova-pre-' + label)
               destination.mkdir(mode=0o700, exist_ok=False)
-              dump = destination / 'cognova-pre-0003.dump'
+              dump = destination / ('cognova-pre-' + label + '.dump')
               started = datetime.now(timezone.utc).isoformat()
               run('pg_dump', [str(binaries / 'pg_dump'), '--no-password', '--format=custom',
                    '--lock-wait-timeout=15s', '--file', str(dump)], env)
               if dump.stat().st_size == 0:
                   raise BackupValidationError('Empty backup')
               toc = run('pg_restore_list', [str(binaries / 'pg_restore'), '--list', str(dump)], env)
-              for table in ('users', 'auth_sessions', 'rate_limit_buckets', 'alembic_version'):
+              tables = ('users', 'auth_sessions', 'rate_limit_buckets', 'alembic_version')
+              if subjects:
+                  tables += ('user_academic_goal_legacy', 'questionnaire_responses')
+              for table in tables:
                   if f'TABLE DATA public {table} '.encode() not in toc:
                       raise BackupValidationError('Required table data missing from backup')
               # Decode the complete archive, without connecting or executing SQL.
               run('pg_restore_decode', [str(binaries / 'pg_restore'), '--file=/dev/null', str(dump)], env)
+              if subjects:
+                  # Disposable container: no production credentials or network destination.
+                  isolated = {k: v for k, v in env.items() if not k.startswith('PG')}
+                  run('restore_server', ['docker', 'run', '--detach', '--rm', '--name',
+                      'cognova-restore', '-e', 'POSTGRES_HOST_AUTH_METHOD=trust',
+                      '-p', '127.0.0.1:55434:5432', 'postgres:18'], isolated)
+                  import time
+                  local = dict(isolated, PGHOST='127.0.0.1', PGPORT='55434',
+                               PGUSER='postgres', PGDATABASE='postgres', PGSSLMODE='disable')
+                  try:
+                      for _ in range(60):
+                          ready = subprocess.run([str(binaries / 'pg_isready')],
+                              env=local, capture_output=True, timeout=10)
+                          if ready.returncode == 0:
+                              break
+                          time.sleep(1)
+                      else:
+                          raise BackupValidationError('Restore server not ready')
+                      run('restore_isolated', [str(binaries / 'pg_restore'), '--no-password',
+                          '--exit-on-error', '--no-owner', '--no-privileges',
+                          '--dbname=postgres', str(dump)], local)
+                      restored = run('restore_revision', psql +
+                          ['SELECT version_num FROM public.alembic_version'], local).decode().strip()
+                      if restored != expected:
+                          raise BackupValidationError('Restored revision differs')
+                      counts = {}
+                      for table in tables:
+                          counts[table] = int(run('restore_count', psql +
+                              ['SELECT count(*) FROM public.' + table], local).strip())
+                  finally:
+                      run('restore_cleanup', ['docker', 'stop', 'cognova-restore'], isolated)
               if run('psql_revision_after', psql + ['SELECT version_num FROM public.alembic_version ORDER BY version_num'], env).decode().strip() != revision:
                   raise BackupValidationError('Schema revision changed during backup')
               with dump.open('rb') as stream:
                   digest = hashlib.file_digest(stream, 'sha256').hexdigest()
               size_bytes = dump.stat().st_size
-              encrypted = destination / 'cognova-pre-0003.dump.gpg'
+              encrypted = destination / ('cognova-pre-' + label + '.dump.gpg')
               recovered = destination / 'roundtrip.dump'
               gpg_home = destination / 'gnupg'
               gpg_home.mkdir(mode=0o700)
@@ -216,7 +258,8 @@ jobs:
                   pg_dump_version=dump_version, pg_restore_version=restore_version,
                   revision_before=revision, revision_after=revision,
                   pg_restore_list='passed', full_archive_decode='passed',
-                  restore_rehearsal='not_performed',
+                  restore_rehearsal='passed' if subjects else 'not_performed',
+                  restored_counts=counts if subjects else None,
                   run_id=os.environ['GITHUB_RUN_ID'], attempt=os.environ['GITHUB_RUN_ATTEMPT'],
                   source_commit=os.environ['GITHUB_SHA'],
               )
@@ -250,4 +293,4 @@ jobs:
       - name: Remove runner-local backup files
         if: always()
         shell: bash
-        run: rm -rf -- "$RUNNER_TEMP/cognova-pre-0003"
+        run: rm -rf -- "$RUNNER_TEMP/cognova-pre-0003" "$RUNNER_TEMP/cognova-pre-0004"

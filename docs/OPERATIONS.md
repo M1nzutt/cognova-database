@@ -1,5 +1,19 @@
 # Operación futura, permisos y recuperación
 
+## Release autorizado de 0004 — 2026-10-19
+
+El usuario autoriza aplicar 0004 y habilitar cognova_runtime para Backend Materias
+06f6c4b1c94ddf6da4c78b518b2f7ccc0d2ad63c (database fijado c3394c3).
+El workflow registrado backup-pre-0003.yml admite subjects_release=true para este
+release: exige exactamente 0003 antes/después, verifica seis tablas, decodifica el
+dump y ensaya pg_restore --exit-on-error en un contenedor PostgreSQL 18 aislado,
+sin credenciales productivas. Omite ownership/ACL en el ensayo: los roles/grants
+se verifican por separado. Publica solo cognova-pre-0004.dump.gpg, AES-256, con
+roundtrip SHA-256 y retención de siete días. El nombre histórico del workflow y
+del artifact se conserva; identificar alcance por el manifest y archivo interior.
+Sin subjects_release conserva el procedimiento pre-0003. Verificar éxito, fecha,
+SHA del ciphertext descargado y restauración antes de autorizar el helper DDL.
+
 ## Preparación de 0004 Materias
 
 Contrato: [DATA_MODEL](DATA_MODEL.md). Esta entrega implementa y prueba la migración;

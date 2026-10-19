@@ -1,5 +1,20 @@
 # Estado de Cognova Database
 
+## Release Materias en preparación — 2026-10-19
+
+Autorizado por el usuario para el Backend final
+`06f6c4b1c94ddf6da4c78b518b2f7ccc0d2ad63c`, que fija database
+`c3394c38c55a8cd466d10f02fe7c80d7c1e1980f`. Runner y migraciones sin diff
+contra ese SHA. Inicio: 27 commits, árbol limpio.
+Preflight READ ONLY a las 17:25:04Z: recurso Render existente, cognova/public,
+TLS, exactamente 0003; users=4, auth_sessions=9, rate_limit_buckets=5,
+legacy=1, questionnaire_responses=5. Existe cognova_runtime, LOGIN sin SUPERUSER,
+CREATEDB ni CREATEROLE; migrador/propietario cognova_user.
+Se prepara backup fresco mediante el workflow registrado con subjects_release=true:
+exige 0003, incluye las seis tablas y restaura en PostgreSQL 18 aislado antes de
+publicar ciphertext. 42 pruebas offline pasan; producción todavía no modificada.
+DELETE/TRUNCATE de subjects siguen prohibidos por DATA_MODEL/OPERATIONS.
+
 ## Materias — 2026-10-18
 
 Implementada 0004_subjects después de 0003, sin modificar 0001–0003. Contrato:

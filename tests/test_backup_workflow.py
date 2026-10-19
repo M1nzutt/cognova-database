@@ -32,6 +32,7 @@ def backup_code(monkeypatch, tmp_path):
         "GITHUB_SHA": "test-commit",
         "VALIDATE_ONLY": "false",
         "DIAGNOSE_CONNECTION": "false",
+        "SUBJECTS_RELEASE": "false",
     }.items():
         monkeypatch.setenv(name, value)
     # Synthetic credential; never use the local .env in workflow tests.
@@ -53,7 +54,10 @@ def fake_commands(monkeypatch, namespace, failure=None):
         assert all(KEY not in arg for arg in args)
         assert "BACKUP_ENCRYPTION_KEY" not in kwargs["env"]
         binary = Path(args[0]).name
-        if binary != "gpg":
+        local = kwargs["env"].get("PGHOST") == "127.0.0.1"
+        if binary == "docker" or local:
+            assert "PGPASSWORD" not in kwargs["env"]
+        elif binary != "gpg":
             assert kwargs["env"]["PGSSLMODE"] == "require"
             assert kwargs["env"]["PGDATABASE"] == "cognova"
             assert kwargs["env"]["PGHOST"].startswith("dpg-db2iojc9v7es7387i2ig-a.")
@@ -68,6 +72,14 @@ def fake_commands(monkeypatch, namespace, failure=None):
             output = f"{binary} (PostgreSQL) 18.6".encode()
         elif binary == "psql":
             output = b"t" if "pg_stat_ssl" in args[-1] else b"0002_auth_sessions"
+            if namespace["os"].environ.get("SUBJECTS_RELEASE") == "true":
+                output = (
+                    b"t"
+                    if "pg_stat_ssl" in args[-1]
+                    else b"0003_onboarding_questionnaire"
+                )
+            if "count(*)" in args[-1]:
+                output = b"0"
             if failure == "revision" and "alembic_version" in args[-1]:
                 output = b"0003_onboarding_questionnaire"
         elif binary == "pg_dump":
@@ -90,6 +102,8 @@ def fake_commands(monkeypatch, namespace, failure=None):
                     "auth_sessions",
                     "rate_limit_buckets",
                     "alembic_version",
+                    "user_academic_goal_legacy",
+                    "questionnaire_responses",
                 )
             )
             if failure == "toc":
@@ -214,7 +228,7 @@ def test_operation_errors_print_only_constant_label(
         and isinstance(node.func, ast.Name)
         and node.func.id == "run"
     ]
-    assert len(calls) == 11
+    assert len(calls) == 16
     labels = []
     for call in calls:
         assert isinstance(call.args[0], ast.Constant)
@@ -291,3 +305,18 @@ def test_connection_diagnostic_is_read_only_and_never_leaks(
     assert captured.err == ""
     assert not (tmp_path / "outputs").exists()
     assert not (tmp_path / "cognova-pre-0003").exists()
+
+
+def test_subjects_backup_restores_isolated_before_publishing(
+    backup_code, monkeypatch, tmp_path, capsys
+):
+    monkeypatch.setenv("SUBJECTS_RELEASE", "true")
+    calls = fake_commands(monkeypatch, backup_code)
+    backup_code["backup"]()
+    manifest = json.loads(capsys.readouterr().out)
+    assert manifest["revision_before"] == "0003_onboarding_questionnaire"
+    assert manifest["restore_rehearsal"] == "passed"
+    assert len(manifest["restored_counts"]) == 6
+    assert manifest["encrypted_file"] == "cognova-pre-0004.dump.gpg"
+    assert any("--exit-on-error" in call for call in calls)
+    assert not (tmp_path / "cognova-pre-0004/roundtrip.dump").exists()
