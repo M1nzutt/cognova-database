@@ -1,5 +1,37 @@
 # Estado de Cognova Database
 
+## DELETE de Materias autorizado — 2026-10-20
+
+Confirmado en producción a las 15:37:00Z: único cambio
+`GRANT DELETE ON TABLE public.subjects TO cognova_runtime`.
+DELETE antes=false, después=true; SELECT/INSERT/UPDATE siguen concedidos.
+[Inventario previo](evidence/subjects-delete-before-2026-10-20.json) y
+[comparación antes/después y confirmación post-commit](evidence/subjects-delete-grant-2026-10-20.json).
+Todas las demás autorizaciones de tablas comparadas permanecen iguales.
+DELETE sigue denegado en users, auth_sessions, alembic_version,
+user_academic_goal_legacy y questionnaire_responses. rate_limit_buckets ya tenía
+DELETE: se conserva, no es un grant nuevo. TRUNCATE de subjects sigue denegado.
+Sin DDL, migraciones, modificaciones de filas, contraseñas ni membresías.
+0004_subjects permanece igual; historia y alembic_version conservan sus bloqueos.
+Runtime sin ownership, CREATE persistente, roles heredados ni privilegios elevados;
+TEMP heredado preexistente sigue presente.
+
+Verificación de permisos efectivos mediante has_table_privilege y catálogo usando
+el migrador, incluida reconfirmación READ ONLY posterior al commit. No hay
+RUNTIME_DATABASE_URL ni contraseña runtime disponible en este repositorio.
+La documentación previa registra el rol ya existente, no su creación; el helper
+de 0004 usó SET ROLE mediante habilitación transitoria, no login runtime.
+Por instrucción del usuario no se repite esa habilitación ni se rota el secreto.
+Login runtime, DML real y smoke API quedan pendientes en Backend.
+Backend ya puede repetir el smoke DELETE con su credencial desplegada.
+
+Esta autorización posterior reemplaza la prohibición de DELETE de subjects de
+la entrega original; no modifica el esquema ni los helpers históricos de release.
+Validación: 42 pruebas offline pasan, 89 integration deseleccionadas; Ruff lint/
+formato, pip check y git diff --check correctos. Sin suite DDL ni DML contra
+producción. Diff de migraciones/runner vacío; revisión básica de archivos nuevos
+sin credenciales. Inicio: 30 commits, árbol limpio.
+
 ## Release Materias aplicado — 2026-10-19
 
 **Producción exactamente en 0004_subjects**, commit de transacción verificado
