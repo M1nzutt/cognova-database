@@ -31,6 +31,9 @@ Validación: 42 pruebas offline pasan, 89 integration deseleccionadas; Ruff lint
 formato, pip check y git diff --check correctos. Sin suite DDL ni DML contra
 producción. Diff de migraciones/runner vacío; revisión básica de archivos nuevos
 sin credenciales. Inicio: 30 commits, árbol limpio.
+Entrega: a8bc7d7 registra operación/evidencia; el cierre documental actualiza el
+contrato de OPERATIONS. Dos commits granulares nuevos, 32 totales, sin squash.
+No cambia el SHA de esquema fijado por Backend.
 
 ## Release Materias aplicado — 2026-10-19
 

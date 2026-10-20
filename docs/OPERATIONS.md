@@ -1,5 +1,38 @@
 # Operación futura, permisos y recuperación
 
+## Permiso DELETE de subjects — 2026-10-20
+
+Aplicado y reconfirmado post-commit: únicamente
+`GRANT DELETE ON TABLE public.subjects TO cognova_runtime`.
+[Evidencia antes/después](evidence/subjects-delete-grant-2026-10-20.json).
+Permisos actuales de subjects: SELECT/INSERT/UPDATE/DELETE; sin TRUNCATE.
+La autorización explícita de borrado físico del usuario reemplaza la restricción
+original de DELETE de la entrega 0004 descrita abajo y en DATA_MODEL.
+No modifica la migración 0004 ni el contrato de integridad/ownership de Backend.
+
+Verificación por catálogo/has_table_privilege con migrador: solo cambia ese bit
+de autorización. DELETE sigue denegado en users, auth_sessions, alembic_version,
+user_academic_goal_legacy y questionnaire_responses. El DELETE preexistente de
+rate_limit_buckets se conserva. SELECT/INSERT/UPDATE previos no cambian.
+Historia y alembic_version conservan la prohibición de modificaciones existente
+(questionnaire_responses admite INSERT append-only). Sin ownership, CREATE
+persistente ni privilegios elevados para runtime; TEMP heredado no se modifica.
+No se ejecutaron DDL, DML de prueba, cambios de membresía ni de contraseñas.
+
+Helper acotado, con configuración explícita del migrador y ENVIRONMENT=production:
+`python -m scripts.grant_subjects_delete inspect --evidence <archivo.json>`.
+Modo `apply` concede solo el permiso indicado, compara todas las autorizaciones
+de tablas public y aborta si detecta cualquier diferencia adicional; tras commit
+reconfirma en READ ONLY. No requiere volver a aplicar el release 0004.
+Los secretos se inyectan localmente y no forman parte de la evidencia.
+
+El repositorio no documenta la creación del rol ni contiene su contraseña
+disponible; el release previo verificó SET ROLE, no autenticación runtime.
+El usuario autorizó explícitamente verificar por catálogo ante esa ausencia.
+Login runtime y ejecución real SELECT/INSERT/UPDATE/DELETE quedan pendientes
+con el secreto ya desplegado en Backend. No rotarlo para estas comprobaciones.
+Backend puede repetir ahora el smoke DELETE; esta entrega no certifica su API.
+
 ## Release autorizado de 0004 — 2026-10-19
 
 **Aplicado y confirmado** 2026-10-19 17:34:03Z; reconfirmación READ ONLY
@@ -52,10 +85,11 @@ de PUBLIC afectaría otros roles y queda fuera de los grants de esta entrega.
 Contrato: [DATA_MODEL](DATA_MODEL.md). El código por sí solo no autoriza aplicar
 DDL productivo; el release autorizado y aplicado figura arriba. Antes de releases, respaldo vigente,
 inventario y Backend compatible con 0004 explícitamente admitida en readiness.
-Runtime: SELECT/INSERT/UPDATE en subjects y USAGE/SELECT en subjects_id_seq, además
-de SELECT/UPDATE de users para el bloqueo de asignación. Sin DELETE/TRUNCATE de
-subjects, ownership ni DDL. El flujo destructivo futuro requiere política y grants
-revisados aparte. No se aplican grants a roles desconocidos en la migración.
+Runtime: SELECT/INSERT/UPDATE/DELETE en subjects y USAGE/SELECT en subjects_id_seq, además
+de SELECT/UPDATE de users para el bloqueo de asignación. DELETE fue autorizado
+posteriormente según la sección 2026-10-20. Siguen prohibidos TRUNCATE,
+ownership y DDL persistente.
+No se aplican grants a roles desconocidos en la migración.
 Downgrade vía conexión inyectada hacia 0003 solo con subjects vacía; el bloqueo
 exclusivo evita una carrera con escrituras. Nunca vaciarla para facilitar rollback.
 
