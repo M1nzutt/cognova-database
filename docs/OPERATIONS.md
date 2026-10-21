@@ -1,5 +1,45 @@
 # Operación futura, permisos y recuperación
 
+## Preparación 0005 Actividades — 2026-10-21
+
+Esta entrega implementa/prueba/publica código; **no aplica 0005 a producción**.
+Producción conserva 0004. No ejecutar helpers históricos de release 0003/0004 para
+esta migración ni asumir que su backup/grants certifican el siguiente release.
+Contrato físico y separación DB/Backend en DATA_MODEL.
+
+Antes de un release autorizado: fijar SHA de código, coordinar Backend que admita
+0005 en readiness, inventario exacto 0004, respaldo fresco con subjects y datos
+previos, restauración comprobada aislada, ventana y revisión de locks. Agregar la
+clave compuesta en subjects requiere lock de DDL y construir índice; evaluar tamaño
+y concurrencia. Mantener timeouts y advisory lock del runner, no stamp/create_all.
+Aplicar mediante runner oficial con destino explícito 0005_activities, comprobar
+preservación de filas, constraints/FK/índices y triggers antes/después del commit.
+Ni runtime ni sus credenciales ejecutan migraciones.
+
+Permisos mínimos a revisar y conceder en un release separado, al rol real verificado:
+- activities: SELECT/INSERT/UPDATE; DELETE solo si Backend ofrece borrado explícito.
+- activities_id_seq: USAGE/SELECT.
+- activity_deadline_events: solo SELECT; nunca INSERT/UPDATE/DELETE/TRUNCATE.
+- Funciones de trigger de 0005: ningún EXECUTE runtime/PUBLIC; tampoco ownership.
+  El trigger SECURITY DEFINER escribe historia como propietario y respeta esquema
+  explícito. No conceder capacidad de crear/alterar triggers o funciones persistentes.
+- Conservar privilegios anteriores; no tocar subjects, alembic_version ni historia
+  anterior. Sin grants masivos/default privileges que permitan falsificar eventos.
+
+0005 revoca PUBLIC sobre sus tablas/funciones, sin grants a roles de nombre supuesto.
+Auditar también privilegios heredados y ALTER DEFAULT PRIVILEGES del creador: grants
+previos específicos a runtime podrían requerir remediación explícita antes de usarlo.
+Probar con rol runtime real que UPDATE deadline genera historia sin INSERT/EXECUTE
+directos y que escritura/truncado de historia, DDL y alteración de revisión fallan.
+La prueba local usa un rol de ensayo temporalmente creado y después eliminado;
+no acredita permisos productivos. TEMP preexistente no se revoca.
+
+Rollback transaccional antes de commit no conserva tablas ni eventos parciales.
+Downgrade deliberado con conexión inyectada hacia 0004 solo si activities e historia
+están vacías; locks exclusivos y DROP sin CASCADE. Subjects con datos se conserva.
+Si hay actividades/eventos, mantener schema y coordinar reparación hacia adelante;
+no borrar datos ni historia para forzar un downgrade.
+
 ## Permiso DELETE de subjects — 2026-10-20
 
 Aplicado y reconfirmado post-commit: únicamente

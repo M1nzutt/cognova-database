@@ -1,5 +1,10 @@
 # Reglas para agentes
 
+- La fase Actividades autorizada el 2026-10-21 agrega 0005_activities después de
+  0004, sin editar 0001–0004. Sustituye las exclusiones históricas de actividades
+  de fases anteriores. Alcance: esquema, historial de fechas, pruebas locales,
+  documentación y push; no autoriza DDL/grants productivos ni cambios en otros repos.
+
 - Leer README, PROJECT_STATE, ARCHITECTURE, MIGRATIONS y PROVENANCE antes de editar.
 - Modificar solo cognova-database. Backend/frontend se consultan solo en lectura.
 - No alterar las revisiones históricas; no squash, renumeración, stamp ni create_all.

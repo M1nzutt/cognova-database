@@ -1,5 +1,21 @@
 # Estado de Cognova Database
 
+## Actividades en desarrollo — 2026-10-21
+
+Rama feat/0005-activities, base 667c6d8, 32 commits iniciales y árbol inicialmente limpio.
+Contrato confirmado por usuario: deadline TIMESTAMPTZ obligatorio, prioridad
+low/medium/high/urgent y evento automático postponed/rescheduled según dirección
+del cambio, manteniendo fecha inicial; Backend decide estados/transiciones.
+Diseño y responsabilidades detallados en DATA_MODEL; permisos futuros en OPERATIONS.
+Validación local final: 184 pruebas aprobadas, 142 PostgreSQL y 42 offline, sin
+omisiones. Incluye 53 casos nuevos de Actividades: preservación, constraints,
+historia, atomicidad, concurrencia READ COMMITTED/REPEATABLE READ, rol restringido
+y downgrade seguro. Ruff lint/formato, pip check y SQL offline correctos.
+Diff revisado: 0001–0004 intactas; sin credenciales nuevas en archivos de entrega.
+Resta publicar commits y fijar SHA de handoff.
+No se cargó .env ni se conectó a producción; esta entrega no aplica 0005 ni grants.
+Producción sigue en 0004 conforme a la evidencia operativa previa.
+
 ## DELETE de Materias autorizado — 2026-10-20
 
 Confirmado en producción a las 15:37:00Z: único cambio
