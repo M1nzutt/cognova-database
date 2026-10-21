@@ -2,7 +2,7 @@
 
 Repositorio operativo del esquema PostgreSQL existente de Cognova. No es una API.
 Historial: `0001_create_users` → `0002_auth_sessions` → `0003_onboarding_questionnaire`
-→ `0004_subjects` (Materias; [contrato](docs/DATA_MODEL.md)).
+→ `0004_subjects` → `0005_activities` ([contrato](docs/DATA_MODEL.md)).
 0001 y 0002 permanecen intactas. 0003 separa onboarding del registro y conserva
 la percepción inicial y las revisiones del cuestionario.
 Backend conserva ORM, conexiones, consultas, auth y lógica de negocio.

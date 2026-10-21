@@ -13,7 +13,7 @@ PREVIOUS = "0003_onboarding_questionnaire"
 HEAD = "0004_subjects"
 
 
-def migrate(connection, revision="head", *, down=False):
+def migrate(connection, revision=HEAD, *, down=False):
     config = migration_config()
     config.attributes["connection"] = connection
     (command.downgrade if down else command.upgrade)(config, revision)
@@ -291,12 +291,12 @@ def test_concurrent_last_slot_cannot_exceed_limit(pg_engine, isolation, reactiva
         )
 
 
-def test_cli_explicit_revision_and_head(pg_engine, monkeypatch):
+def test_cli_explicit_subjects_revision_is_repeatable(pg_engine, monkeypatch):
     engine, schema = pg_engine
     monkeypatch.setenv("ENVIRONMENT", "test")
     monkeypatch.setenv("DATABASE_URL", engine.url.render_as_string(hide_password=False))
     assert main(["upgrade", HEAD]) == 0
-    assert main(["upgrade", "head"]) == 0
+    assert main(["upgrade", HEAD]) == 0
     with engine.connect() as c:
         assert c.scalar(text("SELECT current_schema()")) == schema
         assert c.scalar(text("SELECT version_num FROM alembic_version")) == HEAD
