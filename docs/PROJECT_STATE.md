@@ -1,6 +1,6 @@
 # Estado de Cognova Database
 
-## Actividades en desarrollo — 2026-10-21
+## Actividades implementadas y validadas localmente — 2026-10-21
 
 Rama feat/0005-activities, base 667c6d8, 32 commits iniciales y árbol inicialmente limpio.
 Contrato confirmado por usuario: deadline TIMESTAMPTZ obligatorio, prioridad
@@ -12,9 +12,15 @@ omisiones. Incluye 53 casos nuevos de Actividades: preservación, constraints,
 historia, atomicidad, concurrencia READ COMMITTED/REPEATABLE READ, rol restringido
 y downgrade seguro. Ruff lint/formato, pip check y SQL offline correctos.
 Diff revisado: 0001–0004 intactas; sin credenciales nuevas en archivos de entrega.
-Resta publicar commits y fijar SHA de handoff.
+SHA de código y pruebas que Backend debe fijar:
+`604e296e2670d154ba7e18d7afa3f010e66dd42d`.
+Commits: b87506b contrato, 5b06c8a migración, 604e296 pruebas; el cuarto commit
+documenta este handoff (4 nuevos, 36 totales). Publicación en feat/0005-activities,
+sin squash ni integración a main solicitada. CI remoto no acreditado en esta evidencia.
 No se cargó .env ni se conectó a producción; esta entrega no aplica 0005 ni grants.
 Producción sigue en 0004 conforme a la evidencia operativa previa.
+Backend puede implementar contra este contrato fijado; desplegarlo requiere antes
+un release Database separado de 0005 y permisos runtime verificados.
 
 ## DELETE de Materias autorizado — 2026-10-20
 

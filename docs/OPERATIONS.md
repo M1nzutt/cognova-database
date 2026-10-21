@@ -6,6 +6,10 @@ Esta entrega implementa/prueba/publica código; **no aplica 0005 a producción**
 Producción conserva 0004. No ejecutar helpers históricos de release 0003/0004 para
 esta migración ni asumir que su backup/grants certifican el siguiente release.
 Contrato físico y separación DB/Backend en DATA_MODEL.
+Código/pruebas fijados para handoff: `604e296e2670d154ba7e18d7afa3f010e66dd42d`.
+Validación local PostgreSQL 17.11: 184 pruebas, incluidas 142 de integración,
+sin skips; SQL offline, Ruff lint/formato y pip check aprobados. Esto no constituye
+evidencia de aplicación ni de permisos productivos para 0005.
 
 Antes de un release autorizado: fijar SHA de código, coordinar Backend que admita
 0005 en readiness, inventario exacto 0004, respaldo fresco con subjects y datos
