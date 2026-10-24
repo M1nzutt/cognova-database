@@ -1,5 +1,18 @@
 # Estado de Cognova Database
 
+## Release 0005 en preparación — 2026-10-23
+
+Autorizado por usuario para Backend 442f5b2782570ae6b19a1dfad238026d84e018c7,
+que fija Database604e296e2670d154ba7e18d7afa3f010e66dd42d. Inicio limpio4735735,
+36 commits, rama feat/0005-activities. No se modifican migraciones ni runner.
+Preparando backup fresco pre-0005 mediante workflow existente, con input exclusivo
+activities_release, revisión exacta0004, siete tablas y restauración aislada.
+Preflight READ ONLY03:00:57Z (23 octubre22:00:57 Bogotá): exactamente0004, TLS,
+users15, auth_sessions24, rate_limit_buckets2, legacy1, respuestas18, subjects7.
+Cero transacciones activas/preparadas observadas. 44 pruebas offline aprobadas;
+DDL productivo todavía no ejecutado.
+
+
 ## Actividades implementadas y validadas localmente — 2026-10-21
 
 Rama feat/0005-activities, base 667c6d8, 32 commits iniciales y árbol inicialmente limpio.

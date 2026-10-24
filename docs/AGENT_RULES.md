@@ -1,5 +1,10 @@
 # Reglas para agentes
 
+- Release Actividades autorizado el 2026-10-23: preflight, backup fresco con
+  restauración aislada, aplicación 0005 y grants mínimos al runtime identificado.
+  Esta autorización sustituye la exclusión productiva de la fase de desarrollo;
+  no permite cambios de otros repos ni de 0001–0004. Ver OPERATIONS.
+
 - La fase Actividades autorizada el 2026-10-21 agrega 0005_activities después de
   0004, sin editar 0001–0004. Sustituye las exclusiones históricas de actividades
   de fases anteriores. Alcance: esquema, historial de fechas, pruebas locales,

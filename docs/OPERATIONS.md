@@ -1,5 +1,18 @@
 # Operación futura, permisos y recuperación
 
+## Release 0005 autorizado — 2026-10-23
+
+Usuario autoriza aplicar0005 y preparar runtime para Backend442f5b2. El workflow
+backup-pre-0003.yml admite activities_release=true: exige0004, incluye subjects
+y las seis tablas anteriores, restaura aisladamente y publica solo ciphertext
+AES256 cognova-pre-0005.dump.gpg. No mezclar flags subjects/activities. Verificar
+manifest, restauración, roundtrip y hash descargado antes de DDL.
+Runtime: activities SELECT/INSERT/UPDATE/DELETE, events solo SELECT, secuencia
+activities_id_seq USAGE/SELECT. Backend no requiere INSERT de historia: la escribe
+el trigger SECURITY DEFINER. Verificar por catálogo sin cambiar membresías/secretos.
+La ausencia de DDL se refiere a objetos persistentes; TEMP heredado se conserva.
+
+
 ## Preparación 0005 Actividades — 2026-10-21
 
 Esta entrega implementa/prueba/publica código; **no aplica 0005 a producción**.

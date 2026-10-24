@@ -33,6 +33,7 @@ def backup_code(monkeypatch, tmp_path):
         "VALIDATE_ONLY": "false",
         "DIAGNOSE_CONNECTION": "false",
         "SUBJECTS_RELEASE": "false",
+        "ACTIVITIES_RELEASE": "false",
     }.items():
         monkeypatch.setenv(name, value)
     # Synthetic credential; never use the local .env in workflow tests.
@@ -78,6 +79,8 @@ def fake_commands(monkeypatch, namespace, failure=None):
                     if "pg_stat_ssl" in args[-1]
                     else b"0003_onboarding_questionnaire"
                 )
+            if namespace["os"].environ.get("ACTIVITIES_RELEASE") == "true":
+                output = b"t" if "pg_stat_ssl" in args[-1] else b"0004_subjects"
             if "count(*)" in args[-1]:
                 output = b"0"
             if failure == "revision" and "alembic_version" in args[-1]:
@@ -104,6 +107,7 @@ def fake_commands(monkeypatch, namespace, failure=None):
                     "alembic_version",
                     "user_academic_goal_legacy",
                     "questionnaire_responses",
+                    "subjects",
                 )
             )
             if failure == "toc":
@@ -320,3 +324,27 @@ def test_subjects_backup_restores_isolated_before_publishing(
     assert manifest["encrypted_file"] == "cognova-pre-0004.dump.gpg"
     assert any("--exit-on-error" in call for call in calls)
     assert not (tmp_path / "cognova-pre-0004/roundtrip.dump").exists()
+
+
+def test_activities_backup_includes_subjects_and_restore(
+    backup_code, monkeypatch, capsys
+):
+    monkeypatch.setenv("ACTIVITIES_RELEASE", "true")
+    calls = fake_commands(monkeypatch, backup_code)
+    backup_code["backup"]()
+    manifest = json.loads(capsys.readouterr().out)
+    assert manifest["revision_before"] == manifest["revision_after"] == "0004_subjects"
+    assert manifest["restore_rehearsal"] == "passed"
+    assert len(manifest["restored_counts"]) == 7
+    assert "subjects" in manifest["restored_counts"]
+    assert manifest["encrypted_file"] == "cognova-pre-0005.dump.gpg"
+    assert any("--exit-on-error" in call for call in calls)
+
+
+def test_conflicting_release_flags_never_connect(backup_code, monkeypatch):
+    monkeypatch.setenv("ACTIVITIES_RELEASE", "true")
+    monkeypatch.setenv("SUBJECTS_RELEASE", "true")
+    calls = fake_commands(monkeypatch, backup_code)
+    with pytest.raises(ValueError):
+        backup_code["backup"]()
+    assert not calls
