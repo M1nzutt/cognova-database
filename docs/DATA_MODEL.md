@@ -1,7 +1,7 @@
 # Modelo de datos
 
 Head de código: 0001 → 0002 → 0003_onboarding_questionnaire → 0004_subjects
-→ **0005_activities**. Producción permanece en 0004; 0005 requiere release separado.
+→ **0005_activities**, aplicada en producción el 2026-10-24 según OPERATIONS.
 0001–0004 son inmutables. El modelo anterior se detalla en
 [MIGRATIONS](MIGRATIONS.md) y [SCHEMA_0003](SCHEMA_0003.md).
 

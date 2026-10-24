@@ -1,0 +1,115 @@
+{
+  "revision": "0005_activities",
+  "catalog_matches_tested_contract": true,
+  "runtime": {
+    "role": {
+      "rolname": "cognova_runtime",
+      "rolsuper": false,
+      "rolcreaterole": false,
+      "rolcreatedb": false,
+      "rolcanlogin": true,
+      "rolreplication": false,
+      "rolbypassrls": false
+    },
+    "memberships": [],
+    "owned_objects": [],
+    "schema_create": [],
+    "temporary_ddl_existing": true,
+    "table_privileges": {
+      "alembic_version": {
+        "SELECT": true,
+        "INSERT": false,
+        "UPDATE": false,
+        "DELETE": false,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      },
+      "user_academic_goal_legacy": {
+        "SELECT": true,
+        "INSERT": false,
+        "UPDATE": false,
+        "DELETE": false,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      },
+      "questionnaire_responses": {
+        "SELECT": true,
+        "INSERT": true,
+        "UPDATE": false,
+        "DELETE": false,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      }
+    }
+  },
+  "table_privileges": {
+    "activities": {
+      "SELECT": true,
+      "INSERT": true,
+      "UPDATE": true,
+      "DELETE": true,
+      "TRUNCATE": false,
+      "REFERENCES": false,
+      "TRIGGER": false
+    },
+    "activity_deadline_events": {
+      "SELECT": true,
+      "INSERT": false,
+      "UPDATE": false,
+      "DELETE": false,
+      "TRUNCATE": false,
+      "REFERENCES": false,
+      "TRIGGER": false
+    }
+  },
+  "sequence_privileges": {
+    "USAGE": true,
+    "SELECT": true,
+    "UPDATE": false
+  },
+  "function_execute": {
+    "cognova_prepare_activity": false,
+    "cognova_record_activity_deadline": false,
+    "cognova_preserve_activity_deadline": false
+  },
+  "revision_before": "0004_subjects",
+  "rows_preserved": {
+    "users": true,
+    "auth_sessions": true,
+    "rate_limit_buckets": true,
+    "user_academic_goal_legacy": true,
+    "questionnaire_responses": true,
+    "subjects": true
+  },
+  "counts_before": {
+    "users": 15,
+    "auth_sessions": 24,
+    "rate_limit_buckets": 2,
+    "user_academic_goal_legacy": 1,
+    "questionnaire_responses": 18,
+    "subjects": 7
+  },
+  "previous_structure_preserved_except_subject_composite_key": true,
+  "previous_triggers_permissions_sequences_memberships_preserved": true,
+  "preservation_scope": "all rows/columns under exclusive locks",
+  "production_behavior_checks": "catalog identical to locally tested constraints/functions/triggers; no synthetic production writes",
+  "committed": true,
+  "backup_run": "40056632732",
+  "observed_at_utc": "2026-10-24T19:38:45.881515+00:00",
+  "code_pin": "604e296e2670d154ba7e18d7afa3f010e66dd42d",
+  "counts_after_commit": {
+    "users": 15,
+    "auth_sessions": 24,
+    "rate_limit_buckets": 2,
+    "user_academic_goal_legacy": 1,
+    "questionnaire_responses": 18,
+    "subjects": 7,
+    "activities": 0,
+    "activity_deadline_events": 0
+  },
+  "post_commit_checks": "passed",
+  "post_commit_at_utc": "2026-10-24T19:38:54.094983+00:00"
+}

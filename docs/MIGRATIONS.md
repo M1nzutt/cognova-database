@@ -51,7 +51,7 @@ lock y ajustes SET LOCAL hasta commit/rollback. No usar autocommit.
   timestamptz NOT NULL; índice ix_rate_limit_buckets_expires_at.
 - alembic_version: una fila `0002_auth_sessions` al completar el upgrade.
 
-El head de código es 0005_activities; producción sigue en 0004_subjects.
+El head de código y producción es 0005_activities (release 2026-10-24, OPERATIONS).
 Ver [DATA_MODEL](DATA_MODEL.md).
 Para onboarding ver [SCHEMA_0003](SCHEMA_0003.md).
 Estas definiciones describen el punto de partida, no la nulabilidad actual.

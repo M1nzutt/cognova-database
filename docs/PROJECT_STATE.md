@@ -1,5 +1,47 @@
 # Estado de Cognova Database
 
+## Release 0005 aplicado — 2026-10-24
+
+Producción: **0004_subjects → 0005_activities**. Commit confirmado 19:38:45Z;
+reconfirmación READ ONLY 19:38:54Z (14:38:54 Bogotá), mismo PostgreSQL y TLS.
+[Evidencia del release](evidence/0005-release-2026-10-24.json).
+Runner/migraciones idénticos al SHA fijado por Backend:
+604e296e2670d154ba7e18d7afa3f010e66dd42d. No cambios de 0001–0004.
+
+Preservación de todas las filas/columnas bajo locks exclusivos: users=15,
+auth_sessions=24, rate_limit_buckets=2, legacy=1, questionnaire_responses=18,
+subjects=7. Estructura previa intacta salvo la clave compuesta añadida a subjects;
+triggers, secuencias previas, permisos runtime anteriores y membresías iguales.
+activities=0 y activity_deadline_events=0 tras commit. Dos FK RESTRICT, 12 checks,
+PK e índices válidos; catálogo de funciones/triggers idéntico al ensayado localmente.
+Historial automático, fecha inicial inmutable y restricciones de borrado probados
+con DML local; producción verificada por catálogo, sin filas sintéticas ni probes DML.
+
+Backup run40056632732, artifact12544639694: AES256, SHA-256 descargado coincidente,
+pg_restore --list, decodificación, restauración aislada y roundtrip aprobados.
+[Manifest](evidence/0005-backup-2026-10-24.json). Verificado 03:02:29Z, menor de24h
+al aplicar; expira 2026-10-31T03:02:29Z. Clave existente custodiada por usuario.
+
+cognova_runtime: SELECT/INSERT/UPDATE/DELETE en activities; solo SELECT en eventos;
+USAGE/SELECT en activities_id_seq. Sin EXECUTE en funciones de trigger, TRUNCATE,
+DDL persistente, ownership ni cambios de alembic_version/historia existente.
+TEMP heredado se conserva. Grants efectivos verificados mediante catálogo y
+has_table_privilege/has_sequence_privilege/has_function_privilege antes del commit
+y después. No cambios de membresía ni contraseñas; no se probó login runtime.
+
+**Backend Actividades 442f5b2782570ae6b19a1dfad238026d84e018c7 ya puede desplegarse
+desde la dependencia Database.** Su deploy y smoke API con credencial runtime real
+siguen correspondiendo a Backend. No se modificaron ni desplegaron otros repos.
+El backend anterior exige0004; continuar el release coordinado, sin downgrade automático.
+
+Validación previa y post-release: 195 pruebas, 144 PostgreSQL, cero omitidas.
+JUnit artifacts/test-results-release-0005.xml validado; Ruff lint/formato, pip check
+y git diff --check correctos. El helper reconfirmó revisión, catálogo y permisos
+productivos. No se ejecutó la suite contra producción ni se acredita smoke API.
+Inicio del release: 36 commits; db69ab2 preparación/backup, 1bca13c helper/ensayo
+y cierre documental: tres nuevos, 39 totales, sin squash. Esta continuación desde
+db69ab2 añade dos de esos commits. Rama feat/0005-activities.
+
 ## Release 0005 en preparación — 2026-10-23
 
 Autorizado por usuario para Backend 442f5b2782570ae6b19a1dfad238026d84e018c7,

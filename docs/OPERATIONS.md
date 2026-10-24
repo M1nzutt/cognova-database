@@ -1,5 +1,37 @@
 # Operación futura, permisos y recuperación
 
+## 0005 aplicado y permisos verificados — 2026-10-24
+
+Revisión productiva actual: 0005_activities. Aplicación confirmada 19:38:45Z y
+reconfirmada READ ONLY 19:38:54Z. [Evidencia](evidence/0005-release-2026-10-24.json).
+No repetir --apply: exige exactamente0004. Para controles posteriores usar lectura
+de revisión/catálogo/permisos; ante incidentes conservar datos y reparar hacia adelante.
+
+Backup fresco verificado al aplicar: run40056632732 / artifact12544639694,
+[manifest y hashes](evidence/0005-backup-2026-10-24.json), restauración aislada aprobada.
+Expira 2026-10-31T03:02:29Z. El archivo descargado contiene solo ciphertext;
+la clave de recuperación existente sigue custodiada por usuario.
+
+Grants aplicados exclusivamente a cognova_runtime:
+
+- activities: SELECT, INSERT, UPDATE, DELETE.
+- activity_deadline_events: SELECT; ningún INSERT/UPDATE/DELETE/TRUNCATE.
+- activities_id_seq: USAGE, SELECT; ningún UPDATE/setval.
+
+El trigger SECURITY DEFINER registra eventos sin INSERT directo ni EXECUTE runtime.
+Sin DDL persistente, ownership, privilegios elevados o membresías nuevas; sin cambios
+de permisos anteriores, alembic_version o historia. TEMP heredado no se modificó.
+Verificado por catálogo y funciones has_*_privilege en producción. DML real e
+historial se ensayaron con rol restringido en PostgreSQL desechable, no en producción.
+El login/runtime real y smoke HTTP deben comprobarse al desplegar Backend Actividades.
+
+Quince usuarios y siete materias, más sesiones/cuestionarios/datos previos, preservados
+en todas sus filas/columnas dentro de locks. Catálogo nuevo coincide exactamente con
+evidence/0005-schema-contract.json; constraints/índices válidos y triggers habilitados.
+El backend anterior exige0004: completar deploy coordinado del Backend listo para0005.
+No hubo cambios de Backend/Frontend, de credenciales ni de configuración de hosting.
+Los procedimientos siguientes conservan trazabilidad; no instruyen reaplicar el release.
+
 ## Release 0005 autorizado — 2026-10-23
 
 Usuario autoriza aplicar0005 y preparar runtime para Backend442f5b2. El workflow
