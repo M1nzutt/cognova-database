@@ -10,6 +10,16 @@ activities_release, revisión exacta0004, siete tablas y restauración aislada.
 Preflight READ ONLY03:00:57Z (23 octubre22:00:57 Bogotá): exactamente0004, TLS,
 users15, auth_sessions24, rate_limit_buckets2, legacy1, respuestas18, subjects7.
 Cero transacciones activas/preparadas observadas. 44 pruebas offline aprobadas;
+Backup run40056632732 / artifact12544639694 success: ciphertext descargado y
+SHA256 coincidente; pg_restore list/decode, restauración PostgreSQL18 aislada y
+roundtrip de cifrado aprobados. Siete tablas restauradas con conteos del preflight.
+Manifest en evidence/0005-backup-2026-10-24.json; retención hasta2026-10-31T03:02:29Z.
+Helper scripts/release_0005.py usa runner/conexión inyectada al destino explícito,
+locks y verificación de filas, estructura, triggers y permisos previos; sin SET ROLE
+ni cambios de membresía productivos. Catálogo de referencia obtenido de migración
+local y revertido, con función/cuerpo/configuración/trigger exactos.
+Validación previa: 195 pruebas pasan, 0 omitidas (51 offline,144 PostgreSQL),
+incluidos gates/ensayo integral nuevos. Ruff lint/formato correctos.
 DDL productivo todavía no ejecutado.
 
 

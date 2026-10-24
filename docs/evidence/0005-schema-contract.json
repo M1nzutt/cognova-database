@@ -1,0 +1,374 @@
+{
+  "tables": {
+    "activities": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": "nextval('\"public\".activities_id_seq'::regclass)",
+          "autoincrement": true,
+          "comment": null
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "subject_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "title",
+          "type": "TEXT",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "deadline",
+          "type": "TIMESTAMP",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "original_deadline",
+          "type": "TIMESTAMP",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "deadline_revision",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": "0",
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "priority",
+          "type": "TEXT",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "status",
+          "type": "TEXT",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "estimated_duration",
+          "type": "SMALLINT",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "nullable": true,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": false,
+          "default": "now()",
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "nullable": false,
+          "default": "now()",
+          "autoincrement": false,
+          "comment": null
+        }
+      ],
+      "checks": [
+        {
+          "name": "ck_activities_deadline",
+          "sqltext": "isfinite(deadline)",
+          "comment": null
+        },
+        {
+          "name": "ck_activities_duration",
+          "sqltext": "estimated_duration >= 10 AND estimated_duration <= 300",
+          "comment": null
+        },
+        {
+          "name": "ck_activities_notes",
+          "sqltext": "char_length(notes) <= 200",
+          "comment": null
+        },
+        {
+          "name": "ck_activities_original_deadline",
+          "sqltext": "isfinite(original_deadline)",
+          "comment": null
+        },
+        {
+          "name": "ck_activities_priority",
+          "sqltext": "priority = ANY (ARRAY['low'::text, 'medium'::text, 'high'::text, 'urgent'::text])",
+          "comment": null
+        },
+        {
+          "name": "ck_activities_revision",
+          "sqltext": "deadline_revision >= 0",
+          "comment": null
+        },
+        {
+          "name": "ck_activities_status",
+          "sqltext": "status = ANY (ARRAY['pending'::text, 'in_progress'::text, 'completed'::text, 'postponed'::text, 'cancelled'::text])",
+          "comment": null
+        },
+        {
+          "name": "ck_activities_timestamps",
+          "sqltext": "isfinite(created_at) AND isfinite(updated_at) AND updated_at >= created_at",
+          "comment": null
+        },
+        {
+          "name": "ck_activities_title",
+          "sqltext": "char_length(title) >= 1 AND char_length(title) <= 50 AND title = btrim(title) AND title !~ '^[[:space:]]*$'::text",
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_activities_user_status_deadline",
+          "unique": false,
+          "column_names": [
+            "user_id",
+            "status",
+            "deadline",
+            "id"
+          ],
+          "dialect_options": {
+            "postgresql_include": []
+          }
+        },
+        {
+          "name": "ix_activities_user_subject",
+          "unique": false,
+          "column_names": [
+            "user_id",
+            "subject_id"
+          ],
+          "dialect_options": {
+            "postgresql_include": []
+          }
+        }
+      ],
+      "pk": {
+        "constrained_columns": [
+          "id"
+        ],
+        "name": "activities_pkey",
+        "comment": null,
+        "dialect_options": {
+          "postgresql_include": []
+        }
+      },
+      "fk": [
+        {
+          "name": "fk_activities_owner_subject",
+          "constrained_columns": [
+            "user_id",
+            "subject_id"
+          ],
+          "referred_schema": "public",
+          "referred_table": "subjects",
+          "referred_columns": [
+            "user_id",
+            "id"
+          ],
+          "options": {
+            "onupdate": "RESTRICT",
+            "ondelete": "RESTRICT"
+          },
+          "comment": null
+        }
+      ],
+      "unique": []
+    },
+    "activity_deadline_events": {
+      "columns": [
+        {
+          "name": "activity_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "revision",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "previous_deadline",
+          "type": "TIMESTAMP",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "new_deadline",
+          "type": "TIMESTAMP",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "event_type",
+          "type": "TEXT",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "occurred_at",
+          "type": "TIMESTAMP",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        }
+      ],
+      "checks": [
+        {
+          "name": "ck_deadline_events_direction",
+          "sqltext": "event_type = 'postponed'::text AND new_deadline > previous_deadline OR event_type = 'rescheduled'::text AND new_deadline < previous_deadline",
+          "comment": null
+        },
+        {
+          "name": "ck_deadline_events_finite",
+          "sqltext": "isfinite(previous_deadline) AND isfinite(new_deadline) AND isfinite(occurred_at)",
+          "comment": null
+        },
+        {
+          "name": "ck_deadline_events_revision",
+          "sqltext": "revision > 0",
+          "comment": null
+        }
+      ],
+      "indexes": [],
+      "pk": {
+        "constrained_columns": [
+          "activity_id",
+          "revision"
+        ],
+        "name": "activity_deadline_events_pkey",
+        "comment": null,
+        "dialect_options": {
+          "postgresql_include": []
+        }
+      },
+      "fk": [
+        {
+          "name": "fk_deadline_events_activity",
+          "constrained_columns": [
+            "activity_id"
+          ],
+          "referred_schema": "public",
+          "referred_table": "activities",
+          "referred_columns": [
+            "id"
+          ],
+          "options": {
+            "onupdate": "RESTRICT",
+            "ondelete": "RESTRICT"
+          },
+          "comment": null
+        }
+      ],
+      "unique": []
+    }
+  },
+  "triggers": [
+    {
+      "relname": "activities",
+      "tgname": "activity_prepare",
+      "tgenabled": "O",
+      "def": "CREATE TRIGGER activity_prepare BEFORE INSERT OR UPDATE ON public.activities FOR EACH ROW EXECUTE FUNCTION cognova_prepare_activity()"
+    },
+    {
+      "relname": "activities",
+      "tgname": "activity_record_deadline",
+      "tgenabled": "O",
+      "def": "CREATE TRIGGER activity_record_deadline AFTER UPDATE ON public.activities FOR EACH ROW EXECUTE FUNCTION cognova_record_activity_deadline()"
+    },
+    {
+      "relname": "activity_deadline_events",
+      "tgname": "deadline_events_immutable",
+      "tgenabled": "O",
+      "def": "CREATE TRIGGER deadline_events_immutable BEFORE DELETE OR UPDATE ON public.activity_deadline_events FOR EACH ROW EXECUTE FUNCTION cognova_preserve_activity_deadline()"
+    },
+    {
+      "relname": "activity_deadline_events",
+      "tgname": "deadline_events_no_truncate",
+      "tgenabled": "O",
+      "def": "CREATE TRIGGER deadline_events_no_truncate BEFORE TRUNCATE ON public.activity_deadline_events FOR EACH STATEMENT EXECUTE FUNCTION cognova_preserve_activity_deadline()"
+    }
+  ],
+  "functions": [
+    {
+      "proname": "cognova_prepare_activity",
+      "prosrc": "\n        BEGIN\n            IF TG_OP = 'INSERT' THEN\n                IF (NEW.original_deadline IS NOT NULL AND\n                    NEW.original_deadline IS DISTINCT FROM NEW.deadline)\n                   OR NEW.deadline_revision IS DISTINCT FROM 0 THEN\n                    RAISE EXCEPTION 'Invalid initial activity metadata'\n                        USING ERRCODE = '23514';\n                END IF;\n                NEW.original_deadline := NEW.deadline;\n                NEW.created_at := clock_timestamp();\n                NEW.updated_at := NEW.created_at;\n            ELSE\n                IF NEW.id IS DISTINCT FROM OLD.id\n                   OR NEW.user_id IS DISTINCT FROM OLD.user_id\n                   OR NEW.created_at IS DISTINCT FROM OLD.created_at\n                   OR NEW.original_deadline IS DISTINCT FROM OLD.original_deadline\n                   OR NEW.deadline_revision IS DISTINCT FROM OLD.deadline_revision THEN\n                    RAISE EXCEPTION 'Activity identity/history metadata are immutable'\n                        USING ERRCODE = '23514';\n                END IF;\n                NEW.updated_at := greatest(clock_timestamp(), OLD.updated_at);\n                IF NEW.deadline IS DISTINCT FROM OLD.deadline THEN\n                    NEW.deadline_revision := OLD.deadline_revision + 1;\n                END IF;\n            END IF;\n            RETURN NEW;\n        END ",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "provolatile": "v",
+      "return_type": "trigger"
+    },
+    {
+      "proname": "cognova_preserve_activity_deadline",
+      "prosrc": "\n        BEGIN\n            RAISE EXCEPTION 'Activity deadline history is immutable'\n                USING ERRCODE = '23514';\n        END ",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "provolatile": "v",
+      "return_type": "trigger"
+    },
+    {
+      "proname": "cognova_record_activity_deadline",
+      "prosrc": "\n        BEGIN\n            IF NEW.deadline IS DISTINCT FROM OLD.deadline THEN\n                EXECUTE format(\n                    'INSERT INTO %I.activity_deadline_events '\n                    '(activity_id,revision,previous_deadline,new_deadline,'\n                    'event_type,occurred_at) VALUES ($1,$2,$3,$4,$5,$6)',\n                    TG_TABLE_SCHEMA)\n                USING NEW.id, NEW.deadline_revision, OLD.deadline, NEW.deadline,\n                    CASE WHEN NEW.deadline > OLD.deadline THEN 'postponed'\n                         ELSE 'rescheduled' END, NEW.updated_at;\n            END IF;\n            RETURN NEW;\n        END ",
+      "prosecdef": true,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "provolatile": "v",
+      "return_type": "trigger"
+    }
+  ]
+}

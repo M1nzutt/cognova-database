@@ -13,6 +13,34 @@ el trigger SECURITY DEFINER. Verificar por catálogo sin cambiar membresías/sec
 La ausencia de DDL se refiere a objetos persistentes; TEMP heredado se conserva.
 
 
+### Procedimiento revisado 0005
+
+Backup verificado: [manifest](evidence/0005-backup-2026-10-24.json),
+run40056632732/artifact12544639694, siete tablas incluida subjects. Clave de cifrado
+existente custodiada por usuario; no se imprime ni rota. Solo ciphertext descargado.
+
+Aplicar con configuración explícita del migrador y ENVIRONMENT=production:
+`python -m scripts.release_0005 --apply --backup-evidence
+ docs/evidence/0005-backup-2026-10-24.json --evidence
+ docs/evidence/0005-release-2026-10-24.json` (una línea).
+El wrapper local ignorado carga exclusivamente DATABASE_URL existente sin imprimirla.
+Se exige identidad del recurso, TLS, backup menor de24h/no expirado y revisión0004
+bajo locks exclusivos; runner/migraciones deben ser idénticos al SHA fijado.
+El runner aplica0005 y los grants específicos en una transacción. Compara todas las
+filas/columnas previas en memoria, estructura salvo clave compuesta nueva, triggers,
+secuencias, permisos runtime y membresías. No exporta datos ni hashes de filas.
+Cualquier fallo anterior al commit revierte DDL/grants. No cambia membresías ni
+contraseñas para probar runtime. El catálogo/has_table_privilege certifica permisos;
+DML real y reglas se ensayan localmente con rol restringido, sin datos demo productivos.
+
+La referencia evidence/0005-schema-contract.json contiene catálogo local comprobado:
+columnas/checks/FK/índices y definiciones exactas de funciones/triggers. Verificar
+igualdad productiva y validez de constraints/índices, también después del commit
+mediante conexión READ ONLY. Si committed=true, o el fallo ocurre en
+commit_in_progress, inspeccionar revisión/evidencia antes de decidir; nunca repetir
+--apply a ciegas ni ejecutar downgrade automático. Backend anterior exige0004;
+tras aplicar0005 debe seguir el deploy coordinado del Backend Actividades listo.
+
 ## Preparación 0005 Actividades — 2026-10-21
 
 Esta entrega implementa/prueba/publica código; **no aplica 0005 a producción**.
