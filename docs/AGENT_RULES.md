@@ -1,5 +1,14 @@
 # Reglas para agentes
 
+## Alcance vigente de esta tarea — 2026-10-25
+
+- Alinear main/documentación con producción 0005; preservar commits sin squash.
+- No modificar migraciones, lógica, scripts ni evidencias existentes.
+- No operar producción ni modificar otros repositorios.
+- Las autorizaciones fechadas siguientes describen fases anteriores, no órdenes
+  de repetir releases. Estado vigente en PROJECT_STATE y OPERATIONS.
+
+
 - Release Actividades autorizado el 2026-10-23: preflight, backup fresco con
   restauración aislada, aplicación 0005 y grants mínimos al runtime identificado.
   Esta autorización sustituye la exclusión productiva de la fase de desarrollo;
@@ -13,8 +22,8 @@
 - Leer README, PROJECT_STATE, ARCHITECTURE, MIGRATIONS y PROVENANCE antes de editar.
 - Modificar solo cognova-database. Backend/frontend se consultan solo en lectura.
 - No alterar las revisiones históricas; no squash, renumeración, stamp ni create_all.
-- No copiar ORM, auth o settings del backend. Limitar esta fase al registro mínimo,
-  onboarding y percepción/cuestionario autorizados por el usuario.
+- No copiar ORM, auth o settings del backend. Respetar el alcance explícito vigente;
+  las limitaciones de producto de fases anteriores son históricas.
 - 0003 autoriza academic_goal nullable con copia histórica inmutable; leer
   SCHEMA_0003. No eliminar valores ni fabricar respuestas faltantes.
 - La fase Materias autorizada el 2026-10-18 agrega 0004_subjects; leer DATA_MODEL.

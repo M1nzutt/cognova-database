@@ -1,6 +1,37 @@
 # Estado de Cognova Database
 
-## Release 0005 aplicado — 2026-10-24
+## Estado vigente: main alineado con producción — 2026-10-25
+
+Producción está en **0005_activities**, según el release del 2026-10-24
+([evidencia](evidence/0005-release-2026-10-24.json)) y la confirmación del usuario.
+Esta tarea solo alinea Git/documentación: no se consultó ni modificó producción.
+
+Main previo 3974ee3 (6 commits) era ancestro de feat/0005-activities 57e3cd5
+(39 commits). Comparación remota actualizada: 0 exclusivos de main y 33 de la rama.
+Merge --no-ff e853f1ec1893f61598b4e2be690fd5ca764897b1 conserva los 39 commits
+previos y ambos padres. Revisiones 0003/0004/0005, scripts, evidencias, tests y
+workflow vigente incorporados íntegramente. Sin squash ni rebase.
+Cierre documental: **41 commits totales**, dos nuevos en esta tarea.
+
+Cadena vigente: 0001_create_users → 0002_auth_sessions →
+0003_onboarding_questionnaire → 0004_subjects → 0005_activities (único head).
+Migraciones, runner, scripts, tests, configuración y evidencias idénticos a 57e3cd5;
+los únicos ajustes posteriores al merge son Markdown. Pin Backend conservado:
+604e296e2670d154ba7e18d7afa3f010e66dd42d.
+
+Esta alineación no verifica releases ni acredita pruebas nuevas de Backend/Frontend.
+Las secciones siguientes conservan las capturas de cada release. Sus conteos,
+expiraciones, bloqueos y siguientes pasos son históricos, no inventario actual ni
+instrucciones de reaplicación. Referencia operativa vigente: OPERATIONS.
+
+Checks de esta alineación: 51 pruebas offline aprobadas (144 de integración
+excluidas deliberadamente), heads/history confirman la cadena lineal hasta 0005.
+Ambos padres y los 39 commits preservados comprobados; árbol del merge idéntico
+a la rama integrada y diff no documental vacío. 61 enlaces Markdown locales y
+todos los JSON de evidencia válidos; git diff --check correcto. Sin suite ni
+conexiones PostgreSQL, sin operación productiva y sin secretos nuevos.
+
+## Histórico — Release 0005 aplicado — 2026-10-24
 
 Producción: **0004_subjects → 0005_activities**. Commit confirmado 19:38:45Z;
 reconfirmación READ ONLY 19:38:54Z (14:38:54 Bogotá), mismo PostgreSQL y TLS.
@@ -42,7 +73,7 @@ Inicio del release: 36 commits; db69ab2 preparación/backup, 1bca13c helper/ensa
 y cierre documental: tres nuevos, 39 totales, sin squash. Esta continuación desde
 db69ab2 añade dos de esos commits. Rama feat/0005-activities.
 
-## Release 0005 en preparación — 2026-10-23
+## Histórico — Release 0005 en preparación — 2026-10-23
 
 Autorizado por usuario para Backend 442f5b2782570ae6b19a1dfad238026d84e018c7,
 que fija Database604e296e2670d154ba7e18d7afa3f010e66dd42d. Inicio limpio4735735,
@@ -65,7 +96,7 @@ incluidos gates/ensayo integral nuevos. Ruff lint/formato correctos.
 DDL productivo todavía no ejecutado.
 
 
-## Actividades implementadas y validadas localmente — 2026-10-21
+## Histórico — Actividades implementadas y validadas localmente — 2026-10-21
 
 Rama feat/0005-activities, base 667c6d8, 32 commits iniciales y árbol inicialmente limpio.
 Contrato confirmado por usuario: deadline TIMESTAMPTZ obligatorio, prioridad
@@ -87,7 +118,7 @@ Producción sigue en 0004 conforme a la evidencia operativa previa.
 Backend puede implementar contra este contrato fijado; desplegarlo requiere antes
 un release Database separado de 0005 y permisos runtime verificados.
 
-## DELETE de Materias autorizado — 2026-10-20
+## Histórico — DELETE de Materias autorizado — 2026-10-20
 
 Confirmado en producción a las 15:37:00Z: único cambio
 `GRANT DELETE ON TABLE public.subjects TO cognova_runtime`.
@@ -122,7 +153,7 @@ Entrega: a8bc7d7 registra operación/evidencia; el cierre documental actualiza e
 contrato de OPERATIONS. Dos commits granulares nuevos, 32 totales, sin squash.
 No cambia el SHA de esquema fijado por Backend.
 
-## Release Materias aplicado — 2026-10-19
+## Histórico — Release Materias aplicado — 2026-10-19
 
 **Producción exactamente en 0004_subjects**, commit de transacción verificado
 17:34:03Z y reconfirmado READ ONLY 17:34:32Z. Antes: exactamente 0003.
@@ -186,7 +217,7 @@ La certificación sin DDL se refiere a objetos persistentes; TEMP no permite
 alterar el esquema productivo. No se revoca TEMP de PUBLIC, fuera de este alcance.
 Antes de ejecutar: 0004 todavía no aplicada; el siguiente commit registra el helper.
 
-## Materias — 2026-10-18
+## Histórico — Materias — 2026-10-18
 
 Implementada 0004_subjects después de 0003, sin modificar 0001–0003. Contrato:
 [DATA_MODEL](DATA_MODEL.md). Cinco posiciones activas únicas por usuario garantizan
@@ -218,7 +249,7 @@ Las secciones siguientes son historial de la entrega 0003, no el head de código
 
 Fecha de actualización: 2026-10-17. Rama: feat/0003-onboarding-questionnaire.
 
-## Fase actual: aplicación operativa de 0003
+## Histórico — Fase actual: aplicación operativa de 0003
 
 **0003_onboarding_questionnaire aplicada y commit confirmado** el 2026-10-17,
 verificación a las 16:13:38Z, reconfirmada a las 16:13:59Z. Antes: 0002 exactamente.
@@ -328,7 +359,7 @@ registro inicial del workflow en main, artifact y evidencia productiva pendiente
 no se reporta run success. Detalles en [RELEASE_0003](RELEASE_0003.md).
 Inicio: 8 commits; cierre documental y workflow: 9, faltantes hasta 501: 492.
 
-## Release operativo actual
+## Histórico — Release operativo actual
 
 Conectividad confirmada con carga explícita del .env. Recurso Render
 dpg-db2iojc9v7es7387i2ig-a, cognova/public, PostgreSQL 18.6, TLS. Estado productivo
@@ -371,7 +402,7 @@ certificar. Este reintento parte de 6 commits y añade evidencia documental:
 total 7, faltantes hasta 501: 494. Sigue pendiente habilitar la configuración
 efectiva del mismo PostgreSQL existente; detalles en RELEASE_0003.
 
-## Entrega publicada
+## Histórico — Entrega publicada
 
 Commit de código que backend debe fijar:
 `232c43130c0fb3eddd32e1dd3707368ba0d87d4c`.
@@ -379,14 +410,14 @@ Incluye migración, tooling, pruebas y contrato físico; publicado en
 origin/feat/0003-onboarding-questionnaire. El commit documental posterior solo
 registra esta referencia y el cierre de validaciones; no cambia el esquema.
 
-## Estado reconstruido
+## Histórico — Estado reconstruido
 
 Inicio limpio en main/origin/main, 3 commits: 7158cb4, f7b6fa5 y 325e7ea.
 La fase anterior validó offline (18 passed, 5 skipped) y no aplicó DDL en producción.
 La validación real se ejecutó en esta fase. El ZIP anterior corresponde a f7b6fa5
 y ya no representa el head nuevo; no reutilizarlo para esta entrega.
 
-## Decisión y revisión
+## Histórico — Decisión y revisión
 
 0003_onboarding_questionnaire, down_revision=0002_auth_sessions.
 0001/0002 y sus blobs originales intactos: [PROVENANCE](PROVENANCE.md).
@@ -404,7 +435,7 @@ y ya no representa el head nuevo; no reutilizarlo para esta entrega.
 
 Contrato físico/justificación JSONB: [SCHEMA_0003](SCHEMA_0003.md).
 
-## Pruebas reales
+## Histórico — Pruebas reales
 
 PostgreSQL 17.11 x64 Windows, instancia desechable propia en 127.0.0.1:55433,
 base cognova_test, sin servicio del sistema ni producción. Binarios EDB en
@@ -428,7 +459,7 @@ Revisión básica de secretos sin coincidencias de tokens/claves privadas ni .en
 dumps o binarios versionados. Enlaces Markdown locales correctos. No se afirma
 auditoría exhaustiva de vulnerabilidades ni pruebas contra otros motores/versiones.
 
-## Riesgos y límites
+## Histórico — Riesgos y límites
 
 - Faltan opciones/cardinalidades definitivas de las diez preguntas en el contrato
   documental: backend debe fijarlas; no se inventaron valores de producto.
@@ -440,7 +471,7 @@ auditoría exhaustiva de vulnerabilidades ni pruebas contra otros motores/versio
 - Producción ya está en 0003 y el respaldo está verificado. Runtime real,
   ensayo aislado de restauración y pruebas backend continúan pendientes.
 
-## DEPENDENCY BACKEND
+## Histórico — DEPENDENCY BACKEND
 
 El bloqueo de revisión de base está resuelto: producción está en 0003. Antes de
 desplegar, confirmar rol efectivo y permisos de OPERATIONS y ejecutar readiness/
@@ -460,7 +491,7 @@ smoke tests del backend compatible. No se certifica ese despliegue desde databas
 6. Configurar permisos de tablas/funciones y decidir retención/borrado de cuenta,
    más remediación de anomalías legacy. Detalles en SCHEMA_0003 y OPERATIONS.
 
-## Próximo paso
+## Histórico — Próximo paso
 
 Backend confirma su rol/permisos, integra la referencia y realiza readiness/smoke
 tests de su release compatible. No volver a aplicar ni revertir 0003 para ese paso.

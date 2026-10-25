@@ -1,6 +1,12 @@
-# Release operativo 0003 — procedimiento y evidencia
+# Archivo histórico: release operativo 0003 — procedimiento y evidencia
 
-Actualización: 2026-10-17. Objetivo actual: aplicación autorizada de 0003.
+Este archivo completo conserva hechos, bloqueos y procedimientos del release 0003.
+No describe el estado actual ni autoriza reaplicación. Producción: 0005_activities;
+consultar [OPERATIONS](OPERATIONS.md) y [PROJECT_STATE](PROJECT_STATE.md).
+Referencias a 0002, permisos pendientes o backups vigentes corresponden a la fecha
+de cada apartado histórico, no al presente.
+
+Actualización histórica: 2026-10-17. Objetivo entonces: aplicación de 0003.
 Estado: **0003 aplicada y verificada; permisos del runtime backend pendientes**.
 
 ## Aplicación operativa autorizada

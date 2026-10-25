@@ -1,6 +1,10 @@
-# Operación futura, permisos y recuperación
+# Operación vigente, permisos y recuperación
 
-## 0005 aplicado y permisos verificados — 2026-10-24
+Main incorpora el historial completo hasta 0005 desde el 2026-10-25. Esta
+alineación no ejecutó operaciones productivas. Los procedimientos de aplicación
+0003/0004/0005 se conservan como historia; no reaplicarlos sobre producción.
+
+## 0005 aplicado y permisos verificados — evidencia 2026-10-24
 
 Revisión productiva actual: 0005_activities. Aplicación confirmada 19:38:45Z y
 reconfirmada READ ONLY 19:38:54Z. [Evidencia](evidence/0005-release-2026-10-24.json).
@@ -23,16 +27,23 @@ Sin DDL persistente, ownership, privilegios elevados o membresías nuevas; sin c
 de permisos anteriores, alembic_version o historia. TEMP heredado no se modificó.
 Verificado por catálogo y funciones has_*_privilege en producción. DML real e
 historial se ensayaron con rol restringido en PostgreSQL desechable, no en producción.
-El login/runtime real y smoke HTTP deben comprobarse al desplegar Backend Actividades.
+El login/runtime real y smoke HTTP pertenecen al release Backend, comunicado como
+cerrado en esta sesión. Aquí se conserva la evidencia Database sin nuevas pruebas API.
 
 Quince usuarios y siete materias, más sesiones/cuestionarios/datos previos, preservados
 en todas sus filas/columnas dentro de locks. Catálogo nuevo coincide exactamente con
 evidence/0005-schema-contract.json; constraints/índices válidos y triggers habilitados.
-El backend anterior exige0004: completar deploy coordinado del Backend listo para0005.
+El backend productivo debe admitir 0005; no volver a una versión que exija 0004.
 No hubo cambios de Backend/Frontend, de credenciales ni de configuración de hosting.
 Los procedimientos siguientes conservan trazabilidad; no instruyen reaplicar el release.
 
-## Release 0005 autorizado — 2026-10-23
+## Archivo histórico de releases
+
+Los apartados siguientes hasta el contrato vigente de roles describen fases
+pasadas. Sus frases «pendiente», «producción conserva 0004» y grants iniciales
+corresponden a esas fechas. Los comandos --apply no son mantenimiento actual.
+
+## Histórico — Release 0005 autorizado — 2026-10-23
 
 Usuario autoriza aplicar0005 y preparar runtime para Backend442f5b2. El workflow
 backup-pre-0003.yml admite activities_release=true: exige0004, incluye subjects
@@ -73,7 +84,7 @@ commit_in_progress, inspeccionar revisión/evidencia antes de decidir; nunca rep
 --apply a ciegas ni ejecutar downgrade automático. Backend anterior exige0004;
 tras aplicar0005 debe seguir el deploy coordinado del Backend Actividades listo.
 
-## Preparación 0005 Actividades — 2026-10-21
+## Histórico — Preparación 0005 Actividades — 2026-10-21
 
 Esta entrega implementa/prueba/publica código; **no aplica 0005 a producción**.
 Producción conserva 0004. No ejecutar helpers históricos de release 0003/0004 para
@@ -117,7 +128,7 @@ están vacías; locks exclusivos y DROP sin CASCADE. Subjects con datos se conse
 Si hay actividades/eventos, mantener schema y coordinar reparación hacia adelante;
 no borrar datos ni historia para forzar un downgrade.
 
-## Permiso DELETE de subjects — 2026-10-20
+## Histórico — Permiso DELETE de subjects — 2026-10-20
 
 Aplicado y reconfirmado post-commit: únicamente
 `GRANT DELETE ON TABLE public.subjects TO cognova_runtime`.
@@ -150,7 +161,7 @@ Login runtime y ejecución real SELECT/INSERT/UPDATE/DELETE quedan pendientes
 con el secreto ya desplegado en Backend. No rotarlo para estas comprobaciones.
 Backend puede repetir ahora el smoke DELETE; esta entrega no certifica su API.
 
-## Release autorizado de 0004 — 2026-10-19
+## Histórico — Release autorizado de 0004 — 2026-10-19
 
 **Aplicado y confirmado** 2026-10-19 17:34:03Z; reconfirmación READ ONLY
 17:34:32Z. [Evidencia](evidence/0004-release-2026-10-19.json).
@@ -197,7 +208,7 @@ No se utiliza ni rota la contraseña runtime. TEMP heredado existente permite
 objetos temporales propios; no hay DDL sobre objetos persistentes. Revocar TEMP
 de PUBLIC afectaría otros roles y queda fuera de los grants de esta entrega.
 
-## Contrato operativo de 0004 Materias
+## Histórico — Contrato operativo de 0004 Materias
 
 Contrato: [DATA_MODEL](DATA_MODEL.md). El código por sí solo no autoriza aplicar
 DDL productivo; el release autorizado y aplicado figura arriba. Antes de releases, respaldo vigente,
@@ -214,7 +225,12 @@ El release operativo de 0003 está autorizado desde 2026-10-13. Su ejecución re
 y bloqueos se registran en [RELEASE_0003](RELEASE_0003.md). No crear recursos nuevos,
 datos demo ni una base sustituta. No asumir que autorización equivale a aplicación.
 
-## Contrato de roles y grants
+## Contrato vigente de roles y grants
+
+0004/0005 añaden los permisos específicos verificados arriba: DML completo en
+subjects/activities, USAGE/SELECT de sus secuencias y solo SELECT de eventos.
+El contrato base de auth/onboarding siguiente sigue aplicando.
+
 
 El rol migrador debe poseer el esquema/tablas y poder ejecutar DDL. El rol runtime
 del backend requiere CONNECT a la base, USAGE del esquema, DML necesario sobre
@@ -243,7 +259,7 @@ FOR ROLE del creador real para objetos futuros. No otorgar DML indiscriminado
 sobre alembic_version. Verificar con el rol runtime queries de auth y rechazo de
 DDL. El rol migrador y su secreto no se entregan al runtime backend.
 
-## Backup y restauración: runbook pendiente de ensayo
+## Backup y restauración: procedimiento general
 
 1. Operación confirma recursos Render existentes, responsable, versión PostgreSQL,
    retención, RPO/RTO y capacidad de backup del plan realmente contratado.
@@ -259,9 +275,11 @@ DDL. El rol migrador y su secreto no se entregan al runtime backend.
 6. Solo tras demostrar recuperación, coordinar el corte. Un rollback de backend
    exige una revisión admitida; no ejecutar downgrade destructivo automáticamente.
 
-Este runbook no acredita backup, restauración, retención o grants ya configurados.
+Los ensayos aislados pre-0004 y pre-0005 sí están acreditados por sus manifests y
+evidencias fechadas. Este procedimiento no acredita una restauración nueva ni la
+disponibilidad actual de artifacts; verificar retención y acceso antes de usarlos.
 
-## Backup pre-0003 en Actions
+## Backup manual en Actions — nombre histórico pre-0003
 
 El workflow manual [backup-pre-0003.yml](../.github/workflows/backup-pre-0003.yml)
 publica exclusivamente un .dump.gpg cifrado mediante BACKUP_ENCRYPTION_KEY. El repo
@@ -269,11 +287,17 @@ puede seguir público, pero la clave debe ser aleatoria, secreta, de al menos 32
 y una línea. Guardar la clave de recuperación fuera de GitHub; rotar el secret no
 debe eliminar la clave de backups aún retenidos. Retención: siete días.
 
-Después de registrar el workflow en main, dispararlo
-manualmente sobre un commit revisado, verificar status=completed/conclusion=success
+El workflow ya está registrado en main. Para otro release autorizado, ejecutarlo
+solo si sus precondiciones coinciden con la revisión origen requerida; verificar
+status=completed/conclusion=success
 y artifact no expirado. Comparar SHA-256 del .gpg descargado con el resumen del run;
 descifrar en entorno protegido con GnuPG y la clave correspondiente, comparar SHA-256
 del dump con el resumen y ejecutar pg_restore --list. No pasar la clave en argumentos
 ni escribirla en logs. El digest ZIP de GitHub es distinto de los SHA-256 .gpg/.dump.
-El workflow prueba este roundtrip antes del upload; no hace restauración a una base.
-Revisar fecha y cambios posteriores antes de migrar. No ejecutar 0003 en este flujo.
+El workflow prueba el roundtrip antes del upload. subjects_release=true exige 0003
+y ensaya restauración aislada pre-0004; activities_release=true exige 0004 y ensaya
+restauración aislada pre-0005. Sin esos flags conserva el modo histórico pre-0003,
+que exige 0002 y no realiza restauración aislada. No mezclar flags.
+Ningún modo respalda el estado actual 0005: no dispararlo como backup genérico
+post-0005 ni saltar sus gates. Otro release requiere preparación separada.
+Revisar fecha y cambios posteriores antes de migrar; este workflow no aplica DDL.

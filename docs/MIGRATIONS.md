@@ -1,5 +1,13 @@
 # Migraciones, configuración y validación
 
+## Historial vigente en main y producción
+
+Único head: **0005_activities**, aplicado el 2026-10-24; main alineado el
+2026-10-25. Cadena: 0001_create_users → 0002_auth_sessions →
+0003_onboarding_questionnaire → 0004_subjects → 0005_activities.
+Ver [evidencia](evidence/0005-release-2026-10-24.json) y [OPERATIONS](OPERATIONS.md).
+La descripción 0002 inferior es histórica. Integrar la rama no ejecuta migraciones.
+
 ## Configuración
 
 `ENVIRONMENT` debe ser development, test o production para conexión propia.
@@ -36,7 +44,7 @@ Cada ejecución online usa lock_timeout=30s, statement_timeout=120s y advisory l
 transaccional 1943187001. Una transacción inyectada debe terminar pronto: retiene
 lock y ajustes SET LOCAL hasta commit/rollback. No usar autocommit.
 
-## Esquema anterior (0002)
+## Esquema histórico de partida (0002)
 
 - users: id SERIAL PK; name/email/password_hash/degree_program/academic_goal TEXT
   NOT NULL; semester INTEGER NOT NULL con ck_users_semester_positive (`> 0`);
@@ -90,12 +98,16 @@ repetición con hashes/sesiones, constraints/índices, cascada, rollback DDL y
 search_path con conexión propia e inyectada. Los tests con mocks verifican solo
 el contrato de manejo de conexión, nunca comportamiento real del motor.
 
-## Operar 0003
+## Runner vigente y referencia histórica de downgrade 0003
 
 El runner acepta destinos explícitos 0001_create_users, 0002_auth_sessions,
 0003_onboarding_questionnaire, 0004_subjects, 0005_activities y head.
 Backend debe fijar la revisión admitida;
 no inferir compatibilidad por orden numérico de IDs.
+
+El ejemplo siguiente corresponde exclusivamente al downgrade histórico 0003→0002,
+no al estado productivo 0005. Ver DATA_MODEL para restricciones de 0004/0005 y
+OPERATIONS para recuperación; nunca vaciar datos para forzar un downgrade.
 
 Downgrade deliberado vía API Alembic: con conexión inyectada, llamar
 `command.downgrade(config, "0002_auth_sessions")`. Usa locks exclusivos y aborta

@@ -1,11 +1,29 @@
-#  Cognova Database
+# Cognova Database
 
 Repositorio operativo del esquema PostgreSQL existente de Cognova. No es una API.
 Historial: `0001_create_users` → `0002_auth_sessions` → `0003_onboarding_questionnaire`
 → `0004_subjects` → `0005_activities` ([contrato](docs/DATA_MODEL.md)).
-0001 y 0002 permanecen intactas. 0003 separa onboarding del registro y conserva
+Las revisiones 0001–0005 se conservan sin cambios en esta integración. 0003 separa onboarding del registro y conserva
 la percepción inicial y las revisiones del cuestionario.
 Backend conserva ORM, conexiones, consultas, auth y lógica de negocio.
+
+## Estado vigente — 2026-10-25
+
+**Main representa el esquema productivo 0005_activities.** Integra sin squash
+feat/0005-activities, incluidos scripts, pruebas y evidencias de los releases.
+Producción sí fue operada: 0003 se aplicó el 2026-10-17, 0004 el 2026-10-19 y
+0005 el 2026-10-24. El historial no termina en 0002.
+
+- [Estado y trazabilidad](docs/PROJECT_STATE.md).
+- [Operación y permisos vigentes](docs/OPERATIONS.md).
+- [Evidencia productiva 0005](docs/evidence/0005-release-2026-10-24.json).
+- [Backup verificado al aplicar 0005](docs/evidence/0005-backup-2026-10-24.json).
+- [Modelo de Materias y Actividades](docs/DATA_MODEL.md).
+
+El SHA de esquema fijado por Backend sigue siendo
+604e296e2670d154ba7e18d7afa3f010e66dd42d; integrar main no cambia ese pin.
+Esta alineación no ejecuta migraciones, grants ni backups. Las evidencias contienen
+capturas fechadas del release, no un inventario nuevo. No reaplicar helpers históricos.
 
 ## Instalación y comandos
 
@@ -35,8 +53,9 @@ python -m cognova_database current
 ```
 
 No se carga `.env` automáticamente. No se requiere JWT ni código del backend.
-El release operativo autorizado de 0003 y su evidencia se registran en
-[RELEASE_0003](docs/RELEASE_0003.md); consultar el estado antes de operar producción.
+El estado vigente está en [OPERATIONS](docs/OPERATIONS.md).
+[RELEASE_0003](docs/RELEASE_0003.md) es el registro histórico de ese release,
+no la revisión productiva actual.
 
 ## Documentación
 
