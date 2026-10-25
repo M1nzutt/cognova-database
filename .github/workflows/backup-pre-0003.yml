@@ -3,6 +3,23 @@ run-name: Backup pre-0003 · ${{ github.run_id }}
 
 on:
   workflow_dispatch:
+    inputs:
+      activities_release:
+        description: Back up exactly 0004 before authorized 0005 release, including isolated restore
+        type: boolean
+        default: false
+      subjects_release:
+        description: Back up exactly 0003 before the authorized 0004 release, including isolated restore
+        type: boolean
+        default: false
+      diagnose_connection:
+        description: Diagnose only the read-only psql revision query; never run backup
+        type: boolean
+        default: false
+      validate_only:
+        description: Validate secret configuration without contacting PostgreSQL
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -38,6 +55,10 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+          VALIDATE_ONLY: ${{ inputs.validate_only }}
+          DIAGNOSE_CONNECTION: ${{ inputs.diagnose_connection }}
+          SUBJECTS_RELEASE: ${{ inputs.subjects_release }}
+          ACTIVITIES_RELEASE: ${{ inputs.activities_release }}
         shell: bash
         run: |
           set -euo pipefail
@@ -49,22 +70,69 @@ jobs:
           import subprocess
           from datetime import datetime, timezone
           from pathlib import Path
-          from urllib.parse import parse_qsl, urlsplit
+          from urllib.parse import parse_qsl, unquote, urlsplit
 
-          def run(args, env, input_data=None):
-              result = subprocess.run(args, env=env, input=input_data, capture_output=True, timeout=600)
+          class BackupValidationError(ValueError):
+              """Only constant messages authored below, never native error text."""
+              pass
+
+          class BackupOperationError(RuntimeError):
+              pass
+
+          def classify_connection_error(stderr):
+              message = stderr.decode('utf-8', errors='replace').lower()
+              # Match known client diagnostics in memory; return constants only.
+              if 'could not translate host name' in message or 'name or service not known' in message:
+                  return 'DNS'
+              if 'connection to server on socket' in message:
+                  return 'OTHER_PSQL: default_local_socket'
+              if any(token in message for token in ('connection refused', 'connection timed out', 'timeout expired', 'network is unreachable', 'no route to host')):
+                  return 'TCP_PORT'
+              if any(token in message for token in ('password authentication failed', 'no password supplied', 'authentication failed', 'no pg_hba.conf entry')):
+                  return 'AUTHENTICATION'
+              if any(token in message for token in ('ssl error', 'ssl connection', 'certificate verify failed', 'does not support ssl', 'root certificate file', 'private key file')):
+                  return 'TLS'
+              if 'fatal:  database ' in message and 'does not exist' in message:
+                  return 'DATABASE_NOT_FOUND'
+              return 'OTHER_PSQL'
+
+          def diagnose_connection(psql, env):
+              diagnostic_env = dict(env, LC_ALL='C')
+              try:
+                  result = subprocess.run(
+                      psql + ['SELECT version_num FROM public.alembic_version ORDER BY version_num'],
+                      env=diagnostic_env, capture_output=True, timeout=45,
+                  )
+              except Exception:
+                  # A process timeout/spawn failure does not prove a network cause.
+                  print('Connection diagnostic: OTHER_PSQL')
+                  return
+              category = classify_connection_error(result.stderr) if result.returncode else 'SUCCESS'
+              print('Connection diagnostic: ' + category)
+
+          def run(operation, args, env, input_data=None):
+              try:
+                  result = subprocess.run(args, env=env, input=input_data, capture_output=True, timeout=600)
+              except Exception:
+                  raise BackupOperationError(operation) from None
               if result.returncode:
                   # Never print native errors: they can contain connection details.
-                  raise RuntimeError('Backup operation failed; no artifact published')
+                  raise BackupOperationError(operation) from None
               return result.stdout
 
           def backup():
+              subjects = os.environ.get('SUBJECTS_RELEASE') == 'true'
+              activities = os.environ.get('ACTIVITIES_RELEASE') == 'true'
+              if subjects and activities:
+                  raise BackupValidationError('Select only one release')
+              expected = '0004_subjects' if activities else ('0003_onboarding_questionnaire' if subjects else '0002_auth_sessions')
+              label = '0005' if activities else ('0004' if subjects else '0003')
               key = os.environ.get('BACKUP_ENCRYPTION_KEY', '')
               if len(key.encode('utf-8')) < 32 or any(c in key for c in '\r\n\0'):
-                  raise ValueError('Encryption key must be at least 32 bytes and single-line')
+                  raise BackupValidationError('Encryption key must be at least 32 bytes and single-line')
               raw = os.environ.get('DATABASE_URL', '')
               if not raw:
-                  raise ValueError('Required database secret is unavailable')
+                  raise BackupValidationError('Required database secret is unavailable')
               url = raw.replace('postgresql+psycopg://', 'postgresql://', 1)
               parsed = urlsplit(url)
               if (parsed.scheme not in ('postgresql', 'postgres')
@@ -72,47 +140,99 @@ jobs:
                   or parsed.hostname.split('.')[0] != 'dpg-db2iojc9v7es7387i2ig-a'
                   or not parsed.hostname.endswith('.render.com')
                   or parsed.path != '/cognova' or parsed.fragment):
-                  raise ValueError('Unexpected database target')
+                  raise BackupValidationError('Unexpected database target')
               options = parse_qsl(parsed.query, keep_blank_values=True)
               if any(k not in ('sslmode', 'channel_binding', 'connect_timeout') for k, _ in options):
-                  raise ValueError('Unsupported connection options')
+                  raise BackupValidationError('Unsupported connection options')
               if any(k == 'sslmode' and v not in ('require', 'verify-ca', 'verify-full') for k, v in options):
-                  raise ValueError('TLS is required')
+                  raise BackupValidationError('TLS is required')
               env = {k: v for k, v in os.environ.items()
                      if not k.startswith('PG') and k not in ('DATABASE_URL', 'BACKUP_ENCRYPTION_KEY')}
-              env.update(PGDATABASE=url, PGSSLMODE='require', PGCONNECT_TIMEOUT='15',
+              env.update(PGHOST=parsed.hostname, PGPORT=str(parsed.port or 5432),
+                         PGDATABASE=unquote(parsed.path[1:]),
+                         PGUSER=unquote(parsed.username or ''),
+                         PGPASSWORD=unquote(parsed.password or ''),
+                         PGSSLMODE='require', PGCONNECT_TIMEOUT='15',
                          PGOPTIONS='-c default_transaction_read_only=on -c statement_timeout=120000 -c lock_timeout=15000')
+              if not env['PGUSER'] or not env['PGPASSWORD'] or any('\0' in value for value in env.values()):
+                  raise BackupValidationError('Invalid libpq connection parameters')
+              # Preserve stricter TLS and explicit supported connection options.
+              option_env = {'sslmode': 'PGSSLMODE', 'channel_binding': 'PGCHANNELBINDING', 'connect_timeout': 'PGCONNECT_TIMEOUT'}
+              for name, value in options:
+                  env[option_env[name]] = value
+              if os.environ.get('VALIDATE_ONLY') == 'true':
+                  print('Secret configuration accepted; no database connection or backup performed')
+                  return
               binaries = Path('/usr/lib/postgresql/18/bin')
               psql = [str(binaries / 'psql'), '--no-psqlrc', '--no-password', '-At', '-v', 'ON_ERROR_STOP=1', '-c']
-              revision = run(psql + ['SELECT version_num FROM public.alembic_version ORDER BY version_num'], env).decode().strip()
-              if revision != '0002_auth_sessions':
-                  raise ValueError('Expected exactly revision 0002 before backup')
-              if run(psql + ['SELECT ssl FROM pg_stat_ssl WHERE pid=pg_backend_pid()'], env).strip() != b't':
-                  raise ValueError('TLS session could not be verified')
-              dump_version = run([str(binaries / 'pg_dump'), '--version'], env).decode().strip()
-              restore_version = run([str(binaries / 'pg_restore'), '--version'], env).decode().strip()
+              if os.environ.get('DIAGNOSE_CONNECTION') == 'true':
+                  diagnose_connection(psql, env)
+                  return
+              revision = run('psql_revision', psql + ['SELECT version_num FROM public.alembic_version ORDER BY version_num'], env).decode().strip()
+              if revision != expected:
+                  raise BackupValidationError('Unexpected exact revision before backup')
+              if run('psql_tls', psql + ['SELECT ssl FROM pg_stat_ssl WHERE pid=pg_backend_pid()'], env).strip() != b't':
+                  raise BackupValidationError('TLS session could not be verified')
+              dump_version = run('pg_dump_version', [str(binaries / 'pg_dump'), '--version'], env).decode().strip()
+              restore_version = run('pg_restore_version', [str(binaries / 'pg_restore'), '--version'], env).decode().strip()
               if not dump_version.startswith('pg_dump (PostgreSQL) 18.'):
-                  raise ValueError('PostgreSQL client 18 required')
-              destination = Path(os.environ['RUNNER_TEMP']) / 'cognova-pre-0003'
+                  raise BackupValidationError('PostgreSQL client 18 required')
+              destination = Path(os.environ['RUNNER_TEMP']) / ('cognova-pre-' + label)
               destination.mkdir(mode=0o700, exist_ok=False)
-              dump = destination / 'cognova-pre-0003.dump'
+              dump = destination / ('cognova-pre-' + label + '.dump')
               started = datetime.now(timezone.utc).isoformat()
-              run([str(binaries / 'pg_dump'), '--no-password', '--format=custom',
+              run('pg_dump', [str(binaries / 'pg_dump'), '--no-password', '--format=custom',
                    '--lock-wait-timeout=15s', '--file', str(dump)], env)
               if dump.stat().st_size == 0:
-                  raise ValueError('Empty backup')
-              toc = run([str(binaries / 'pg_restore'), '--list', str(dump)], env)
-              for table in ('users', 'auth_sessions', 'rate_limit_buckets', 'alembic_version'):
+                  raise BackupValidationError('Empty backup')
+              toc = run('pg_restore_list', [str(binaries / 'pg_restore'), '--list', str(dump)], env)
+              tables = ('users', 'auth_sessions', 'rate_limit_buckets', 'alembic_version')
+              if subjects or activities:
+                  tables += ('user_academic_goal_legacy', 'questionnaire_responses')
+              if activities:
+                  tables += ('subjects',)
+              for table in tables:
                   if f'TABLE DATA public {table} '.encode() not in toc:
-                      raise ValueError('Required table data missing from backup')
+                      raise BackupValidationError('Required table data missing from backup')
               # Decode the complete archive, without connecting or executing SQL.
-              run([str(binaries / 'pg_restore'), '--file=/dev/null', str(dump)], env)
-              if run(psql + ['SELECT version_num FROM public.alembic_version ORDER BY version_num'], env).decode().strip() != revision:
-                  raise ValueError('Schema revision changed during backup')
+              run('pg_restore_decode', [str(binaries / 'pg_restore'), '--file=/dev/null', str(dump)], env)
+              if subjects or activities:
+                  # Disposable container: no production credentials or network destination.
+                  isolated = {k: v for k, v in env.items() if not k.startswith('PG')}
+                  run('restore_server', ['docker', 'run', '--detach', '--rm', '--name',
+                      'cognova-restore', '-e', 'POSTGRES_HOST_AUTH_METHOD=trust',
+                      '-p', '127.0.0.1:55434:5432', 'postgres:18'], isolated)
+                  import time
+                  local = dict(isolated, PGHOST='127.0.0.1', PGPORT='55434',
+                               PGUSER='postgres', PGDATABASE='postgres', PGSSLMODE='disable')
+                  try:
+                      for _ in range(60):
+                          ready = subprocess.run([str(binaries / 'pg_isready')],
+                              env=local, capture_output=True, timeout=10)
+                          if ready.returncode == 0:
+                              break
+                          time.sleep(1)
+                      else:
+                          raise BackupValidationError('Restore server not ready')
+                      run('restore_isolated', [str(binaries / 'pg_restore'), '--no-password',
+                          '--exit-on-error', '--no-owner', '--no-privileges',
+                          '--dbname=postgres', str(dump)], local)
+                      restored = run('restore_revision', psql +
+                          ['SELECT version_num FROM public.alembic_version'], local).decode().strip()
+                      if restored != expected:
+                          raise BackupValidationError('Restored revision differs')
+                      counts = {}
+                      for table in tables:
+                          counts[table] = int(run('restore_count', psql +
+                              ['SELECT count(*) FROM public.' + table], local).strip())
+                  finally:
+                      run('restore_cleanup', ['docker', 'stop', 'cognova-restore'], isolated)
+              if run('psql_revision_after', psql + ['SELECT version_num FROM public.alembic_version ORDER BY version_num'], env).decode().strip() != revision:
+                  raise BackupValidationError('Schema revision changed during backup')
               with dump.open('rb') as stream:
                   digest = hashlib.file_digest(stream, 'sha256').hexdigest()
               size_bytes = dump.stat().st_size
-              encrypted = destination / 'cognova-pre-0003.dump.gpg'
+              encrypted = destination / ('cognova-pre-' + label + '.dump.gpg')
               recovered = destination / 'roundtrip.dump'
               gpg_home = destination / 'gnupg'
               gpg_home.mkdir(mode=0o700)
@@ -121,18 +241,18 @@ jobs:
                      '--yes', '--no-tty', '--pinentry-mode', 'loopback',
                      '--no-symkey-cache', '--passphrase-fd', '0']
               passphrase = key.encode('utf-8') + b'\n'
-              gpg_version = run(['gpg', '--version'], crypto_env).decode().splitlines()[0]
-              run(gpg + ['--symmetric', '--cipher-algo', 'AES256', '--s2k-mode', '3',
+              gpg_version = run('gpg_version', ['gpg', '--version'], crypto_env).decode().splitlines()[0]
+              run('gpg_encrypt', gpg + ['--symmetric', '--cipher-algo', 'AES256', '--s2k-mode', '3',
                          '--s2k-digest-algo', 'SHA512', '--s2k-count', '65011712',
                          '--compress-algo', 'none', '--output', str(encrypted), str(dump)],
                   crypto_env, passphrase)
               if encrypted.stat().st_size == 0:
-                  raise ValueError('Empty encrypted backup')
-              run(gpg + ['--output', str(recovered), '--decrypt', str(encrypted)],
+                  raise BackupValidationError('Empty encrypted backup')
+              run('gpg_decrypt', gpg + ['--output', str(recovered), '--decrypt', str(encrypted)],
                   crypto_env, passphrase)
               with recovered.open('rb') as stream:
                   if hashlib.file_digest(stream, 'sha256').hexdigest() != digest:
-                      raise ValueError('Decrypted backup differs from verified dump')
+                      raise BackupValidationError('Decrypted backup differs from verified dump')
               with encrypted.open('rb') as stream:
                   encrypted_digest = hashlib.file_digest(stream, 'sha256').hexdigest()
               # Only ciphertext survives to the upload step.
@@ -148,7 +268,8 @@ jobs:
                   pg_dump_version=dump_version, pg_restore_version=restore_version,
                   revision_before=revision, revision_after=revision,
                   pg_restore_list='passed', full_archive_decode='passed',
-                  restore_rehearsal='not_performed',
+                  restore_rehearsal='passed' if subjects or activities else 'not_performed',
+                  restored_counts=counts if subjects or activities else None,
                   run_id=os.environ['GITHUB_RUN_ID'], attempt=os.environ['GITHUB_RUN_ATTEMPT'],
                   source_commit=os.environ['GITHUB_SHA'],
               )
@@ -160,12 +281,17 @@ jobs:
 
           try:
               backup()
+          except BackupOperationError as error:
+              print('::error::Backup stopped at: ' + str(error))
+              raise SystemExit(1) from None
           except Exception as error:
-              print('::error::Backup stopped; exception_type=' + type(error).__name__)
+              detail = str(error) if isinstance(error, BackupValidationError) else type(error).__name__
+              print('::error::Backup stopped; ' + detail)
               raise SystemExit(1) from None
           PY
 
       - name: Upload only encrypted pre-0003 backup
+        if: ${{ success() && steps.backup.outputs.encrypted_file != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: cognova-production-pre-0003-encrypted-${{ github.run_id }}-${{ github.run_attempt }}
@@ -177,4 +303,4 @@ jobs:
       - name: Remove runner-local backup files
         if: always()
         shell: bash
-        run: rm -rf -- "$RUNNER_TEMP/cognova-pre-0003"
+        run: rm -rf -- "$RUNNER_TEMP/cognova-pre-0003" "$RUNNER_TEMP/cognova-pre-0004" "$RUNNER_TEMP/cognova-pre-0005"

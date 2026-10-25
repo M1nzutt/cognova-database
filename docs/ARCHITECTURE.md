@@ -20,4 +20,10 @@ advisory lock transaccional `1943187001` que el launcher transitorio del backend
 Las revisiones se ejecutan dentro de una transacción; el propietario de una
 conexión inyectada con transacción abierta conserva commit/rollback y cierre.
 
-`academic_goal` permanece en users. No hay cambios de producto ni nuevas tablas.
+0003 permite registro mínimo y onboarding posterior. academic_goal permanece
+nullable en users como compatibilidad transitoria; su copia histórica está en
+user_academic_goal_legacy. El cuestionario completo vive en snapshots append-only
+en questionnaire_responses: revisión 1 inicial, última revisión vigente. El goal
+legacy es evidencia parcial anterior, no un cuestionario completo fabricado.
+Ver [contrato físico](SCHEMA_0003.md). Backend posee opciones, cardinalidades y
+validación semántica; database exige estructura, completitud e historial.

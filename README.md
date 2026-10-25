@@ -1,7 +1,10 @@
 #  Cognova Database
 
 Repositorio operativo del esquema PostgreSQL existente de Cognova. No es una API.
-El historial original permanece `0001_create_users` → `0002_auth_sessions`.
+Historial: `0001_create_users` → `0002_auth_sessions` → `0003_onboarding_questionnaire`
+→ `0004_subjects` → `0005_activities` ([contrato](docs/DATA_MODEL.md)).
+0001 y 0002 permanecen intactas. 0003 separa onboarding del registro y conserva
+la percepción inicial y las revisiones del cuestionario.
 Backend conserva ORM, conexiones, consultas, auth y lógica de negocio.
 
 ## Instalación y comandos
@@ -32,7 +35,8 @@ python -m cognova_database current
 ```
 
 No se carga `.env` automáticamente. No se requiere JWT ni código del backend.
-No se ha autorizado ni ejecutado operación contra producción en esta separación.
+El release operativo autorizado de 0003 y su evidencia se registran en
+[RELEASE_0003](docs/RELEASE_0003.md); consultar el estado antes de operar producción.
 
 ## Documentación
 
@@ -42,3 +46,4 @@ No se ha autorizado ni ejecutado operación contra producción en esta separaci�
 - [Estado verificable y DEPENDENCY BACKEND](docs/PROJECT_STATE.md)
 - [Reglas para agentes](docs/AGENT_RULES.md)
 - [Operación, permisos y recuperación](docs/OPERATIONS.md)
+- [Contrato físico de onboarding y cuestionario](docs/SCHEMA_0003.md)

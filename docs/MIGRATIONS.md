@@ -36,7 +36,7 @@ Cada ejecución online usa lock_timeout=30s, statement_timeout=120s y advisory l
 transaccional 1943187001. Una transacción inyectada debe terminar pronto: retiene
 lock y ajustes SET LOCAL hasta commit/rollback. No usar autocommit.
 
-## Esquema actual
+## Esquema anterior (0002)
 
 - users: id SERIAL PK; name/email/password_hash/degree_program/academic_goal TEXT
   NOT NULL; semester INTEGER NOT NULL con ck_users_semester_positive (`> 0`);
@@ -50,6 +50,11 @@ lock y ajustes SET LOCAL hasta commit/rollback. No usar autocommit.
 - rate_limit_buckets: key_hash VARCHAR(64) PK, hits INTEGER NOT NULL y expires_at
   timestamptz NOT NULL; índice ix_rate_limit_buckets_expires_at.
 - alembic_version: una fila `0002_auth_sessions` al completar el upgrade.
+
+El head de código y producción es 0005_activities (release 2026-10-24, OPERATIONS).
+Ver [DATA_MODEL](DATA_MODEL.md).
+Para onboarding ver [SCHEMA_0003](SCHEMA_0003.md).
+Estas definiciones describen el punto de partida, no la nulabilidad actual.
 
 UUID de sesión y onupdate de users.updated_at son comportamientos del ORM, no
 defaults/triggers nuevos que database deba añadir.
@@ -84,3 +89,16 @@ se haya ejecutado. La suite cubre base/esquema vacío, upgrade desde 0001 con da
 repetición con hashes/sesiones, constraints/índices, cascada, rollback DDL y
 search_path con conexión propia e inyectada. Los tests con mocks verifican solo
 el contrato de manejo de conexión, nunca comportamiento real del motor.
+
+## Operar 0003
+
+El runner acepta destinos explícitos 0001_create_users, 0002_auth_sessions,
+0003_onboarding_questionnaire, 0004_subjects, 0005_activities y head.
+Backend debe fijar la revisión admitida;
+no inferir compatibilidad por orden numérico de IDs.
+
+Downgrade deliberado vía API Alembic: con conexión inyectada, llamar
+`command.downgrade(config, "0002_auth_sessions")`. Usa locks exclusivos y aborta
+si hay respuestas, onboarding NULL o un goal que difiera del archivo histórico.
+No completar datos ficticios, forzar stamp ni usarlo como rollback automático.
+La suite real de PostgreSQL está registrada en [PROJECT_STATE](PROJECT_STATE.md).

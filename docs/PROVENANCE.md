@@ -17,3 +17,12 @@ El lock conserva pins/hashes de las dependencias DB y transitivas del lock fuent
 
 No se importó todo el historial Git del backend: se conserva la trazabilidad de
 origen y el historial Alembic completo que reconoce la base existente.
+
+Al agregar 0004, también se protege el blob de 0003_onboarding_questionnaire.py:
+`5e6e5c25d631efb6d0015fabce2b64ae9866fba1`, procedente de la entrega propia 0003.
+Las pruebas offline verifican las tres revisiones inmutables, además del head
+lineal 0004_subjects. No se renumeró ni modificó su SQL.
+
+Al agregar 0005 se protege además el blob de 0004_subjects.py:
+`6827c5d80d5591e2423eca6f971cde0273a5ce38`. Las cuatro revisiones históricas
+permanecen idénticas; el nuevo head lineal es 0005_activities.

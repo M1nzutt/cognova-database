@@ -10,7 +10,7 @@ from cognova_database.runner import main, migration_config
 pytestmark = pytest.mark.integration
 
 
-def upgrade(connection, revision="head"):
+def upgrade(connection, revision="0002_auth_sessions"):
     config = migration_config()
     config.attributes["connection"] = connection
     command.upgrade(config, revision)
@@ -143,8 +143,8 @@ def test_cli_own_connection_respects_search_path(pg_engine, monkeypatch):
     monkeypatch.setenv("ENVIRONMENT", "test")
     monkeypatch.setenv("DATABASE_URL", engine.url.render_as_string(hide_password=False))
     monkeypatch.delenv("JWT_SECRET", raising=False)
-    assert main(["upgrade", "head"]) == 0
-    assert main(["upgrade", "head"]) == 0
+    assert main(["upgrade", "0002_auth_sessions"]) == 0
+    assert main(["upgrade", "0002_auth_sessions"]) == 0
     with engine.connect() as connection:
         assert connection.scalar(text("SELECT current_schema()")) == schema
         assert connection.scalar(text("SELECT version_num FROM alembic_version")) == (

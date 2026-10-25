@@ -1,0 +1,516 @@
+{
+  "database": "cognova",
+  "schema": "public",
+  "role": "cognova_user",
+  "server_version": "18.6 (Debian 18.6-1.pgdg12+2)",
+  "search_path": "\"$user\", public",
+  "tls": true,
+  "tables": [
+    "alembic_version",
+    "users",
+    "auth_sessions",
+    "rate_limit_buckets"
+  ],
+  "revisions": [
+    "0002_auth_sessions"
+  ],
+  "counts": {
+    "users": 1,
+    "auth_sessions": 3,
+    "rate_limit_buckets": 2,
+    "alembic_version": 1
+  },
+  "structure": {
+    "users": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "timezone": null,
+          "nullable": false,
+          "default": "nextval('\"public\".users_id_seq'::regclass)"
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "timezone": null,
+          "nullable": false,
+          "default": null
+        },
+        {
+          "name": "email",
+          "type": "TEXT",
+          "timezone": null,
+          "nullable": false,
+          "default": null
+        },
+        {
+          "name": "password_hash",
+          "type": "TEXT",
+          "timezone": null,
+          "nullable": false,
+          "default": null
+        },
+        {
+          "name": "degree_program",
+          "type": "TEXT",
+          "timezone": null,
+          "nullable": false,
+          "default": null
+        },
+        {
+          "name": "semester",
+          "type": "INTEGER",
+          "timezone": null,
+          "nullable": false,
+          "default": null
+        },
+        {
+          "name": "academic_goal",
+          "type": "TEXT",
+          "timezone": null,
+          "nullable": false,
+          "default": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "timezone": true,
+          "nullable": false,
+          "default": "now()"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "timezone": true,
+          "nullable": false,
+          "default": "now()"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "uq_users_email_lower",
+          "unique": true,
+          "column_names": [
+            null
+          ],
+          "expressions": [
+            "lower(email)"
+          ],
+          "dialect_options": {
+            "postgresql_include": []
+          }
+        }
+      ],
+      "checks": [
+        {
+          "name": "ck_users_semester_positive",
+          "sqltext": "semester > 0",
+          "comment": null
+        }
+      ],
+      "pk": {
+        "constrained_columns": [
+          "id"
+        ],
+        "name": "users_pkey",
+        "comment": null,
+        "dialect_options": {
+          "postgresql_include": []
+        }
+      },
+      "fk": []
+    },
+    "auth_sessions": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "timezone": null,
+          "nullable": false,
+          "default": null
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "timezone": null,
+          "nullable": false,
+          "default": null
+        },
+        {
+          "name": "refresh_token_hash",
+          "type": "VARCHAR(64)",
+          "timezone": null,
+          "nullable": false,
+          "default": null
+        },
+        {
+          "name": "csrf_token_hash",
+          "type": "VARCHAR(64)",
+          "timezone": null,
+          "nullable": false,
+          "default": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "timezone": true,
+          "nullable": false,
+          "default": "now()"
+        },
+        {
+          "name": "expires_at",
+          "type": "TIMESTAMP",
+          "timezone": true,
+          "nullable": false,
+          "default": null
+        },
+        {
+          "name": "last_used_at",
+          "type": "TIMESTAMP",
+          "timezone": true,
+          "nullable": false,
+          "default": null
+        },
+        {
+          "name": "revoked_at",
+          "type": "TIMESTAMP",
+          "timezone": true,
+          "nullable": true,
+          "default": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_auth_sessions_expires_at",
+          "unique": false,
+          "column_names": [
+            "expires_at"
+          ],
+          "dialect_options": {
+            "postgresql_include": []
+          }
+        },
+        {
+          "name": "ix_auth_sessions_user_id",
+          "unique": false,
+          "column_names": [
+            "user_id"
+          ],
+          "dialect_options": {
+            "postgresql_include": []
+          }
+        }
+      ],
+      "checks": [],
+      "pk": {
+        "constrained_columns": [
+          "id"
+        ],
+        "name": "auth_sessions_pkey",
+        "comment": null,
+        "dialect_options": {
+          "postgresql_include": []
+        }
+      },
+      "fk": [
+        {
+          "name": "auth_sessions_user_id_fkey",
+          "constrained_columns": [
+            "user_id"
+          ],
+          "referred_schema": "public",
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ],
+          "options": {
+            "ondelete": "CASCADE"
+          },
+          "comment": null
+        }
+      ]
+    },
+    "rate_limit_buckets": {
+      "columns": [
+        {
+          "name": "key_hash",
+          "type": "VARCHAR(64)",
+          "timezone": null,
+          "nullable": false,
+          "default": null
+        },
+        {
+          "name": "hits",
+          "type": "INTEGER",
+          "timezone": null,
+          "nullable": false,
+          "default": null
+        },
+        {
+          "name": "expires_at",
+          "type": "TIMESTAMP",
+          "timezone": true,
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_rate_limit_buckets_expires_at",
+          "unique": false,
+          "column_names": [
+            "expires_at"
+          ],
+          "dialect_options": {
+            "postgresql_include": []
+          }
+        }
+      ],
+      "checks": [],
+      "pk": {
+        "constrained_columns": [
+          "key_hash"
+        ],
+        "name": "rate_limit_buckets_pkey",
+        "comment": null,
+        "dialect_options": {
+          "postgresql_include": []
+        }
+      },
+      "fk": []
+    },
+    "alembic_version": {
+      "columns": [
+        {
+          "name": "version_num",
+          "type": "VARCHAR(32)",
+          "timezone": null,
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "indexes": [],
+      "checks": [],
+      "pk": {
+        "constrained_columns": [
+          "version_num"
+        ],
+        "name": "alembic_version_pkc",
+        "comment": null,
+        "dialect_options": {
+          "postgresql_include": []
+        }
+      },
+      "fk": []
+    }
+  },
+  "legacy_anomalies": {
+    "name": 0,
+    "email": 0
+  },
+  "roles": [
+    {
+      "rolname": "cognova_user",
+      "rolsuper": false,
+      "rolcreaterole": true,
+      "rolcreatedb": true,
+      "rolcanlogin": true
+    },
+    {
+      "rolname": "datadog",
+      "rolsuper": false,
+      "rolcreaterole": false,
+      "rolcreatedb": false,
+      "rolcanlogin": true
+    },
+    {
+      "rolname": "postgres",
+      "rolsuper": true,
+      "rolcreaterole": true,
+      "rolcreatedb": true,
+      "rolcanlogin": true
+    },
+    {
+      "rolname": "primaryuser",
+      "rolsuper": false,
+      "rolcreaterole": false,
+      "rolcreatedb": false,
+      "rolcanlogin": true
+    },
+    {
+      "rolname": "render_conn",
+      "rolsuper": false,
+      "rolcreaterole": false,
+      "rolcreatedb": false,
+      "rolcanlogin": true
+    }
+  ],
+  "ownership": [
+    {
+      "relname": "alembic_version",
+      "owner": "cognova_user"
+    },
+    {
+      "relname": "auth_sessions",
+      "owner": "cognova_user"
+    },
+    {
+      "relname": "rate_limit_buckets",
+      "owner": "cognova_user"
+    },
+    {
+      "relname": "users",
+      "owner": "cognova_user"
+    }
+  ],
+  "grants": [
+    {
+      "grantee": "cognova_user",
+      "table_name": "alembic_version",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "cognova_user",
+      "table_name": "alembic_version",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "cognova_user",
+      "table_name": "alembic_version",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "cognova_user",
+      "table_name": "alembic_version",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "cognova_user",
+      "table_name": "alembic_version",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "cognova_user",
+      "table_name": "alembic_version",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "cognova_user",
+      "table_name": "alembic_version",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "cognova_user",
+      "table_name": "auth_sessions",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "cognova_user",
+      "table_name": "auth_sessions",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "cognova_user",
+      "table_name": "auth_sessions",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "cognova_user",
+      "table_name": "auth_sessions",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "cognova_user",
+      "table_name": "auth_sessions",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "cognova_user",
+      "table_name": "auth_sessions",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "cognova_user",
+      "table_name": "auth_sessions",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "cognova_user",
+      "table_name": "rate_limit_buckets",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "cognova_user",
+      "table_name": "rate_limit_buckets",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "cognova_user",
+      "table_name": "rate_limit_buckets",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "cognova_user",
+      "table_name": "rate_limit_buckets",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "cognova_user",
+      "table_name": "rate_limit_buckets",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "cognova_user",
+      "table_name": "rate_limit_buckets",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "cognova_user",
+      "table_name": "rate_limit_buckets",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "grantee": "cognova_user",
+      "table_name": "users",
+      "privilege_type": "DELETE"
+    },
+    {
+      "grantee": "cognova_user",
+      "table_name": "users",
+      "privilege_type": "INSERT"
+    },
+    {
+      "grantee": "cognova_user",
+      "table_name": "users",
+      "privilege_type": "REFERENCES"
+    },
+    {
+      "grantee": "cognova_user",
+      "table_name": "users",
+      "privilege_type": "SELECT"
+    },
+    {
+      "grantee": "cognova_user",
+      "table_name": "users",
+      "privilege_type": "TRIGGER"
+    },
+    {
+      "grantee": "cognova_user",
+      "table_name": "users",
+      "privilege_type": "TRUNCATE"
+    },
+    {
+      "grantee": "cognova_user",
+      "table_name": "users",
+      "privilege_type": "UPDATE"
+    }
+  ],
+  "effective_schema_permissions": {
+    "usage": true,
+    "create_objects": true
+  },
+  "target_fingerprint": "0563ebc7f2826da7463de5365454fcfe9dbdab23d027d8e5bff464f6b0888f8b",
+  "observed_at_utc": "2026-10-15T02:59:10.197588+00:00",
+  "render_resource_label": "dpg-db2iojc9v7es7387i2ig-a"
+}

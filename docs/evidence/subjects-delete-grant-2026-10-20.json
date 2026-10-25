@@ -1,0 +1,230 @@
+{
+  "before": {
+    "revision": "0004_subjects",
+    "safety": {
+      "role": {
+        "rolname": "cognova_runtime",
+        "rolsuper": false,
+        "rolcreaterole": false,
+        "rolcreatedb": false,
+        "rolcanlogin": true,
+        "rolreplication": false,
+        "rolbypassrls": false
+      },
+      "memberships": [],
+      "owned_objects": [],
+      "schema_create": [],
+      "temporary_ddl_existing": true,
+      "table_privileges": {
+        "alembic_version": {
+          "SELECT": true,
+          "INSERT": false,
+          "UPDATE": false,
+          "DELETE": false,
+          "TRUNCATE": false,
+          "REFERENCES": false,
+          "TRIGGER": false
+        },
+        "user_academic_goal_legacy": {
+          "SELECT": true,
+          "INSERT": false,
+          "UPDATE": false,
+          "DELETE": false,
+          "TRUNCATE": false,
+          "REFERENCES": false,
+          "TRIGGER": false
+        },
+        "questionnaire_responses": {
+          "SELECT": true,
+          "INSERT": true,
+          "UPDATE": false,
+          "DELETE": false,
+          "TRUNCATE": false,
+          "REFERENCES": false,
+          "TRIGGER": false
+        }
+      }
+    },
+    "table_privileges": {
+      "alembic_version": {
+        "SELECT": true,
+        "INSERT": false,
+        "UPDATE": false,
+        "DELETE": false,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      },
+      "auth_sessions": {
+        "SELECT": true,
+        "INSERT": true,
+        "UPDATE": true,
+        "DELETE": false,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      },
+      "questionnaire_responses": {
+        "SELECT": true,
+        "INSERT": true,
+        "UPDATE": false,
+        "DELETE": false,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      },
+      "rate_limit_buckets": {
+        "SELECT": true,
+        "INSERT": true,
+        "UPDATE": true,
+        "DELETE": true,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      },
+      "subjects": {
+        "SELECT": true,
+        "INSERT": true,
+        "UPDATE": true,
+        "DELETE": false,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      },
+      "user_academic_goal_legacy": {
+        "SELECT": true,
+        "INSERT": false,
+        "UPDATE": false,
+        "DELETE": false,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      },
+      "users": {
+        "SELECT": true,
+        "INSERT": true,
+        "UPDATE": true,
+        "DELETE": false,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      }
+    }
+  },
+  "after": {
+    "revision": "0004_subjects",
+    "safety": {
+      "role": {
+        "rolname": "cognova_runtime",
+        "rolsuper": false,
+        "rolcreaterole": false,
+        "rolcreatedb": false,
+        "rolcanlogin": true,
+        "rolreplication": false,
+        "rolbypassrls": false
+      },
+      "memberships": [],
+      "owned_objects": [],
+      "schema_create": [],
+      "temporary_ddl_existing": true,
+      "table_privileges": {
+        "alembic_version": {
+          "SELECT": true,
+          "INSERT": false,
+          "UPDATE": false,
+          "DELETE": false,
+          "TRUNCATE": false,
+          "REFERENCES": false,
+          "TRIGGER": false
+        },
+        "user_academic_goal_legacy": {
+          "SELECT": true,
+          "INSERT": false,
+          "UPDATE": false,
+          "DELETE": false,
+          "TRUNCATE": false,
+          "REFERENCES": false,
+          "TRIGGER": false
+        },
+        "questionnaire_responses": {
+          "SELECT": true,
+          "INSERT": true,
+          "UPDATE": false,
+          "DELETE": false,
+          "TRUNCATE": false,
+          "REFERENCES": false,
+          "TRIGGER": false
+        }
+      }
+    },
+    "table_privileges": {
+      "alembic_version": {
+        "SELECT": true,
+        "INSERT": false,
+        "UPDATE": false,
+        "DELETE": false,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      },
+      "auth_sessions": {
+        "SELECT": true,
+        "INSERT": true,
+        "UPDATE": true,
+        "DELETE": false,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      },
+      "questionnaire_responses": {
+        "SELECT": true,
+        "INSERT": true,
+        "UPDATE": false,
+        "DELETE": false,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      },
+      "rate_limit_buckets": {
+        "SELECT": true,
+        "INSERT": true,
+        "UPDATE": true,
+        "DELETE": true,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      },
+      "subjects": {
+        "SELECT": true,
+        "INSERT": true,
+        "UPDATE": true,
+        "DELETE": true,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      },
+      "user_academic_goal_legacy": {
+        "SELECT": true,
+        "INSERT": false,
+        "UPDATE": false,
+        "DELETE": false,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      },
+      "users": {
+        "SELECT": true,
+        "INSERT": true,
+        "UPDATE": true,
+        "DELETE": false,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      }
+    }
+  },
+  "post_commit_checks": "passed",
+  "mode": "apply",
+  "committed": true,
+  "observed_at_utc": "2026-10-20T15:37:00.913498+00:00"
+}
