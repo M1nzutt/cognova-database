@@ -97,3 +97,40 @@ def test_same_head_offline_has_no_schema_operations():
 def test_paths_work_outside_repository(monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)
     assert "CREATE TABLE users" in sql_for("head")
+
+
+def test_study_revision_is_additive_and_self_contained():
+    sql = sql_for("0005_activities:0006_study_sessions")
+    for expected in (
+        "CREATE TABLE study_sessions",
+        "CREATE TABLE study_session_intervals",
+        "planned_start_at TIMESTAMP WITH TIME ZONE NOT NULL",
+        "actual_duration NUMERIC(20, 6) DEFAULT '0' NOT NULL",
+        "CONSTRAINT uq_activities_user_subject_id UNIQUE",
+        "EXCLUDE USING gist",
+        "DEFERRABLE INITIALLY DEFERRED",
+        "CREATE UNIQUE INDEX uq_study_sessions_user_executing",
+        "CREATE UNIQUE INDEX uq_study_intervals_open",
+        "REVOKE ALL ON study_sessions, study_session_intervals FROM PUBLIC",
+        "UPDATE alembic_version SET version_num='0006_study_sessions'",
+    ):
+        assert expected in sql
+    for forbidden in (
+        "CREATE TABLE users",
+        "DROP TABLE",
+        "CREATE EXTENSION",
+        "SECURITY DEFINER",
+    ):
+        assert forbidden not in sql
+
+
+def test_study_same_revision_is_noop_and_downgrade_is_guarded():
+    sql = sql_for("0006_study_sessions:0006_study_sessions")
+    assert all(word not in sql for word in ("CREATE", "ALTER", "DROP", "INSERT"))
+    config = migration_config()
+    config.output_buffer = StringIO()
+    command.downgrade(config, "0006_study_sessions:0005_activities", sql=True)
+    sql = config.output_buffer.getvalue()
+    assert sql.index("Downgrade blocked") < sql.index("DROP TABLE")
+    assert "IN ACCESS EXCLUSIVE MODE" in sql
+    assert "CASCADE" not in sql
