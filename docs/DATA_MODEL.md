@@ -1,3 +1,8 @@
+# Modelo de datos
+
+Head de código de esta rama: **0006_study_sessions**. Producción documentada:
+**0005_activities**. Revisiones 0001–0005 inmutables; esta entrega no opera producción.
+
 ## Sesiones de estudio — contrato 0006 confirmado 2026-10-29
 
 Nueva revisión 0006_study_sessions después de 0005; desarrollo local, NO aplicada
@@ -82,11 +87,11 @@ Dependencias futuras provocan rollback atómico. Datos0001–0005 preservados.
 Upgrade mantiene search_path, conexión inyectada, transacción y advisory lock1943187001.
 
 
-# Modelo de datos
+## Modelo previo vigente en producción
 
-Head de código: 0001 → 0002 → 0003_onboarding_questionnaire → 0004_subjects
-→ **0005_activities**, aplicada en producción el 2026-10-24 según OPERATIONS.
-0001–0004 son inmutables. El modelo anterior se detalla en
+Cadena productiva: 0001 → 0002 → 0003_onboarding_questionnaire → 0004_subjects
+→ **0005_activities**, aplicada el 2026-10-24 según OPERATIONS.
+El modelo anterior se detalla en
 [MIGRATIONS](MIGRATIONS.md) y [SCHEMA_0003](SCHEMA_0003.md).
 
 ## Actividades — contrato 0005 confirmado 2026-10-21

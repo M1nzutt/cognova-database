@@ -27,3 +27,15 @@ en questionnaire_responses: revisión 1 inicial, última revisión vigente. El g
 legacy es evidencia parcial anterior, no un cuestionario completo fabricado.
 Ver [contrato físico](SCHEMA_0003.md). Backend posee opciones, cardinalidades y
 validación semántica; database exige estructura, completitud e historial.
+
+0006 separa planificación de estudio, ciclo técnico y resultado final en
+study_sessions. study_session_intervals conserva los segmentos reales sin pausas.
+Backend calcula actual_duration en segundos desde intervalos cerrados y escribe
+ambas tablas en una transacción; DB no ejecuta el timer ni decide transiciones.
+Los triggers diferidos validan evidencia al confirmar la transacción. Cada cambio
+de intervalo actualiza metadata del padre para serializar validación concurrente.
+FK compuestas conservan usuario/materia/actividad coherentes; RESTRICT protege
+recursos referenciados e intervalos inmutables. Índices únicos parciales y exclusión
+GiST impiden dos ejecuciones por usuario, dos intervalos abiertos y solapamientos.
+No se instala extensión. Detalle y permisos en [DATA_MODEL](DATA_MODEL.md).
+Producción documentada continúa en 0005; 0006 requiere un release separado.

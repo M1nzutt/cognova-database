@@ -1,6 +1,15 @@
 # Reglas para agentes
 
-## Alcance vigente de esta tarea — 2026-10-25
+## Alcance vigente de esta tarea — 2026-10-29
+
+- Implementar 0006_study_sessions en rama feat/0006-study-sessions según el
+  contrato confirmado en DATA_MODEL: planificación, ejecución e intervalos.
+- Preservar 0001–0005. Probar únicamente en PostgreSQL local desechable.
+- No operar producción ni cambiar Backend/Frontend. No timer automático ni demos.
+- Commits atómicos reales y push de la rama; sin squash ni merge a main solicitado.
+- Producción permanece en 0005; preparar código no equivale a autorizar su release.
+
+## Histórico — alineación documental 2026-10-25
 
 - Alinear main/documentación con producción 0005; preservar commits sin squash.
 - No modificar migraciones, lógica, scripts ni evidencias existentes.
