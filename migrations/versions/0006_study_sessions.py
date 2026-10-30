@@ -126,6 +126,7 @@ def upgrade() -> None:
             name="ck_study_intervals_timestamps",
         ),
     )
+    _references()
     op.execute("REVOKE ALL ON study_sessions, study_session_intervals FROM PUBLIC")
     op.execute(
         "REVOKE ALL ON SEQUENCE study_sessions_id_seq, "
@@ -148,3 +149,37 @@ def downgrade() -> None:
     """)
     op.drop_table("study_session_intervals")
     op.drop_table("study_sessions")
+    op.drop_constraint("uq_activities_user_subject_id", "activities", type_="unique")
+
+
+def _references() -> None:
+    op.create_unique_constraint(
+        "uq_activities_user_subject_id", "activities", ["user_id", "subject_id", "id"]
+    )
+    op.create_foreign_key(
+        "fk_study_sessions_owner_subject",
+        "study_sessions",
+        "subjects",
+        ["user_id", "subject_id"],
+        ["user_id", "id"],
+        ondelete="RESTRICT",
+        onupdate="RESTRICT",
+    )
+    op.create_foreign_key(
+        "fk_study_sessions_owner_subject_activity",
+        "study_sessions",
+        "activities",
+        ["user_id", "subject_id", "activity_id"],
+        ["user_id", "subject_id", "id"],
+        ondelete="RESTRICT",
+        onupdate="RESTRICT",
+    )
+    op.create_foreign_key(
+        "fk_study_intervals_session",
+        "study_session_intervals",
+        "study_sessions",
+        ["session_id"],
+        ["id"],
+        ondelete="RESTRICT",
+        onupdate="RESTRICT",
+    )
