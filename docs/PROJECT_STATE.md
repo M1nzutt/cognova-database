@@ -511,3 +511,4 @@ Contrato registrado; implementación/pruebas0006 pendientes.
 0006:4 pruebas referenciales PostgreSQL adicionales verdes: ownership, misma materia, activity opcional, catálogo/FKs/índices, archivo y RESTRICT/conservación.
 0006:15 pruebas adicionales de ejecución PostgreSQL verdes: intervalos, pausas, precisión de duración calculada por llamador, validación diferida, inmutabilidad y rollback;66 nuevas en total hasta aquí.
 0006: seis escenarios concurrentes reales pasan en READ COMMITTED/REPEATABLE READ: una sesión activa por usuario, un intervalo abierto y exclusión de solapamientos. No hay actualización automática del acumulado.
+0006: rol runtime temporal local comprobado con DML de sesiones, lectura/inserción/cierre de intervalos y secuencias; sin DDL, modificación de alembic_version/historia ni borrado de intervalos. Ningún grant productivo ejecutado.
