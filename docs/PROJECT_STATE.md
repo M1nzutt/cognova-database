@@ -513,3 +513,4 @@ Contrato registrado; implementación/pruebas0006 pendientes.
 0006: seis escenarios concurrentes reales pasan en READ COMMITTED/REPEATABLE READ: una sesión activa por usuario, un intervalo abierto y exclusión de solapamientos. No hay actualización automática del acumulado.
 0006: rol runtime temporal local comprobado con DML de sesiones, lectura/inserción/cierre de intervalos y secuencias; sin DDL, modificación de alembic_version/historia ni borrado de intervalos. Ningún grant productivo ejecutado.
 0006: siete pruebas de migración verdes: base vacía, upgrade desde 0005 con datos en tablas previas, downgrade vacío/reupgrade, negativa ante cualquier sesión o dependencia futura y rollback DDL atómico. 80 casos PostgreSQL nuevos verificados.
+0006: runner oficial admite destino explícito 0006_study_sessions y head; prueba real desde 0005 y repetición verde. La prueba CLI de Actividades mantiene su destino explícito histórico 0005.

@@ -349,12 +349,12 @@ def test_history_insert_failure_is_atomic(pg_engine):
         assert c.scalar(text("SELECT count(*) FROM activity_deadline_events")) == 0
 
 
-def test_cli_explicit_activities_and_head(pg_engine, monkeypatch):
+def test_cli_explicit_activities_is_repeatable(pg_engine, monkeypatch):
     engine, schema = pg_engine
     monkeypatch.setenv("ENVIRONMENT", "test")
     monkeypatch.setenv("DATABASE_URL", engine.url.render_as_string(hide_password=False))
     assert main(["upgrade", HEAD]) == 0
-    assert main(["upgrade", "head"]) == 0
+    assert main(["upgrade", HEAD]) == 0
     with engine.connect() as c:
         assert c.scalar(text("SELECT current_schema()")) == schema
         assert c.scalar(text("SELECT version_num FROM alembic_version")) == HEAD
