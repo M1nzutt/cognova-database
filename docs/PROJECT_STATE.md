@@ -506,3 +506,4 @@ Contrato registrado; implementación/pruebas0006 pendientes.
 0006: tablas base y checks escalares añadidos; cadena/blobs0001–0005 y51 pruebas offline verdes. FKs/índices/integridad entre tablas pendientes; no usar esta fase intermedia para release.
 0006: FKs compuestas RESTRICT y clave referenciada de activities implementadas, sin cambiar filas previas;51 checks offline verdes. Pruebas referenciales reales siguen pendientes.
 0006: índices de consulta, unicidad parcial de sesión activa/intervalo abierto y exclusión GiST de solapamientos añadidos;51 checks offline verdes. Sin extensión nueva.
+0006: validación diferida entre tablas y conservación de intervalos implementadas; sin cálculo automático de duración ni transiciones. Escritura metadata padre serializa concurrencia.51 checks offline verdes; batería PostgreSQL0006 pendiente.

@@ -128,6 +128,7 @@ def upgrade() -> None:
     )
     _references()
     _indexes()
+    _integrity()
     op.execute("REVOKE ALL ON study_sessions, study_session_intervals FROM PUBLIC")
     op.execute(
         "REVOKE ALL ON SEQUENCE study_sessions_id_seq, "
@@ -150,6 +151,9 @@ def downgrade() -> None:
     """)
     op.drop_table("study_session_intervals")
     op.drop_table("study_sessions")
+    op.execute("DROP FUNCTION cognova_validate_study_execution()")
+    op.execute("DROP FUNCTION cognova_prepare_study_interval()")
+    op.execute("DROP FUNCTION cognova_prepare_study_session()")
     op.drop_constraint("uq_activities_user_subject_id", "activities", type_="unique")
 
 
@@ -224,3 +228,129 @@ def _indexes() -> None:
             tstzrange(started_at, ended_at, '[)') WITH &&
         )
     """)
+
+
+def _integrity() -> None:
+    op.execute("""
+        CREATE FUNCTION cognova_prepare_study_session() RETURNS trigger
+        LANGUAGE plpgsql SET search_path = pg_catalog AS $$
+        BEGIN
+            IF TG_OP = 'INSERT' THEN
+                NEW.created_at := clock_timestamp();
+                NEW.updated_at := NEW.created_at;
+            ELSE
+                IF NEW.id IS DISTINCT FROM OLD.id
+                   OR NEW.user_id IS DISTINCT FROM OLD.user_id
+                   OR NEW.created_at IS DISTINCT FROM OLD.created_at THEN
+                    RAISE EXCEPTION 'Study session identity is immutable'
+                        USING ERRCODE = '23514';
+                END IF;
+                NEW.updated_at := greatest(clock_timestamp(), OLD.updated_at);
+            END IF;
+            RETURN NEW;
+        END $$
+    """)
+    op.execute("""
+        CREATE FUNCTION cognova_prepare_study_interval() RETURNS trigger
+        LANGUAGE plpgsql SET search_path = pg_catalog AS $$
+        DECLARE parent_id integer;
+        BEGIN
+            IF TG_OP IN ('DELETE','TRUNCATE') THEN
+                RAISE EXCEPTION 'Study execution evidence cannot be removed'
+                    USING ERRCODE = '23514';
+            END IF;
+            IF TG_OP = 'INSERT' THEN
+                NEW.created_at := clock_timestamp();
+                NEW.updated_at := NEW.created_at;
+            ELSE
+                IF NEW.id IS DISTINCT FROM OLD.id
+                   OR NEW.session_id IS DISTINCT FROM OLD.session_id
+                   OR NEW.started_at IS DISTINCT FROM OLD.started_at
+                   OR NEW.created_at IS DISTINCT FROM OLD.created_at
+                   OR (OLD.ended_at IS NOT NULL
+                       AND NEW.ended_at IS DISTINCT FROM OLD.ended_at) THEN
+                    RAISE EXCEPTION 'Study interval evidence is immutable'
+                        USING ERRCODE = '23514';
+                END IF;
+                NEW.updated_at := greatest(clock_timestamp(), OLD.updated_at);
+            END IF;
+            -- Metadata-only write serializes parent/child validation, including
+            -- REPEATABLE READ. Never change timer fields or calculate duration.
+            EXECUTE format('UPDATE %I.study_sessions SET updated_at=updated_at '
+                           'WHERE id=$1 RETURNING id', TG_TABLE_SCHEMA)
+                INTO parent_id USING NEW.session_id;
+            IF parent_id IS NULL THEN
+                RAISE EXCEPTION 'Study session does not exist'
+                    USING ERRCODE = '23503';
+            END IF;
+            RETURN NEW;
+        END $$
+    """)
+    op.execute("""
+        CREATE FUNCTION cognova_validate_study_execution() RETURNS trigger
+        LANGUAGE plpgsql SET search_path = pg_catalog AS $$
+        DECLARE
+            session_key integer;
+            s record;
+            evidence record;
+        BEGIN
+            IF TG_TABLE_NAME = 'study_sessions' THEN
+                session_key := NEW.id;
+            ELSE
+                session_key := NEW.session_id;
+            END IF;
+            EXECUTE format('SELECT * FROM %I.study_sessions WHERE id=$1',
+                           TG_TABLE_SCHEMA) INTO s USING session_key;
+            IF s.id IS NULL THEN
+                RETURN NULL;
+            END IF;
+            EXECUTE format(
+                'SELECT count(*) AS total, '
+                'count(*) FILTER (WHERE ended_at IS NULL) AS opened, '
+                'min(started_at) AS first_start, max(ended_at) AS last_end '
+                'FROM %I.study_session_intervals WHERE session_id=$1',
+                TG_TABLE_SCHEMA) INTO evidence USING session_key;
+            IF (evidence.total > 0 AND
+                (s.start_at IS NULL OR evidence.first_start <> s.start_at
+                 OR (s.end_at IS NOT NULL AND evidence.last_end > s.end_at)))
+               OR (s.execution_state = 'planned' AND evidence.total <> 0)
+               OR (s.execution_state = 'running' AND evidence.opened <> 1)
+               OR (s.execution_state = 'paused' AND
+                   (evidence.total = 0 OR evidence.opened <> 0))
+               OR (s.execution_state = 'finished' AND
+                   (evidence.opened <> 0
+                    OR (s.start_at IS NULL AND evidence.total <> 0)
+                    OR (s.start_at IS NOT NULL AND evidence.total = 0))) THEN
+                RAISE EXCEPTION 'Study execution evidence is inconsistent'
+                    USING ERRCODE = '23514';
+            END IF;
+            RETURN NULL;
+        END $$
+    """)
+    op.execute(
+        "CREATE TRIGGER study_session_prepare BEFORE INSERT OR UPDATE "
+        "ON study_sessions FOR EACH ROW "
+        "EXECUTE FUNCTION cognova_prepare_study_session()"
+    )
+    op.execute(
+        "CREATE TRIGGER study_interval_prepare BEFORE INSERT OR UPDATE OR DELETE "
+        "ON study_session_intervals FOR EACH ROW "
+        "EXECUTE FUNCTION cognova_prepare_study_interval()"
+    )
+    op.execute(
+        "CREATE TRIGGER study_interval_no_truncate BEFORE TRUNCATE "
+        "ON study_session_intervals FOR EACH STATEMENT "
+        "EXECUTE FUNCTION cognova_prepare_study_interval()"
+    )
+    for table in ("study_sessions", "study_session_intervals"):
+        op.execute(
+            f"CREATE CONSTRAINT TRIGGER {table}_execution_valid "
+            f"AFTER INSERT OR UPDATE ON {table} DEFERRABLE INITIALLY DEFERRED "
+            "FOR EACH ROW EXECUTE FUNCTION cognova_validate_study_execution()"
+        )
+    for function in (
+        "cognova_prepare_study_session",
+        "cognova_prepare_study_interval",
+        "cognova_validate_study_execution",
+    ):
+        op.execute(f"REVOKE ALL ON FUNCTION {function}() FROM PUBLIC")
