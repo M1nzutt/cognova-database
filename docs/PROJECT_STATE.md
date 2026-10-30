@@ -509,3 +509,4 @@ Contrato registrado; implementación/pruebas0006 pendientes.
 0006: validación diferida entre tablas y conservación de intervalos implementadas; sin cálculo automático de duración ni transiciones. Escritura metadata padre serializa concurrencia.51 checks offline verdes; batería PostgreSQL0006 pendiente.
 0006: valores, planificación, resultados y contexto probados en PostgreSQL local;47 casos nuevos aprobados. Sin datos productivos.
 0006:4 pruebas referenciales PostgreSQL adicionales verdes: ownership, misma materia, activity opcional, catálogo/FKs/índices, archivo y RESTRICT/conservación.
+0006:15 pruebas adicionales de ejecución PostgreSQL verdes: intervalos, pausas, precisión de duración calculada por llamador, validación diferida, inmutabilidad y rollback;66 nuevas en total hasta aquí.
