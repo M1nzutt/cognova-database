@@ -495,3 +495,11 @@ smoke tests del backend compatible. No se certifica ese despliegue desde databas
 
 Backend confirma su rol/permisos, integra la referencia y realiza readiness/smoke
 tests de su release compatible. No volver a aplicar ni revertir 0003 para ese paso.
+
+## Desarrollo vigente 0006 — 2026-10-29
+Rama feat/0006-study-sessions desde f5d9975, 41 commits iniciales, árbol limpio.
+Contrato confirmado: planificación/ciclo/resultado separados e intervalos reales.
+Ver DATA_MODEL. Sin operación productiva ni cambios de otros repositorios.
+Base:195 pruebas (144 PostgreSQL),0 omitidas; Ruff lint/formato correctos.
+PostgreSQL local desechable17.11 en127.0.0.1:55433; no se cargó .env.
+Contrato registrado; implementación/pruebas0006 pendientes.

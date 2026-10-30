@@ -1,3 +1,87 @@
+## Sesiones de estudio — contrato 0006 confirmado 2026-10-29
+
+Nueva revisión 0006_study_sessions después de 0005; desarrollo local, NO aplicada
+a producción. 0001–0005 permanecen inmutables. No datos demo ni lógica de timer.
+
+### study_sessions
+- id INTEGER SERIAL PK; user_id y subject_id INTEGER NOT NULL.
+- activity_id INTEGER nullable. FK (user_id,subject_id) a subjects(user_id,id).
+  FK (user_id,subject_id,activity_id) a activities(user_id,subject_id,id), MATCH
+  SIMPLE permite activity_id NULL. Ambas UPDATE/DELETE RESTRICT.
+  0006 añade uq_activities_user_subject_id, sin cambiar filas ni revisión0005.
+- planned_start_at TIMESTAMPTZ NOT NULL finito; fecha que usará Calendario futuro.
+- planned_duration SMALLINT NOT NULL, 10–180 minutos inclusivos.
+- execution_state TEXT NOT NULL default planned: planned/running/paused/finished.
+- status TEXT nullable: completed/partial/postponed/cancelled, resultado final.
+- start_at/end_at TIMESTAMPTZ nullable, finitos. start_at es primer inicio real;
+  end_at cierre definitivo, nunca duración acumulada. end_at exige start_at y >.
+- actual_duration NUMERIC(20,6) NOT NULL default0: segundos efectivos acumulados,
+  no negativos y finitos. Backend calcula SUM de segundos de intervalos cerrados
+  y actualiza este campo en la misma transacción. DB NO suma ni corrige duración.
+  No se limita por duración planificada: la ejecución puede exceder el plan.
+- context TEXT nullable: finished_early/distracted/tired/interrupted/changed_activity/other.
+- other_text TEXT nullable: requerido con other, trim ASCII, no solo blancos,
+  1–200 caracteres PostgreSQL; NULL para cualquier otro contexto.
+- created_at/updated_at TIMESTAMPTZ NOT NULL; metadata de DB, creación inmutable,
+  actualización monotónica. id/user_id también inmutables.
+
+Coherencia física: planned sin ejecución/resultado/contexto y duración0.
+running/paused requieren start_at, no end_at ni resultado/contexto.
+finished exige resultado; completed/partial exigen inicio/cierre e intervalos reales.
+postponed/cancelled antes de iniciar: sin start/end, duración0, sin intervalos.
+Si hubo ejecución, todo resultado finished exige cierre definitivo.
+Contexto opcional solo con finished. No se deduce resultado por duración.
+
+UNIQUE parcial user_id WHERE execution_state IN ('running','paused') garantiza
+como máximo una sesión activa/pausada por usuario, incluso con concurrencia.
+Índices (user_id,planned_start_at,id) para calendario/listado y
+(user_id,subject_id,activity_id) para FKs/dependencias. Sin índices redundantes.
+
+### study_session_intervals
+id INTEGER SERIAL PK; session_id INTEGER NOT NULL FK a study_sessions.id,
+UPDATE/DELETE RESTRICT. started_at TIMESTAMPTZ NOT NULL finito;
+ended_at TIMESTAMPTZ nullable finito; si existe, estrictamente > started_at.
+Metadata created_at/updated_at como la sesión.
+UNIQUE parcial session_id WHERE ended_at IS NULL: un intervalo abierto.
+EXCLUDE GiST sobre int8range(session_id,session_id,'[]') y
+tstzrange(started_at,ended_at,'[)') impide solapamientos de una sesión, incluso
+con concurrencia; rangos incorporados PostgreSQL, sin extensión btree_gist.
+Índice (session_id,started_at,id) para historia ordenada.
+
+Intervalos append-only: identidad/inicio inmutables; un intervalo abierto puede
+cerrarse una vez, nunca reabrirse; no DELETE/TRUNCATE. No borrar historia para
+forzar downgrade. Una sesión con intervalos no puede borrarse por FK; una sesión
+sin intervalos puede borrarse explícitamente si Backend lo autoriza.
+
+Triggers de integridad diferidos comprueban el estado final de la transacción:
+primer intervalo coincide con start_at, intervalos dentro del rango de ejecución;
+running tiene un intervalo abierto, paused solo cerrados y al menos uno,
+finished ejecutada tiene intervalos cerrados y ningún abierto. No ordenan acciones
+de timer ni generan intervalos. Backend decide transiciones y envía ambas tablas.
+Escribir un intervalo toca solo updated_at del padre para serializar su validación
+con cambios concurrentes; REPEATABLE READ puede abortar con40001.
+Ningún trigger calcula actual_duration ni altera planificación/ciclo/resultado.
+
+### Responsabilidades, permisos y reversión
+DB: integridad física, ownership referencial (no autorización del actor),
+unicidad concurrente, no solapamiento, evidencia y conservación de intervalos.
+Backend: auth/onboarding/ownership en cada request; transiciones, permisos de
+edición, inicio/pausa/reanudación/finalización, cálculo de duración desde intervalos,
+precondiciones y retry transaccional acotado40001/40P01; mensajes seguros.
+La FK también impide reasignar una actividad a otra materia si tiene sesiones.
+
+Sin grants a runtime productivo en esta entrega. Contrato futuro mínimo:
+sesiones SELECT/INSERT/UPDATE/DELETE, intervalos SELECT/INSERT/UPDATE;
+USAGE/SELECT de ambas secuencias, sin DDL/TRUNCATE/escritura de alembic_version,
+sin EXECUTE directo de funciones de trigger. Revisar roles/default privileges
+reales en release separado. PUBLIC revocado en nuevos objetos.
+
+Downgrade toma locks exclusivos y aborta si existe cualquier sesión o intervalo.
+Vacío elimina solo objetos0006 y clave compuesta añadida a activities; sin CASCADE.
+Dependencias futuras provocan rollback atómico. Datos0001–0005 preservados.
+Upgrade mantiene search_path, conexión inyectada, transacción y advisory lock1943187001.
+
+
 # Modelo de datos
 
 Head de código: 0001 → 0002 → 0003_onboarding_questionnaire → 0004_subjects
