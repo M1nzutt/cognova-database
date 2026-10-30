@@ -1,12 +1,36 @@
 # Migraciones, configuración y validación
 
-## Historial vigente en main y producción
+## Historial de código y producción
 
-Único head: **0005_activities**, aplicado el 2026-10-24; main alineado el
-2026-10-25. Cadena: 0001_create_users → 0002_auth_sessions →
-0003_onboarding_questionnaire → 0004_subjects → 0005_activities.
+Único head de feat/0006-study-sessions: **0006_study_sessions**, aún no aplicado
+a producción. Main y producción documentada conservan **0005_activities**.
+Cadena de código: 0001_create_users → 0002_auth_sessions →
+0003_onboarding_questionnaire → 0004_subjects → 0005_activities → 0006_study_sessions.
 Ver [evidencia](evidence/0005-release-2026-10-24.json) y [OPERATIONS](OPERATIONS.md).
 La descripción 0002 inferior es histórica. Integrar la rama no ejecuta migraciones.
+
+## 0006 — ejecución de estudio, sin temporizador automático
+
+Dos tablas: study_sessions y study_session_intervals; contrato en DATA_MODEL.
+Upgrade crea checks, claves compuestas RESTRICT, índices parciales y exclusión
+GiST nativa. Añade una clave única referenciada a activities, sin alterar sus datos.
+No modifica 0001–0005 ni requiere extensión, ORM, autogenerate o nuevos servicios.
+El runner oficial acepta `upgrade 0006_study_sessions` y `upgrade head --sql`.
+Solo se ha ensayado en PostgreSQL desechable: no ejecutar esos comandos online
+contra producción sin el release separado indicado en OPERATIONS.
+
+Downgrade 0006→0005 solo en entorno controlado: toma locks ACCESS EXCLUSIVE,
+rechaza cualquier sesión/intervalo y elimina únicamente objetos añadidos por0006
+sin CASCADE. Si hay una dependencia futura, toda la reversión falla atómicamente.
+No borrar evidencia para habilitarlo; con datos, corregir hacia adelante.
+Se probó upgrade desde vacío y0005, repetición, rollback DDL, downgrade vacío y
+reupgrade, preservación completa de tablas previas y rechazo de pérdida de datos.
+
+La validación diferida de ejecución observa el estado final transaccional, no el
+orden de sentencias. Backend debe escribir padre/intervalos/acumulado en la misma
+transacción y manejar errores también al commit. Para comprobar antes del commit
+puede usar SET CONSTRAINTS ALL IMMEDIATE. La API inyectada propaga errores; el
+consumidor conserva la responsabilidad de no registrar parámetros sensibles.
 
 ## Configuración
 
@@ -59,7 +83,7 @@ lock y ajustes SET LOCAL hasta commit/rollback. No usar autocommit.
   timestamptz NOT NULL; índice ix_rate_limit_buckets_expires_at.
 - alembic_version: una fila `0002_auth_sessions` al completar el upgrade.
 
-El head de código y producción es 0005_activities (release 2026-10-24, OPERATIONS).
+El head de código de la rama es0006; producción documentada es0005 (OPERATIONS).
 Ver [DATA_MODEL](DATA_MODEL.md).
 Para onboarding ver [SCHEMA_0003](SCHEMA_0003.md).
 Estas definiciones describen el punto de partida, no la nulabilidad actual.
@@ -101,12 +125,13 @@ el contrato de manejo de conexión, nunca comportamiento real del motor.
 ## Runner vigente y referencia histórica de downgrade 0003
 
 El runner acepta destinos explícitos 0001_create_users, 0002_auth_sessions,
-0003_onboarding_questionnaire, 0004_subjects, 0005_activities y head.
+0003_onboarding_questionnaire, 0004_subjects, 0005_activities,
+0006_study_sessions y head.
 Backend debe fijar la revisión admitida;
 no inferir compatibilidad por orden numérico de IDs.
 
 El ejemplo siguiente corresponde exclusivamente al downgrade histórico 0003→0002,
-no al estado productivo 0005. Ver DATA_MODEL para restricciones de 0004/0005 y
+no al estado productivo 0005. Ver DATA_MODEL para restricciones de 0004/0005/0006 y
 OPERATIONS para recuperación; nunca vaciar datos para forzar un downgrade.
 
 Downgrade deliberado vía API Alembic: con conexión inyectada, llamar

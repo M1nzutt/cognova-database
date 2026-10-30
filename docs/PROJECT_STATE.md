@@ -516,3 +516,4 @@ Contrato registrado; implementación/pruebas0006 pendientes.
 0006: runner oficial admite destino explícito 0006_study_sessions y head; prueba real desde 0005 y repetición verde. La prueba CLI de Actividades mantiene su destino explícito histórico 0005.
 0006: SQL offline incremental y downgrade revisados automáticamente; sin extensiones, SECURITY DEFINER ni recreación de tablas previas. Blobs 0001–0005 protegidos y único head0006.
 0006: arquitectura, reglas vigentes y procedencia actualizadas; diferenciación explícita entre head de rama0006 y producción0005. No se modifican revisiones previas.
+0006 suite completa:278 passed,225 PostgreSQL y53 offline,0 omitidas. JUnit validado; Ruff lint/formato y pip check verdes tras dividir una cadena SQL larga de una prueba. OPERATIONS/MIGRATIONS separan preparación y futuro release; backup pre-0006 pendiente de adaptación autorizada.

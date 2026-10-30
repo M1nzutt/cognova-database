@@ -4,6 +4,45 @@ Main incorpora el historial completo hasta 0005 desde el 2026-10-25. Esta
 alineación no ejecutó operaciones productivas. Los procedimientos de aplicación
 0003/0004/0005 se conservan como historia; no reaplicarlos sobre producción.
 
+## Preparación 0006 Sesiones — 2026-10-29; no aplicada
+
+La rama feat/0006-study-sessions implementa y ensaya0006 localmente. Producción
+continúa documentada en0005; no se conectó ni operó producción en esta entrega.
+No se ejecutaron backups, grants ni DDL productivos. No hay datos demo.
+
+Antes del release autorizado: fijar SHA probado, coordinar Backend que admita0006
+en readiness y confirmar inventario exacto0005, TLS, locks y tamaño de activities.
+Crear y verificar un backup fresco que incluya activities y activity_deadline_events
+además de todas las tablas anteriores, cifrado, hash y restauración aislada.
+Los helpers/workflows existentes solo cubren hasta pre-0005: NO certifican un
+backup ni release0006 y requieren adaptación/revisión antes de operar0006.
+Evaluar tiempo de lock al construir uq_activities_user_subject_id en activities.
+
+Aplicación futura mediante runner oficial, destino explícito0006_study_sessions,
+cuenta migradora y advisory lock1943187001; no usar runtime para DDL. Comparar
+filas previas y catálogo antes/después, incluyendo constraints validados, índices
+válidos y triggers habilitados. Probar grants mínimos con roles reales por catálogo.
+Contrato ensayado localmente con rol temporal restringido:
+
+- study_sessions: SELECT/INSERT/UPDATE/DELETE; DELETE solo sin intervalos.
+- study_session_intervals: SELECT/INSERT/UPDATE; sin DELETE/TRUNCATE.
+- study_sessions_id_seq y study_session_intervals_id_seq: USAGE/SELECT.
+- USAGE de schema; sin CREATE/ownership/DDL ni escritura de alembic_version o
+  historia existente. Sin EXECUTE directo de funciones de trigger.
+
+Triggers SECURITY INVOKER usan esos permisos: la escritura de intervalo requiere
+UPDATE de study_sessions para serializar solo metadata. El runtime Backend debe
+cerrar el intervalo y actualizar acumulado/ciclo/resultado dentro de una transacción.
+No existe cálculo automático de duración. Autorización del actor, transición y
+retry acotado40001/40P01 pertenecen a Backend; errores pueden aparecer al commit.
+PUBLIC no recibe acceso a tablas/secuencias/funciones0006; auditar default privileges
+y membresías heredadas del rol real antes del release sin asumir el ensayo como grant.
+
+No downgrade automático: con cualquier sesión/intervalo aborta; con esquema vacío
+se ensayó reversión sin CASCADE y con preservación de0001–0005. Priorizar corrección
+hacia adelante una vez exista evidencia. Esta preparación deja la migración lista
+para revisión/release coordinado, no acredita una operación productiva completada.
+
 ## 0005 aplicado y permisos verificados — evidencia 2026-10-24
 
 Revisión productiva actual: 0005_activities. Aplicación confirmada 19:38:45Z y

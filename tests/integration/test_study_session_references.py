@@ -116,7 +116,8 @@ def test_catalog_foreign_keys_and_indexes(pg_engine):
         names = set(
             c.scalars(
                 text(
-                    "SELECT indexname FROM pg_indexes WHERE schemaname=current_schema() "
+                    "SELECT indexname FROM pg_indexes "
+                    "WHERE schemaname=current_schema() "
                     "AND tablename IN ('study_sessions','study_session_intervals')"
                 )
             )
