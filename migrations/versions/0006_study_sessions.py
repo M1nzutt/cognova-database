@@ -127,6 +127,7 @@ def upgrade() -> None:
         ),
     )
     _references()
+    _indexes()
     op.execute("REVOKE ALL ON study_sessions, study_session_intervals FROM PUBLIC")
     op.execute(
         "REVOKE ALL ON SEQUENCE study_sessions_id_seq, "
@@ -183,3 +184,43 @@ def _references() -> None:
         ondelete="RESTRICT",
         onupdate="RESTRICT",
     )
+
+
+def _indexes() -> None:
+    op.create_index(
+        "ix_study_sessions_user_planned",
+        "study_sessions",
+        ["user_id", "planned_start_at", "id"],
+    )
+    op.create_index(
+        "ix_study_sessions_owner_activity",
+        "study_sessions",
+        ["user_id", "subject_id", "activity_id"],
+    )
+    op.create_index(
+        "uq_study_sessions_user_executing",
+        "study_sessions",
+        ["user_id"],
+        unique=True,
+        postgresql_where=sa.text("execution_state IN ('running','paused')"),
+    )
+    op.create_index(
+        "ix_study_intervals_session_started",
+        "study_session_intervals",
+        ["session_id", "started_at", "id"],
+    )
+    op.create_index(
+        "uq_study_intervals_open",
+        "study_session_intervals",
+        ["session_id"],
+        unique=True,
+        postgresql_where=sa.text("ended_at IS NULL"),
+    )
+    # Built-in range opclasses: no extension or superuser installation needed.
+    op.execute("""
+        ALTER TABLE study_session_intervals ADD CONSTRAINT ex_study_intervals_overlap
+        EXCLUDE USING gist (
+            int8range(session_id::bigint, session_id::bigint, '[]') WITH &&,
+            tstzrange(started_at, ended_at, '[)') WITH &&
+        )
+    """)
