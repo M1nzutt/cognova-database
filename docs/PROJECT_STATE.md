@@ -503,3 +503,4 @@ Ver DATA_MODEL. Sin operación productiva ni cambios de otros repositorios.
 Base:195 pruebas (144 PostgreSQL),0 omitidas; Ruff lint/formato correctos.
 PostgreSQL local desechable17.11 en127.0.0.1:55433; no se cargó .env.
 Contrato registrado; implementación/pruebas0006 pendientes.
+0006: tablas base y checks escalares añadidos; cadena/blobs0001–0005 y51 pruebas offline verdes. FKs/índices/integridad entre tablas pendientes; no usar esta fase intermedia para release.

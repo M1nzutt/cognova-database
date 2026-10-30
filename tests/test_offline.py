@@ -13,6 +13,7 @@ BLOBS = {
     "0002_auth_sessions.py": "ef8cd07f0a3482a272c5f62229f51a5390d74ec4",
     "0003_onboarding_questionnaire.py": "5e6e5c25d631efb6d0015fabce2b64ae9866fba1",
     "0004_subjects.py": "6827c5d80d5591e2423eca6f971cde0273a5ce38",
+    "0005_activities.py": "abf886ced6536cc87bbd6ef55245ef0e9f3b5955",
 }
 
 
@@ -31,8 +32,9 @@ def test_original_blobs_and_single_linear_head():
         blob = b"blob " + str(len(data)).encode() + b"\0" + data
         assert hashlib.sha1(blob).hexdigest() == expected
     script = ScriptDirectory.from_config(migration_config())
-    assert script.get_heads() == ["0005_activities"]
+    assert script.get_heads() == ["0006_study_sessions"]
     assert [(r.revision, r.down_revision) for r in script.walk_revisions()] == [
+        ("0006_study_sessions", "0005_activities"),
         ("0005_activities", "0004_subjects"),
         ("0004_subjects", "0003_onboarding_questionnaire"),
         ("0003_onboarding_questionnaire", "0002_auth_sessions"),
