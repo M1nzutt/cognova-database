@@ -1,6 +1,37 @@
 # Estado de Cognova Database
 
-## Estado vigente: main alineado con producción — 2026-10-25
+## Estado vigente: Sesiones 0006 preparada en rama — 2026-10-29
+
+Rama **feat/0006-study-sessions**, base main f5d9975 (41 commits iniciales).
+Migración **0006_study_sessions** después de0005, único head de código. Producción
+documentada sigue en **0005_activities**; no se conectó ni operó en esta tarea.
+Main no se integra en esta entrega: el usuario solicita push de la rama.
+
+Tablas study_sessions y study_session_intervals: planificación obligatoria,
+ciclo planned/running/paused/finished, resultado/contexto final separados, intervalos
+reales y duración efectiva en segundos calculada por Backend. FKs compuestas
+garantizan misma materia/usuario; RESTRICT e intervalos conservados protegen historia.
+Unicidad parcial de ejecución/intervalo abierto y exclusión GiST sin extensiones.
+Checks y validación diferida garantizan evidencia consistente; sin timer automático.
+Contrato y responsabilidades en [DATA_MODEL](DATA_MODEL.md).
+
+**Validación final local:278 pruebas,225 PostgreSQL y53 offline,0 omitidas.**
+JUnit `artifacts/test-results-0006.xml` comprobado con check_test_results.py.
+PostgreSQL17.11 desechable; Ruff lint/formato (38 archivos) y pip check verdes.
+Ensayos de base vacía/upgrade0005, preservación de todas las tablas previas,
+constraints/referencias/contexto, pausas, evidencia inmutable, rollback, downgrade
+seguro y concurrencia READ COMMITTED/REPEATABLE READ aprobados. Rol temporal con
+permisos mínimos funciona sin DDL, modificación de alembic_version/historia ni
+borrado de intervalos. No grants productivos. Revisiones0001–0005 intactas.
+
+**DEPENDENCY BACKEND:** puede implementar contra esta rama fijando el SHA completo
+entregado, consumir0006 y calcular acumulado/transiciones en transacciones atómicas.
+No afirmar disponibilidad productiva de Sesiones: faltan release autorizado,
+backup fresco adaptado (helpers actuales solo cubren hasta pre-0005), aplicación,
+grants y despliegue/smoke del Backend compatible. Ver [OPERATIONS](OPERATIONS.md).
+Sin cambios de otros repositorios, datos demo ni implementación de Calendario/timer.
+
+## Histórico — main alineado con producción — 2026-10-25
 
 Producción está en **0005_activities**, según el release del 2026-10-24
 ([evidencia](evidence/0005-release-2026-10-24.json)) y la confirmación del usuario.
@@ -496,7 +527,9 @@ smoke tests del backend compatible. No se certifica ese despliegue desde databas
 Backend confirma su rol/permisos, integra la referencia y realiza readiness/smoke
 tests de su release compatible. No volver a aplicar ni revertir 0003 para ese paso.
 
-## Desarrollo vigente 0006 — 2026-10-29
+## Bitácora histórica de desarrollo 0006 — 2026-10-29
+
+Los pendientes siguientes describen commits intermedios; el estado final está arriba.
 Rama feat/0006-study-sessions desde f5d9975, 41 commits iniciales, árbol limpio.
 Contrato confirmado: planificación/ciclo/resultado separados e intervalos reales.
 Ver DATA_MODEL. Sin operación productiva ni cambios de otros repositorios.
@@ -517,3 +550,4 @@ Contrato registrado; implementación/pruebas0006 pendientes.
 0006: SQL offline incremental y downgrade revisados automáticamente; sin extensiones, SECURITY DEFINER ni recreación de tablas previas. Blobs 0001–0005 protegidos y único head0006.
 0006: arquitectura, reglas vigentes y procedencia actualizadas; diferenciación explícita entre head de rama0006 y producción0005. No se modifican revisiones previas.
 0006 suite completa:278 passed,225 PostgreSQL y53 offline,0 omitidas. JUnit validado; Ruff lint/formato y pip check verdes tras dividir una cadena SQL larga de una prueba. OPERATIONS/MIGRATIONS separan preparación y futuro release; backup pre-0006 pendiente de adaptación autorizada.
+Cierre local:64 enlaces Markdown y JSON de evidencia válidos; diff/check básico de secretos correcto; SQL offline/heads/history correctos. Sin esquemas test ni roles temporales study restantes; servidor PostgreSQL desechable detenido. Historial de rama:41 iniciales más16 commits reales=57; sin squash. CI remoto se verificará tras push.
