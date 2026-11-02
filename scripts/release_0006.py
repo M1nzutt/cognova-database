@@ -99,6 +99,7 @@ def catalog_contract(c):
                             "pg_get_constraintdef(p.oid) AS definition "
                             "FROM pg_constraint p JOIN pg_class c ON c.oid=p.conrelid "
                             "WHERE c.relnamespace='public'::regnamespace AND "
+                            "p.contype <> 'n' AND "
                             "c.relname IN ('study_sessions','study_session_intervals') "
                             "ORDER BY 1,2"
                         )

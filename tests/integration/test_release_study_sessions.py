@@ -71,6 +71,7 @@ def test_atomic_study_release_runtime_and_preservation(pg_engine):
         c.execute(text("UPDATE activities SET deadline=deadline+interval '1 day'"))
         before = snapshot(c)
         contract = json.loads(CONTRACT.read_text(encoding="utf-8"))
+        assert all(item["contype"] != "n" for item in contract["constraints"])
         report = apply(c, contract)
         assert snapshot(c) == before
         assert all(report["rows_preserved"].values())
