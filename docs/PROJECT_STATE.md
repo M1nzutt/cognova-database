@@ -554,3 +554,5 @@ Cierre local:64 enlaces Markdown y JSON de evidencia válidos; diff/check básic
 
 ## Release 0006 en curso — 2026-11-02
 Autorización productiva nueva. Inicio limpio96daa0b,57 commits,CI40998886377 success. Preflight READ ONLY:0005,TLS,0 transacciones activas,26 usuarios/12 materias/3 actividades/8 eventos. Backup extendido a nueve tablas con study_sessions_release;29 pruebas de workflow verdes. Aún sin aplicar0006.
+
+Wrapper release 0006 preparado: precondición exacta0005, locks y advisory lock, snapshots JSON por fila, esquema previo/triggers/permisos/secuencias/membresías, DDL y grants en una transacción; verificación catalogada contra catálogo PostgreSQL local y postcommit READ ONLY. Sin probes DML en producción. Pruebas PostgreSQL desechable del wrapper:3 aprobadas; rollback probado en fallo de contrato y revisión inesperada.
