@@ -1,0 +1,667 @@
+{
+  "tables": {
+    "study_sessions": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": "nextval('\"public\".study_sessions_id_seq'::regclass)",
+          "autoincrement": true,
+          "comment": null
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "subject_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "activity_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "planned_start_at",
+          "type": "TIMESTAMP",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "planned_duration",
+          "type": "SMALLINT",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "execution_state",
+          "type": "TEXT",
+          "nullable": false,
+          "default": "'planned'::text",
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "status",
+          "type": "TEXT",
+          "nullable": true,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "start_at",
+          "type": "TIMESTAMP",
+          "nullable": true,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "end_at",
+          "type": "TIMESTAMP",
+          "nullable": true,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "actual_duration",
+          "type": "NUMERIC(20, 6)",
+          "nullable": false,
+          "default": "'0'::numeric",
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "context",
+          "type": "TEXT",
+          "nullable": true,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "other_text",
+          "type": "TEXT",
+          "nullable": true,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": false,
+          "default": "now()",
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "nullable": false,
+          "default": "now()",
+          "autoincrement": false,
+          "comment": null
+        }
+      ],
+      "checks": [
+        {
+          "name": "ck_study_sessions_actual_duration",
+          "sqltext": "actual_duration >= 0::numeric AND actual_duration < 'Infinity'::numeric",
+          "comment": null
+        },
+        {
+          "name": "ck_study_sessions_context",
+          "sqltext": "context = ANY (ARRAY['finished_early'::text, 'distracted'::text, 'tired'::text, 'interrupted'::text, 'changed_activity'::text, 'other'::text])",
+          "comment": null
+        },
+        {
+          "name": "ck_study_sessions_execution_state",
+          "sqltext": "execution_state = ANY (ARRAY['planned'::text, 'running'::text, 'paused'::text, 'finished'::text])",
+          "comment": null
+        },
+        {
+          "name": "ck_study_sessions_execution_times",
+          "sqltext": "(start_at IS NULL OR isfinite(start_at)) AND (end_at IS NULL OR isfinite(end_at) AND start_at IS NOT NULL AND end_at > start_at)",
+          "comment": null
+        },
+        {
+          "name": "ck_study_sessions_lifecycle",
+          "sqltext": "execution_state = 'planned'::text AND start_at IS NULL AND end_at IS NULL AND actual_duration = 0::numeric AND status IS NULL AND context IS NULL OR (execution_state = ANY (ARRAY['running'::text, 'paused'::text])) AND start_at IS NOT NULL AND end_at IS NULL AND status IS NULL AND context IS NULL OR execution_state = 'finished'::text AND status IS NOT NULL AND (start_at IS NOT NULL AND end_at IS NOT NULL AND actual_duration > 0::numeric OR (status = ANY (ARRAY['postponed'::text, 'cancelled'::text])) AND start_at IS NULL AND end_at IS NULL AND actual_duration = 0::numeric)",
+          "comment": null
+        },
+        {
+          "name": "ck_study_sessions_other_text",
+          "sqltext": "NOT context IS DISTINCT FROM 'other'::text AND other_text IS NOT NULL AND char_length(other_text) >= 1 AND char_length(other_text) <= 200 AND other_text = btrim(other_text) AND other_text !~ '^[[:space:]]*$'::text OR context IS DISTINCT FROM 'other'::text AND other_text IS NULL",
+          "comment": null
+        },
+        {
+          "name": "ck_study_sessions_planned_duration",
+          "sqltext": "planned_duration >= 10 AND planned_duration <= 180",
+          "comment": null
+        },
+        {
+          "name": "ck_study_sessions_planned_start",
+          "sqltext": "isfinite(planned_start_at)",
+          "comment": null
+        },
+        {
+          "name": "ck_study_sessions_status",
+          "sqltext": "status = ANY (ARRAY['completed'::text, 'partial'::text, 'postponed'::text, 'cancelled'::text])",
+          "comment": null
+        },
+        {
+          "name": "ck_study_sessions_timestamps",
+          "sqltext": "isfinite(created_at) AND isfinite(updated_at) AND updated_at >= created_at",
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_study_sessions_owner_activity",
+          "unique": false,
+          "column_names": [
+            "user_id",
+            "subject_id",
+            "activity_id"
+          ],
+          "dialect_options": {
+            "postgresql_include": []
+          }
+        },
+        {
+          "name": "ix_study_sessions_user_planned",
+          "unique": false,
+          "column_names": [
+            "user_id",
+            "planned_start_at",
+            "id"
+          ],
+          "dialect_options": {
+            "postgresql_include": []
+          }
+        },
+        {
+          "name": "uq_study_sessions_user_executing",
+          "unique": true,
+          "column_names": [
+            "user_id"
+          ],
+          "dialect_options": {
+            "postgresql_where": "(execution_state = ANY (ARRAY['running'::text, 'paused'::text]))",
+            "postgresql_include": []
+          }
+        }
+      ],
+      "pk": {
+        "constrained_columns": [
+          "id"
+        ],
+        "name": "study_sessions_pkey",
+        "comment": null,
+        "dialect_options": {
+          "postgresql_include": []
+        }
+      },
+      "fk": [
+        {
+          "name": "fk_study_sessions_owner_subject",
+          "constrained_columns": [
+            "user_id",
+            "subject_id"
+          ],
+          "referred_schema": "public",
+          "referred_table": "subjects",
+          "referred_columns": [
+            "user_id",
+            "id"
+          ],
+          "options": {
+            "onupdate": "RESTRICT",
+            "ondelete": "RESTRICT"
+          },
+          "comment": null
+        },
+        {
+          "name": "fk_study_sessions_owner_subject_activity",
+          "constrained_columns": [
+            "user_id",
+            "subject_id",
+            "activity_id"
+          ],
+          "referred_schema": "public",
+          "referred_table": "activities",
+          "referred_columns": [
+            "user_id",
+            "subject_id",
+            "id"
+          ],
+          "options": {
+            "onupdate": "RESTRICT",
+            "ondelete": "RESTRICT"
+          },
+          "comment": null
+        }
+      ],
+      "unique": []
+    },
+    "study_session_intervals": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": "nextval('\"public\".study_session_intervals_id_seq'::regclass)",
+          "autoincrement": true,
+          "comment": null
+        },
+        {
+          "name": "session_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "started_at",
+          "type": "TIMESTAMP",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "ended_at",
+          "type": "TIMESTAMP",
+          "nullable": true,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": false,
+          "default": "now()",
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "nullable": false,
+          "default": "now()",
+          "autoincrement": false,
+          "comment": null
+        }
+      ],
+      "checks": [
+        {
+          "name": "ck_study_intervals_times",
+          "sqltext": "isfinite(started_at) AND (ended_at IS NULL OR isfinite(ended_at) AND ended_at > started_at)",
+          "comment": null
+        },
+        {
+          "name": "ck_study_intervals_timestamps",
+          "sqltext": "isfinite(created_at) AND isfinite(updated_at) AND updated_at >= created_at",
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ex_study_intervals_overlap",
+          "unique": false,
+          "column_names": [
+            null,
+            null
+          ],
+          "expressions": [
+            "int8range(session_id::bigint, session_id::bigint, '[]'::text)",
+            "tstzrange(started_at, ended_at, '[)'::text)"
+          ],
+          "duplicates_constraint": "ex_study_intervals_overlap",
+          "dialect_options": {
+            "postgresql_using": "gist",
+            "postgresql_include": []
+          }
+        },
+        {
+          "name": "ix_study_intervals_session_started",
+          "unique": false,
+          "column_names": [
+            "session_id",
+            "started_at",
+            "id"
+          ],
+          "dialect_options": {
+            "postgresql_include": []
+          }
+        },
+        {
+          "name": "uq_study_intervals_open",
+          "unique": true,
+          "column_names": [
+            "session_id"
+          ],
+          "dialect_options": {
+            "postgresql_where": "(ended_at IS NULL)",
+            "postgresql_include": []
+          }
+        }
+      ],
+      "pk": {
+        "constrained_columns": [
+          "id"
+        ],
+        "name": "study_session_intervals_pkey",
+        "comment": null,
+        "dialect_options": {
+          "postgresql_include": []
+        }
+      },
+      "fk": [
+        {
+          "name": "fk_study_intervals_session",
+          "constrained_columns": [
+            "session_id"
+          ],
+          "referred_schema": "public",
+          "referred_table": "study_sessions",
+          "referred_columns": [
+            "id"
+          ],
+          "options": {
+            "onupdate": "RESTRICT",
+            "ondelete": "RESTRICT"
+          },
+          "comment": null
+        }
+      ],
+      "unique": []
+    }
+  },
+  "triggers": [
+    {
+      "relname": "study_session_intervals",
+      "tgname": "study_interval_no_truncate",
+      "tgenabled": "O",
+      "def": "CREATE TRIGGER study_interval_no_truncate BEFORE TRUNCATE ON public.study_session_intervals FOR EACH STATEMENT EXECUTE FUNCTION cognova_prepare_study_interval()"
+    },
+    {
+      "relname": "study_session_intervals",
+      "tgname": "study_interval_prepare",
+      "tgenabled": "O",
+      "def": "CREATE TRIGGER study_interval_prepare BEFORE INSERT OR DELETE OR UPDATE ON public.study_session_intervals FOR EACH ROW EXECUTE FUNCTION cognova_prepare_study_interval()"
+    },
+    {
+      "relname": "study_session_intervals",
+      "tgname": "study_session_intervals_execution_valid",
+      "tgenabled": "O",
+      "def": "CREATE CONSTRAINT TRIGGER study_session_intervals_execution_valid AFTER INSERT OR UPDATE ON public.study_session_intervals DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION cognova_validate_study_execution()"
+    },
+    {
+      "relname": "study_sessions",
+      "tgname": "study_session_prepare",
+      "tgenabled": "O",
+      "def": "CREATE TRIGGER study_session_prepare BEFORE INSERT OR UPDATE ON public.study_sessions FOR EACH ROW EXECUTE FUNCTION cognova_prepare_study_session()"
+    },
+    {
+      "relname": "study_sessions",
+      "tgname": "study_sessions_execution_valid",
+      "tgenabled": "O",
+      "def": "CREATE CONSTRAINT TRIGGER study_sessions_execution_valid AFTER INSERT OR UPDATE ON public.study_sessions DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION cognova_validate_study_execution()"
+    }
+  ],
+  "functions": [
+    {
+      "proname": "cognova_prepare_study_interval",
+      "prosrc": "\n        DECLARE parent_id integer;\n        BEGIN\n            IF TG_OP IN ('DELETE','TRUNCATE') THEN\n                RAISE EXCEPTION 'Study execution evidence cannot be removed'\n                    USING ERRCODE = '23514';\n            END IF;\n            IF TG_OP = 'INSERT' THEN\n                NEW.created_at := clock_timestamp();\n                NEW.updated_at := NEW.created_at;\n            ELSE\n                IF NEW.id IS DISTINCT FROM OLD.id\n                   OR NEW.session_id IS DISTINCT FROM OLD.session_id\n                   OR NEW.started_at IS DISTINCT FROM OLD.started_at\n                   OR NEW.created_at IS DISTINCT FROM OLD.created_at\n                   OR (OLD.ended_at IS NOT NULL\n                       AND NEW.ended_at IS DISTINCT FROM OLD.ended_at) THEN\n                    RAISE EXCEPTION 'Study interval evidence is immutable'\n                        USING ERRCODE = '23514';\n                END IF;\n                NEW.updated_at := greatest(clock_timestamp(), OLD.updated_at);\n            END IF;\n            -- Metadata-only write serializes parent/child validation, including\n            -- REPEATABLE READ. Never change timer fields or calculate duration.\n            EXECUTE format('UPDATE %I.study_sessions SET updated_at=updated_at '\n                           'WHERE id=$1 RETURNING id', TG_TABLE_SCHEMA)\n                INTO parent_id USING NEW.session_id;\n            IF parent_id IS NULL THEN\n                RAISE EXCEPTION 'Study session does not exist'\n                    USING ERRCODE = '23503';\n            END IF;\n            RETURN NEW;\n        END ",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "provolatile": "v",
+      "return_type": "trigger"
+    },
+    {
+      "proname": "cognova_prepare_study_session",
+      "prosrc": "\n        BEGIN\n            IF TG_OP = 'INSERT' THEN\n                NEW.created_at := clock_timestamp();\n                NEW.updated_at := NEW.created_at;\n            ELSE\n                IF NEW.id IS DISTINCT FROM OLD.id\n                   OR NEW.user_id IS DISTINCT FROM OLD.user_id\n                   OR NEW.created_at IS DISTINCT FROM OLD.created_at THEN\n                    RAISE EXCEPTION 'Study session identity is immutable'\n                        USING ERRCODE = '23514';\n                END IF;\n                NEW.updated_at := greatest(clock_timestamp(), OLD.updated_at);\n            END IF;\n            RETURN NEW;\n        END ",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "provolatile": "v",
+      "return_type": "trigger"
+    },
+    {
+      "proname": "cognova_validate_study_execution",
+      "prosrc": "\n        DECLARE\n            session_key integer;\n            s record;\n            evidence record;\n        BEGIN\n            IF TG_TABLE_NAME = 'study_sessions' THEN\n                session_key := NEW.id;\n            ELSE\n                session_key := NEW.session_id;\n            END IF;\n            EXECUTE format('SELECT * FROM %I.study_sessions WHERE id=$1',\n                           TG_TABLE_SCHEMA) INTO s USING session_key;\n            IF s.id IS NULL THEN\n                RETURN NULL;\n            END IF;\n            EXECUTE format(\n                'SELECT count(*) AS total, '\n                'count(*) FILTER (WHERE ended_at IS NULL) AS opened, '\n                'min(started_at) AS first_start, max(ended_at) AS last_end '\n                'FROM %I.study_session_intervals WHERE session_id=$1',\n                TG_TABLE_SCHEMA) INTO evidence USING session_key;\n            IF (evidence.total > 0 AND\n                (s.start_at IS NULL OR evidence.first_start <> s.start_at\n                 OR (s.end_at IS NOT NULL AND evidence.last_end > s.end_at)))\n               OR (s.execution_state = 'planned' AND evidence.total <> 0)\n               OR (s.execution_state = 'running' AND evidence.opened <> 1)\n               OR (s.execution_state = 'paused' AND\n                   (evidence.total = 0 OR evidence.opened <> 0))\n               OR (s.execution_state = 'finished' AND\n                   (evidence.opened <> 0\n                    OR (s.start_at IS NULL AND evidence.total <> 0)\n                    OR (s.start_at IS NOT NULL AND evidence.total = 0))) THEN\n                RAISE EXCEPTION 'Study execution evidence is inconsistent'\n                    USING ERRCODE = '23514';\n            END IF;\n            RETURN NULL;\n        END ",
+      "prosecdef": false,
+      "proconfig": [
+        "search_path=pg_catalog"
+      ],
+      "provolatile": "v",
+      "return_type": "trigger"
+    }
+  ],
+  "constraints": [
+    {
+      "relname": "study_session_intervals",
+      "conname": "ck_study_intervals_times",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK ((isfinite(started_at) AND ((ended_at IS NULL) OR (isfinite(ended_at) AND (ended_at > started_at)))))"
+    },
+    {
+      "relname": "study_session_intervals",
+      "conname": "ck_study_intervals_timestamps",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK ((isfinite(created_at) AND isfinite(updated_at) AND (updated_at >= created_at)))"
+    },
+    {
+      "relname": "study_session_intervals",
+      "conname": "ex_study_intervals_overlap",
+      "contype": "x",
+      "convalidated": true,
+      "definition": "EXCLUDE USING gist (int8range((session_id)::bigint, (session_id)::bigint, '[]'::text) WITH &&, tstzrange(started_at, ended_at, '[)'::text) WITH &&)"
+    },
+    {
+      "relname": "study_session_intervals",
+      "conname": "fk_study_intervals_session",
+      "contype": "f",
+      "convalidated": true,
+      "definition": "FOREIGN KEY (session_id) REFERENCES study_sessions(id) ON UPDATE RESTRICT ON DELETE RESTRICT"
+    },
+    {
+      "relname": "study_session_intervals",
+      "conname": "study_session_intervals_execution_valid",
+      "contype": "t",
+      "convalidated": true,
+      "definition": "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+    },
+    {
+      "relname": "study_session_intervals",
+      "conname": "study_session_intervals_pkey",
+      "contype": "p",
+      "convalidated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "relname": "study_sessions",
+      "conname": "ck_study_sessions_actual_duration",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK (((actual_duration >= (0)::numeric) AND (actual_duration < 'Infinity'::numeric)))"
+    },
+    {
+      "relname": "study_sessions",
+      "conname": "ck_study_sessions_context",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK ((context = ANY (ARRAY['finished_early'::text, 'distracted'::text, 'tired'::text, 'interrupted'::text, 'changed_activity'::text, 'other'::text])))"
+    },
+    {
+      "relname": "study_sessions",
+      "conname": "ck_study_sessions_execution_state",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK ((execution_state = ANY (ARRAY['planned'::text, 'running'::text, 'paused'::text, 'finished'::text])))"
+    },
+    {
+      "relname": "study_sessions",
+      "conname": "ck_study_sessions_execution_times",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK ((((start_at IS NULL) OR isfinite(start_at)) AND ((end_at IS NULL) OR (isfinite(end_at) AND (start_at IS NOT NULL) AND (end_at > start_at)))))"
+    },
+    {
+      "relname": "study_sessions",
+      "conname": "ck_study_sessions_lifecycle",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK ((((execution_state = 'planned'::text) AND (start_at IS NULL) AND (end_at IS NULL) AND (actual_duration = (0)::numeric) AND (status IS NULL) AND (context IS NULL)) OR ((execution_state = ANY (ARRAY['running'::text, 'paused'::text])) AND (start_at IS NOT NULL) AND (end_at IS NULL) AND (status IS NULL) AND (context IS NULL)) OR ((execution_state = 'finished'::text) AND (status IS NOT NULL) AND (((start_at IS NOT NULL) AND (end_at IS NOT NULL) AND (actual_duration > (0)::numeric)) OR ((status = ANY (ARRAY['postponed'::text, 'cancelled'::text])) AND (start_at IS NULL) AND (end_at IS NULL) AND (actual_duration = (0)::numeric))))))"
+    },
+    {
+      "relname": "study_sessions",
+      "conname": "ck_study_sessions_other_text",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK ((((NOT (context IS DISTINCT FROM 'other'::text)) AND (other_text IS NOT NULL) AND ((char_length(other_text) >= 1) AND (char_length(other_text) <= 200)) AND (other_text = btrim(other_text)) AND (other_text !~ '^[[:space:]]*$'::text)) OR ((context IS DISTINCT FROM 'other'::text) AND (other_text IS NULL))))"
+    },
+    {
+      "relname": "study_sessions",
+      "conname": "ck_study_sessions_planned_duration",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK (((planned_duration >= 10) AND (planned_duration <= 180)))"
+    },
+    {
+      "relname": "study_sessions",
+      "conname": "ck_study_sessions_planned_start",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK (isfinite(planned_start_at))"
+    },
+    {
+      "relname": "study_sessions",
+      "conname": "ck_study_sessions_status",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK ((status = ANY (ARRAY['completed'::text, 'partial'::text, 'postponed'::text, 'cancelled'::text])))"
+    },
+    {
+      "relname": "study_sessions",
+      "conname": "ck_study_sessions_timestamps",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK ((isfinite(created_at) AND isfinite(updated_at) AND (updated_at >= created_at)))"
+    },
+    {
+      "relname": "study_sessions",
+      "conname": "fk_study_sessions_owner_subject",
+      "contype": "f",
+      "convalidated": true,
+      "definition": "FOREIGN KEY (user_id, subject_id) REFERENCES subjects(user_id, id) ON UPDATE RESTRICT ON DELETE RESTRICT"
+    },
+    {
+      "relname": "study_sessions",
+      "conname": "fk_study_sessions_owner_subject_activity",
+      "contype": "f",
+      "convalidated": true,
+      "definition": "FOREIGN KEY (user_id, subject_id, activity_id) REFERENCES activities(user_id, subject_id, id) ON UPDATE RESTRICT ON DELETE RESTRICT"
+    },
+    {
+      "relname": "study_sessions",
+      "conname": "study_sessions_execution_valid",
+      "contype": "t",
+      "convalidated": true,
+      "definition": "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+    },
+    {
+      "relname": "study_sessions",
+      "conname": "study_sessions_pkey",
+      "contype": "p",
+      "convalidated": true,
+      "definition": "PRIMARY KEY (id)"
+    }
+  ],
+  "all_indexes": [
+    {
+      "relname": "study_session_intervals",
+      "index_name": "ex_study_intervals_overlap",
+      "indisvalid": true,
+      "indisready": true,
+      "definition": "CREATE INDEX ex_study_intervals_overlap ON public.study_session_intervals USING gist (int8range((session_id)::bigint, (session_id)::bigint, '[]'::text), tstzrange(started_at, ended_at, '[)'::text))"
+    },
+    {
+      "relname": "study_session_intervals",
+      "index_name": "ix_study_intervals_session_started",
+      "indisvalid": true,
+      "indisready": true,
+      "definition": "CREATE INDEX ix_study_intervals_session_started ON public.study_session_intervals USING btree (session_id, started_at, id)"
+    },
+    {
+      "relname": "study_session_intervals",
+      "index_name": "study_session_intervals_pkey",
+      "indisvalid": true,
+      "indisready": true,
+      "definition": "CREATE UNIQUE INDEX study_session_intervals_pkey ON public.study_session_intervals USING btree (id)"
+    },
+    {
+      "relname": "study_session_intervals",
+      "index_name": "uq_study_intervals_open",
+      "indisvalid": true,
+      "indisready": true,
+      "definition": "CREATE UNIQUE INDEX uq_study_intervals_open ON public.study_session_intervals USING btree (session_id) WHERE (ended_at IS NULL)"
+    },
+    {
+      "relname": "study_sessions",
+      "index_name": "ix_study_sessions_owner_activity",
+      "indisvalid": true,
+      "indisready": true,
+      "definition": "CREATE INDEX ix_study_sessions_owner_activity ON public.study_sessions USING btree (user_id, subject_id, activity_id)"
+    },
+    {
+      "relname": "study_sessions",
+      "index_name": "ix_study_sessions_user_planned",
+      "indisvalid": true,
+      "indisready": true,
+      "definition": "CREATE INDEX ix_study_sessions_user_planned ON public.study_sessions USING btree (user_id, planned_start_at, id)"
+    },
+    {
+      "relname": "study_sessions",
+      "index_name": "study_sessions_pkey",
+      "indisvalid": true,
+      "indisready": true,
+      "definition": "CREATE UNIQUE INDEX study_sessions_pkey ON public.study_sessions USING btree (id)"
+    },
+    {
+      "relname": "study_sessions",
+      "index_name": "uq_study_sessions_user_executing",
+      "indisvalid": true,
+      "indisready": true,
+      "definition": "CREATE UNIQUE INDEX uq_study_sessions_user_executing ON public.study_sessions USING btree (user_id) WHERE (execution_state = ANY (ARRAY['running'::text, 'paused'::text]))"
+    }
+  ]
+}
