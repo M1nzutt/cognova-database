@@ -551,3 +551,6 @@ Contrato registrado; implementación/pruebas0006 pendientes.
 0006: arquitectura, reglas vigentes y procedencia actualizadas; diferenciación explícita entre head de rama0006 y producción0005. No se modifican revisiones previas.
 0006 suite completa:278 passed,225 PostgreSQL y53 offline,0 omitidas. JUnit validado; Ruff lint/formato y pip check verdes tras dividir una cadena SQL larga de una prueba. OPERATIONS/MIGRATIONS separan preparación y futuro release; backup pre-0006 pendiente de adaptación autorizada.
 Cierre local:64 enlaces Markdown y JSON de evidencia válidos; diff/check básico de secretos correcto; SQL offline/heads/history correctos. Sin esquemas test ni roles temporales study restantes; servidor PostgreSQL desechable detenido. Historial de rama:41 iniciales más16 commits reales=57; sin squash. CI remoto se verificará tras push.
+
+## Release 0006 en curso — 2026-11-02
+Autorización productiva nueva. Inicio limpio96daa0b,57 commits,CI40998886377 success. Preflight READ ONLY:0005,TLS,0 transacciones activas,26 usuarios/12 materias/3 actividades/8 eventos. Backup extendido a nueve tablas con study_sessions_release;29 pruebas de workflow verdes. Aún sin aplicar0006.

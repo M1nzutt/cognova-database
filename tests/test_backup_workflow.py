@@ -34,6 +34,7 @@ def backup_code(monkeypatch, tmp_path):
         "DIAGNOSE_CONNECTION": "false",
         "SUBJECTS_RELEASE": "false",
         "ACTIVITIES_RELEASE": "false",
+        "STUDY_SESSIONS_RELEASE": "false",
     }.items():
         monkeypatch.setenv(name, value)
     # Synthetic credential; never use the local .env in workflow tests.
@@ -83,6 +84,8 @@ def fake_commands(monkeypatch, namespace, failure=None):
                 output = b"t" if "pg_stat_ssl" in args[-1] else b"0004_subjects"
             if "count(*)" in args[-1]:
                 output = b"0"
+            elif namespace["os"].environ.get("STUDY_SESSIONS_RELEASE") == "true":
+                output = b"t" if "pg_stat_ssl" in args[-1] else b"0005_activities"
             if failure == "revision" and "alembic_version" in args[-1]:
                 output = b"0003_onboarding_questionnaire"
         elif binary == "pg_dump":
@@ -108,6 +111,8 @@ def fake_commands(monkeypatch, namespace, failure=None):
                     "user_academic_goal_legacy",
                     "questionnaire_responses",
                     "subjects",
+                    "activities",
+                    "activity_deadline_events",
                 )
             )
             if failure == "toc":
@@ -344,6 +349,33 @@ def test_activities_backup_includes_subjects_and_restore(
 def test_conflicting_release_flags_never_connect(backup_code, monkeypatch):
     monkeypatch.setenv("ACTIVITIES_RELEASE", "true")
     monkeypatch.setenv("SUBJECTS_RELEASE", "true")
+    calls = fake_commands(monkeypatch, backup_code)
+    with pytest.raises(ValueError):
+        backup_code["backup"]()
+    assert not calls
+
+
+def test_study_backup_includes_activities_and_history(backup_code, monkeypatch, capsys):
+    monkeypatch.setenv("STUDY_SESSIONS_RELEASE", "true")
+    calls = fake_commands(monkeypatch, backup_code)
+    backup_code["backup"]()
+    manifest = json.loads(capsys.readouterr().out)
+    assert (
+        manifest["revision_before"] == manifest["revision_after"] == "0005_activities"
+    )
+    assert manifest["restore_rehearsal"] == "passed"
+    assert len(manifest["restored_counts"]) == 9
+    assert {"activities", "activity_deadline_events"} <= manifest[
+        "restored_counts"
+    ].keys()
+    assert manifest["encrypted_file"] == "cognova-pre-0006.dump.gpg"
+    assert any("--exit-on-error" in call for call in calls)
+
+
+@pytest.mark.parametrize("other", ["SUBJECTS_RELEASE", "ACTIVITIES_RELEASE"])
+def test_study_backup_rejects_mixed_release(backup_code, monkeypatch, other):
+    monkeypatch.setenv("STUDY_SESSIONS_RELEASE", "true")
+    monkeypatch.setenv(other, "true")
     calls = fake_commands(monkeypatch, backup_code)
     with pytest.raises(ValueError):
         backup_code["backup"]()
