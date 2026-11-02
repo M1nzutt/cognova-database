@@ -1,6 +1,25 @@
 # Reglas para agentes
 
-## Alcance vigente de esta tarea — 2026-10-25
+## Alcance vigente — release autorizado 2026-11-02
+
+- Aplicar0006 a producción con preflight READ ONLY, backup fresco verificado,
+  merge --no-ff a main, runner oficial y grants mínimos; preservar todas las filas.
+- No modificar migraciones ni Backend/Frontend. DML de comportamiento en entorno
+  aislado; producción por catálogo, sin probes que creen historia o avancen secuencias.
+- Conservar permisos anteriores, incluidos TEMP heredado, sin DDL persistente,
+  ownership, TRUNCATE ni edición de alembic_version para runtime.
+- Esta autorización sustituye la exclusión productiva de la fase siguiente.
+
+## Histórico — desarrollo 2026-10-29
+
+- Implementar 0006_study_sessions en rama feat/0006-study-sessions según el
+  contrato confirmado en DATA_MODEL: planificación, ejecución e intervalos.
+- Preservar 0001–0005. Probar únicamente en PostgreSQL local desechable.
+- No operar producción ni cambiar Backend/Frontend. No timer automático ni demos.
+- Commits atómicos reales y push de la rama; sin squash ni merge a main solicitado.
+- Producción permanece en 0005; preparar código no equivale a autorizar su release.
+
+## Histórico — alineación documental 2026-10-25
 
 - Alinear main/documentación con producción 0005; preservar commits sin squash.
 - No modificar migraciones, lógica, scripts ni evidencias existentes.

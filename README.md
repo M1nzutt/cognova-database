@@ -2,14 +2,16 @@
 
 Repositorio operativo del esquema PostgreSQL existente de Cognova. No es una API.
 Historial: `0001_create_users` → `0002_auth_sessions` → `0003_onboarding_questionnaire`
-→ `0004_subjects` → `0005_activities` ([contrato](docs/DATA_MODEL.md)).
-Las revisiones 0001–0005 se conservan sin cambios en esta integración. 0003 separa onboarding del registro y conserva
+→ `0004_subjects` → `0005_activities` → `0006_study_sessions`
+([contrato](docs/DATA_MODEL.md)).
+Las revisiones 0001–0005 se conservan sin cambios. 0003 separa onboarding del registro y conserva
 la percepción inicial y las revisiones del cuestionario.
 Backend conserva ORM, conexiones, consultas, auth y lógica de negocio.
 
-## Estado vigente — 2026-10-25
+## Estado vigente — 2026-10-29
 
-**Main representa el esquema productivo 0005_activities.** Integra sin squash
+**La rama feat/0006-study-sessions prepara Sesiones; producción sigue en0005.**
+Main representa el esquema productivo 0005_activities e integra sin squash
 feat/0005-activities, incluidos scripts, pruebas y evidencias de los releases.
 Producción sí fue operada: 0003 se aplicó el 2026-10-17, 0004 el 2026-10-19 y
 0005 el 2026-10-24. El historial no termina en 0002.
@@ -18,12 +20,19 @@ Producción sí fue operada: 0003 se aplicó el 2026-10-17, 0004 el 2026-10-19 y
 - [Operación y permisos vigentes](docs/OPERATIONS.md).
 - [Evidencia productiva 0005](docs/evidence/0005-release-2026-10-24.json).
 - [Backup verificado al aplicar 0005](docs/evidence/0005-backup-2026-10-24.json).
-- [Modelo de Materias y Actividades](docs/DATA_MODEL.md).
+- [Modelo de Materias, Actividades y Sesiones](docs/DATA_MODEL.md).
 
 El SHA de esquema fijado por Backend sigue siendo
 604e296e2670d154ba7e18d7afa3f010e66dd42d; integrar main no cambia ese pin.
-Esta alineación no ejecuta migraciones, grants ni backups. Las evidencias contienen
+La preparación0006 no ejecuta migraciones, grants ni backups productivos. Las evidencias contienen
 capturas fechadas del release, no un inventario nuevo. No reaplicar helpers históricos.
+
+0006 agrega planificación de estudio, ciclo técnico, resultado y segmentos reales
+de ejecución. Backend calcula segundos efectivos sin pausas; DB protege coherencia,
+unicidad concurrente y conservación de historia mediante RESTRICT. No timer automático.
+Validación local:278 pruebas (225 PostgreSQL), sin omisiones; Ruff/formato y pip check
+verdes. Producción requiere un release separado con backup fresco adaptado a0006,
+compatibilidad de Backend y permisos mínimos; ver OPERATIONS.
 
 ## Instalación y comandos
 

@@ -25,7 +25,12 @@ y el entonces head lineal 0004_subjects. No se renumeró ni modificó su SQL.
 
 Al agregar 0005 se protege además el blob de 0004_subjects.py:
 `6827c5d80d5591e2423eca6f971cde0273a5ce38`. Las cuatro revisiones históricas
-permanecen idénticas; el nuevo head lineal es 0005_activities.
+permanecen idénticas; el head lineal de esa entrega fue 0005_activities.
+
+Al agregar 0006 se protege además el blob de 0005_activities.py:
+`abf886ced6536cc87bbd6ef55245ef0e9f3b5955`. El test offline comprueba los cinco
+blobs históricos y la cadena lineal hasta 0006_study_sessions. La clave compuesta
+adicional de activities se crea exclusivamente en 0006, sin modificar 0005.
 
 ## Integración del historial en main — 2026-10-25
 

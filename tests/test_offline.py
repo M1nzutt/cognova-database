@@ -13,6 +13,7 @@ BLOBS = {
     "0002_auth_sessions.py": "ef8cd07f0a3482a272c5f62229f51a5390d74ec4",
     "0003_onboarding_questionnaire.py": "5e6e5c25d631efb6d0015fabce2b64ae9866fba1",
     "0004_subjects.py": "6827c5d80d5591e2423eca6f971cde0273a5ce38",
+    "0005_activities.py": "abf886ced6536cc87bbd6ef55245ef0e9f3b5955",
 }
 
 
@@ -31,8 +32,9 @@ def test_original_blobs_and_single_linear_head():
         blob = b"blob " + str(len(data)).encode() + b"\0" + data
         assert hashlib.sha1(blob).hexdigest() == expected
     script = ScriptDirectory.from_config(migration_config())
-    assert script.get_heads() == ["0005_activities"]
+    assert script.get_heads() == ["0006_study_sessions"]
     assert [(r.revision, r.down_revision) for r in script.walk_revisions()] == [
+        ("0006_study_sessions", "0005_activities"),
         ("0005_activities", "0004_subjects"),
         ("0004_subjects", "0003_onboarding_questionnaire"),
         ("0003_onboarding_questionnaire", "0002_auth_sessions"),
@@ -95,3 +97,40 @@ def test_same_head_offline_has_no_schema_operations():
 def test_paths_work_outside_repository(monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)
     assert "CREATE TABLE users" in sql_for("head")
+
+
+def test_study_revision_is_additive_and_self_contained():
+    sql = sql_for("0005_activities:0006_study_sessions")
+    for expected in (
+        "CREATE TABLE study_sessions",
+        "CREATE TABLE study_session_intervals",
+        "planned_start_at TIMESTAMP WITH TIME ZONE NOT NULL",
+        "actual_duration NUMERIC(20, 6) DEFAULT '0' NOT NULL",
+        "CONSTRAINT uq_activities_user_subject_id UNIQUE",
+        "EXCLUDE USING gist",
+        "DEFERRABLE INITIALLY DEFERRED",
+        "CREATE UNIQUE INDEX uq_study_sessions_user_executing",
+        "CREATE UNIQUE INDEX uq_study_intervals_open",
+        "REVOKE ALL ON study_sessions, study_session_intervals FROM PUBLIC",
+        "UPDATE alembic_version SET version_num='0006_study_sessions'",
+    ):
+        assert expected in sql
+    for forbidden in (
+        "CREATE TABLE users",
+        "DROP TABLE",
+        "CREATE EXTENSION",
+        "SECURITY DEFINER",
+    ):
+        assert forbidden not in sql
+
+
+def test_study_same_revision_is_noop_and_downgrade_is_guarded():
+    sql = sql_for("0006_study_sessions:0006_study_sessions")
+    assert all(word not in sql for word in ("CREATE", "ALTER", "DROP", "INSERT"))
+    config = migration_config()
+    config.output_buffer = StringIO()
+    command.downgrade(config, "0006_study_sessions:0005_activities", sql=True)
+    sql = config.output_buffer.getvalue()
+    assert sql.index("Downgrade blocked") < sql.index("DROP TABLE")
+    assert "IN ACCESS EXCLUSIVE MODE" in sql
+    assert "CASCADE" not in sql

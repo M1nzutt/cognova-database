@@ -4,6 +4,10 @@ run-name: Backup pre-0003 · ${{ github.run_id }}
 on:
   workflow_dispatch:
     inputs:
+      study_sessions_release:
+        description: Back up exactly 0005 before authorized 0006 release, including activities and isolated restore
+        type: boolean
+        default: false
       activities_release:
         description: Back up exactly 0004 before authorized 0005 release, including isolated restore
         type: boolean
@@ -59,6 +63,7 @@ jobs:
           DIAGNOSE_CONNECTION: ${{ inputs.diagnose_connection }}
           SUBJECTS_RELEASE: ${{ inputs.subjects_release }}
           ACTIVITIES_RELEASE: ${{ inputs.activities_release }}
+          STUDY_SESSIONS_RELEASE: ${{ inputs.study_sessions_release }}
         shell: bash
         run: |
           set -euo pipefail
@@ -123,10 +128,13 @@ jobs:
           def backup():
               subjects = os.environ.get('SUBJECTS_RELEASE') == 'true'
               activities = os.environ.get('ACTIVITIES_RELEASE') == 'true'
-              if subjects and activities:
+              studies = os.environ.get('STUDY_SESSIONS_RELEASE') == 'true'
+              if sum((subjects, activities, studies)) > 1:
                   raise BackupValidationError('Select only one release')
               expected = '0004_subjects' if activities else ('0003_onboarding_questionnaire' if subjects else '0002_auth_sessions')
               label = '0005' if activities else ('0004' if subjects else '0003')
+              if studies:
+                  expected, label = '0005_activities', '0006'
               key = os.environ.get('BACKUP_ENCRYPTION_KEY', '')
               if len(key.encode('utf-8')) < 32 or any(c in key for c in '\r\n\0'):
                   raise BackupValidationError('Encryption key must be at least 32 bytes and single-line')
@@ -187,16 +195,18 @@ jobs:
                   raise BackupValidationError('Empty backup')
               toc = run('pg_restore_list', [str(binaries / 'pg_restore'), '--list', str(dump)], env)
               tables = ('users', 'auth_sessions', 'rate_limit_buckets', 'alembic_version')
-              if subjects or activities:
+              if subjects or activities or studies:
                   tables += ('user_academic_goal_legacy', 'questionnaire_responses')
-              if activities:
+              if activities or studies:
                   tables += ('subjects',)
+              if studies:
+                  tables += ('activities', 'activity_deadline_events')
               for table in tables:
                   if f'TABLE DATA public {table} '.encode() not in toc:
                       raise BackupValidationError('Required table data missing from backup')
               # Decode the complete archive, without connecting or executing SQL.
               run('pg_restore_decode', [str(binaries / 'pg_restore'), '--file=/dev/null', str(dump)], env)
-              if subjects or activities:
+              if subjects or activities or studies:
                   # Disposable container: no production credentials or network destination.
                   isolated = {k: v for k, v in env.items() if not k.startswith('PG')}
                   run('restore_server', ['docker', 'run', '--detach', '--rm', '--name',
@@ -268,8 +278,8 @@ jobs:
                   pg_dump_version=dump_version, pg_restore_version=restore_version,
                   revision_before=revision, revision_after=revision,
                   pg_restore_list='passed', full_archive_decode='passed',
-                  restore_rehearsal='passed' if subjects or activities else 'not_performed',
-                  restored_counts=counts if subjects or activities else None,
+                  restore_rehearsal='passed' if subjects or activities or studies else 'not_performed',
+                  restored_counts=counts if subjects or activities or studies else None,
                   run_id=os.environ['GITHUB_RUN_ID'], attempt=os.environ['GITHUB_RUN_ATTEMPT'],
                   source_commit=os.environ['GITHUB_SHA'],
               )
@@ -303,4 +313,4 @@ jobs:
       - name: Remove runner-local backup files
         if: always()
         shell: bash
-        run: rm -rf -- "$RUNNER_TEMP/cognova-pre-0003" "$RUNNER_TEMP/cognova-pre-0004" "$RUNNER_TEMP/cognova-pre-0005"
+        run: rm -rf -- "$RUNNER_TEMP/cognova-pre-0003" "$RUNNER_TEMP/cognova-pre-0004" "$RUNNER_TEMP/cognova-pre-0005" "$RUNNER_TEMP/cognova-pre-0006"
