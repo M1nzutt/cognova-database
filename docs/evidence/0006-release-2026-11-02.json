@@ -1,0 +1,141 @@
+{
+  "revision": "0006_study_sessions",
+  "merge_sha": "fbee151e03f56b97ec54e726abcae63fc786024c",
+  "main_code_sha": "20c6fdc21e2a48cd8f5fb37f46545460e9b9a161",
+  "postgres_server_version": "18.6 (Debian 18.6-1.pgdg12+2)",
+  "schema_evidence": "0006-schema-contract.json",
+  "catalog_matches_tested_contract": true,
+  "verified_catalog_objects": {
+    "check_constraints": 12,
+    "exclusion_constraints": 1,
+    "foreign_keys": 3,
+    "primary_keys": 2,
+    "valid_ready_indexes": 8,
+    "enabled_triggers": 5,
+    "functions": 3
+  },
+  "runtime": {
+    "role": {
+      "rolname": "cognova_runtime",
+      "rolsuper": false,
+      "rolcreaterole": false,
+      "rolcreatedb": false,
+      "rolcanlogin": true,
+      "rolreplication": false,
+      "rolbypassrls": false
+    },
+    "memberships": [],
+    "owned_objects": [],
+    "schema_create": [],
+    "temporary_ddl_existing": true,
+    "table_privileges": {
+      "alembic_version": {
+        "SELECT": true,
+        "INSERT": false,
+        "UPDATE": false,
+        "DELETE": false,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      },
+      "user_academic_goal_legacy": {
+        "SELECT": true,
+        "INSERT": false,
+        "UPDATE": false,
+        "DELETE": false,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      },
+      "questionnaire_responses": {
+        "SELECT": true,
+        "INSERT": true,
+        "UPDATE": false,
+        "DELETE": false,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      }
+    }
+  },
+  "table_privileges": {
+    "study_sessions": {
+      "SELECT": true,
+      "INSERT": true,
+      "UPDATE": true,
+      "DELETE": true,
+      "TRUNCATE": false,
+      "REFERENCES": false,
+      "TRIGGER": false
+    },
+    "study_session_intervals": {
+      "SELECT": true,
+      "INSERT": true,
+      "UPDATE": true,
+      "DELETE": false,
+      "TRUNCATE": false,
+      "REFERENCES": false,
+      "TRIGGER": false
+    }
+  },
+  "sequence_privileges": {
+    "study_sessions": {
+      "USAGE": true,
+      "SELECT": true,
+      "UPDATE": false
+    },
+    "study_session_intervals": {
+      "USAGE": true,
+      "SELECT": true,
+      "UPDATE": false
+    }
+  },
+  "function_execute": {
+    "cognova_prepare_study_session": false,
+    "cognova_prepare_study_interval": false,
+    "cognova_validate_study_execution": false
+  },
+  "revision_before": "0005_activities",
+  "rows_preserved": {
+    "users": true,
+    "auth_sessions": true,
+    "rate_limit_buckets": true,
+    "user_academic_goal_legacy": true,
+    "questionnaire_responses": true,
+    "subjects": true,
+    "activities": true,
+    "activity_deadline_events": true
+  },
+  "counts_before": {
+    "users": 26,
+    "auth_sessions": 36,
+    "rate_limit_buckets": 1,
+    "user_academic_goal_legacy": 1,
+    "questionnaire_responses": 33,
+    "subjects": 12,
+    "activities": 3,
+    "activity_deadline_events": 8
+  },
+  "previous_structure_preserved_except_activity_composite_key": true,
+  "previous_triggers_permissions_sequences_memberships_preserved": true,
+  "preservation_scope": "all rows/columns under exclusive locks",
+  "production_behavior_checks": "catalog identical to locally tested constraints/functions/triggers; no synthetic production writes",
+  "committed": true,
+  "backup_run": "41537103226",
+  "observed_at_utc": "2026-11-02T22:42:03.523113+00:00",
+  "code_pin": "96daa0b6f3b1f64c4ccdc00b0d2026aad9cabd30",
+  "counts_after_commit": {
+    "users": 26,
+    "auth_sessions": 36,
+    "rate_limit_buckets": 1,
+    "user_academic_goal_legacy": 1,
+    "questionnaire_responses": 33,
+    "subjects": 12,
+    "activities": 3,
+    "activity_deadline_events": 8,
+    "study_sessions": 0,
+    "study_session_intervals": 0
+  },
+  "post_commit_checks": "passed",
+  "post_commit_at_utc": "2026-11-02T22:42:11.351573+00:00"
+}

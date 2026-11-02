@@ -1,35 +1,50 @@
 # Estado de Cognova Database
 
-## Estado vigente: Sesiones 0006 preparada en rama — 2026-10-29
+## Estado vigente: release Sesiones 0006 cerrado — 2026-11-02
 
-Rama **feat/0006-study-sessions**, base main f5d9975 (41 commits iniciales).
-Migración **0006_study_sessions** después de0005, único head de código. Producción
-documentada sigue en **0005_activities**; no se conectó ni operó en esta tarea.
-Main no se integra en esta entrega: el usuario solicita push de la rama.
+**Producción y main están en 0006_study_sessions.** Merge no-ff
+`fbee151e03f56b97ec54e726abcae63fc786024c`; SHA de código en main usado para
+el release, tras el ajuste probado de catálogo PG18:
+`20c6fdc21e2a48cd8f5fb37f46545460e9b9a161`. CI verde en ese SHA.
+Backend debe fijar como pin de migraciones `96daa0b6f3b1f64c4ccdc00b0d2026aad9cabd30`.
+La diferencia de catálogo PG18 se corrigió sin cambiar la migración: PG18 registra
+NOT NULL también en pg_constraint; esas filas redundan con la nulabilidad de
+columnas y se excluyen de la comparación. Resto del catálogo coincide exactamente.
 
-Tablas study_sessions y study_session_intervals: planificación obligatoria,
-ciclo planned/running/paused/finished, resultado/contexto final separados, intervalos
-reales y duración efectiva en segundos calculada por Backend. FKs compuestas
-garantizan misma materia/usuario; RESTRICT e intervalos conservados protegen historia.
-Unicidad parcial de ejecución/intervalo abierto y exclusión GiST sin extensiones.
-Checks y validación diferida garantizan evidencia consistente; sin timer automático.
-Contrato y responsabilidades en [DATA_MODEL](DATA_MODEL.md).
+Release atómico por runner oficial, con TLS, advisory lock y ACCESS EXCLUSIVE locks.
+Backup previo run `41537103226`, artifact `13183708284`: AES256, SHA cifrado
+`3ba26dbda223d71aef599dc264d0780a5cf1e97864b9142aba4aae66149ee84a`; listado,
+decodificación, roundtrip y restauración aislada aprobados. [Manifiesto](evidence/0006-backup-2026-11-02.json).
+[Preflight](evidence/0006-preflight-2026-11-02.json) y [release](evidence/0006-release-2026-11-02.json).
 
-**Validación final local:278 pruebas,225 PostgreSQL y53 offline,0 omitidas.**
-JUnit `artifacts/test-results-0006.xml` comprobado con check_test_results.py.
-PostgreSQL17.11 desechable; Ruff lint/formato (38 archivos) y pip check verdes.
-Ensayos de base vacía/upgrade0005, preservación de todas las tablas previas,
-constraints/referencias/contexto, pausas, evidencia inmutable, rollback, downgrade
-seguro y concurrencia READ COMMITTED/REPEATABLE READ aprobados. Rol temporal con
-permisos mínimos funciona sin DDL, modificación de alembic_version/historia ni
-borrado de intervalos. No grants productivos. Revisiones0001–0005 intactas.
+Se preservaron exactamente filas/columnas de users=26, auth_sessions=36,
+rate_limit_buckets=1, user_academic_goal_legacy=1, questionnaire_responses=33,
+subjects=12, activities=3 y activity_deadline_events=8. Secuencias, estructura previa,
+triggers, permisos y membresías se conservaron; única adición previa a activities:
+clave compuesta para ownership referencial. study_sessions=0,
+study_session_intervals=0; no hubo DML sintético productivo.
 
-**DEPENDENCY BACKEND:** puede implementar contra esta rama fijando el SHA completo
-entregado, consumir0006 y calcular acumulado/transiciones en transacciones atómicas.
-No afirmar disponibilidad productiva de Sesiones: faltan release autorizado,
-backup fresco adaptado (helpers actuales solo cubren hasta pre-0005), aplicación,
-grants y despliegue/smoke del Backend compatible. Ver [OPERATIONS](OPERATIONS.md).
-Sin cambios de otros repositorios, datos demo ni implementación de Calendario/timer.
+Runtime `cognova_runtime`: study_sessions SELECT/INSERT/UPDATE/DELETE;
+study_session_intervals SELECT/INSERT/UPDATE; ambas secuencias USAGE/SELECT.
+Sin DELETE/TRUNCATE en intervalos, UPDATE de secuencias, CREATE persistente,
+ownership, memberships, EXECUTE de funciones nuevas ni modificación de revisión/historia.
+El permiso TEMP preexistente viene de PUBLIC y se dejó intacto; no se concedió aquí.
+Los grants de producción fueron verificados por has_table_privilege, secuencias,
+funciones y catálogo.
+
+**Validación final:284 pruebas,228 PostgreSQL,0 omitidas; CI verde, Ruff, formato,
+pip check y SQL offline verdes.** Integridad y concurrencia se ensayaron en PG17;
+wrapper de release se probó aislado, y catálogo real PG18 verificado postcommit READ ONLY.
+No se modificó Backend ni Frontend. Database 0006 queda cerrado; Backend Sesiones
+puede empezar contra el pin indicado. Ver [OPERATIONS](OPERATIONS.md).
+
+Total Git tras merge, corrección y cierre documental: **64 commits**, 23 commits
+por encima del main anterior de 41. Working tree limpio después del commit final.
+
+## Histórico — Sesiones 0006 preparada en rama — 2026-10-29
+
+La fase de desarrollo siguiente describe el estado previo al release; producción
+entonces estaba en 0005. La validación local y el contrato se conservan como historia.
 
 ## Histórico — main alineado con producción — 2026-10-25
 

@@ -1,14 +1,64 @@
 # Operación vigente, permisos y recuperación
 
-Main incorpora el historial completo hasta 0005 desde el 2026-10-25. Esta
-alineación no ejecutó operaciones productivas. Los procedimientos de aplicación
-0003/0004/0005 se conservan como historia; no reaplicarlos sobre producción.
+## Release 0006 aplicado — 2026-11-02
 
-## Preparación 0006 Sesiones — 2026-10-29; no aplicada
+Producción está exactamente en 0006_study_sessions. Aplicación atómica con
+runner oficial, pin de migración 96daa0b6f3b1f64c4ccdc00b0d2026aad9cabd30,
+merge no-ff fbee151e03f56b97ec54e726abcae63fc786024c y SHA de código en main
+usado para el release `20c6fdc21e2a48cd8f5fb37f46545460e9b9a161`. CI verde.
+[Evidencia completa](evidence/0006-release-2026-11-02.json) y
+[catálogo verificado de tablas, constraints, FKs, índices, triggers y funciones](evidence/0006-schema-contract.json).
+
+Backup pre-0006 run 41537103226 / artifact 13183708284, verificado antes del DDL,
+[manifiesto](evidence/0006-backup-2026-11-02.json). SHA-256 ciphertext
+3ba26dbda223d71aef599dc264d0780a5cf1e97864b9142aba4aae66149ee84a;
+cifrado AES256, listado/decodificación, roundtrip y restauración aislada aprobados.
+Incluyó 9 tablas previas, incluidas activities e historial de deadlines.
+Expira 2026-11-09; solo se conserva ciphertext y la clave existente sigue bajo
+custodia del usuario.
+
+Preflight READ ONLY exacto 0005_activities, TLS activo, cero transacciones
+activas relevantes; 26 usuarios, 12 materias, 3 actividades y 8 eventos.
+La aplicación bloqueó alembic_version y tablas previas, exigió revisión exacta,
+verificó permisos runtime previos, capturó todas las filas/columnas y conservó
+secuencias, estructura, triggers, permisos y memberships. Una primera transacción
+revirtió antes de commit por la representación nueva de NOT NULL en el catálogo
+PG18; el comparador se ajustó para excluir solo esas filas duplicadas y CI/local
+pasaron antes del segundo intento exitoso. No hubo DML de comportamiento en prod.
+
+Después del commit: revisión exacta 0006; estudio y sus dos tablas con catálogo
+idéntico a referencia: 12 checks, 1 constraint de exclusión, 3 FKs RESTRICT,
+2 PK, 8 índices válidos/listos, cinco triggers habilitados y tres funciones
+verificadas. FKs RESTRICT e índices parciales/exclusión comprobados.
+Se preservaron exactamente users=26, auth_sessions=36, rate_limit_buckets=1,
+user_academic_goal_legacy=1, questionnaire_responses=33, subjects=12, activities=3
+y activity_deadline_events=8. Tablas nuevas vacías.
+
+Grants mínimos a cognova_runtime:
+
+- study_sessions: SELECT, INSERT, UPDATE, DELETE.
+- study_session_intervals: SELECT, INSERT, UPDATE; sin DELETE/TRUNCATE.
+- study_sessions_id_seq y study_session_intervals_id_seq: USAGE, SELECT; sin UPDATE.
+- Sin TRUNCATE, REFERENCES o TRIGGER en tablas nuevas; sin DDL persistente,
+  ownership, memberships ni EXECUTE de funciones nuevas.
+- Sin escritura de alembic_version/historia existente; privilegios anteriores
+  y grants de otras tablas no cambiaron.
+
+El permiso database TEMP sigue heredado de PUBLIC y ya existía antes de 0006;
+no se concedió en el release ni se revocó por el efecto global que tendría retirar
+TEMP a PUBLIC. No permite DDL persistente en el esquema. El catálogo y funciones
+has_*_privilege se comprobaron después del commit en transacción READ ONLY.
+
+No se ejecutaron probes productivos de INSERT/UPDATE: el comportamiento y el rol
+runtime se probaron localmente con PostgreSQL desechable; post-release fue por catálogo.
+No downgrade automático. Con datos de sesión, el downgrade falla preservando evidencia;
+priorizar corrección hacia adelante.
+
+## Histórico — Preparación 0006 Sesiones — 2026-10-29
 
 La rama feat/0006-study-sessions implementa y ensaya0006 localmente. Producción
 continúa documentada en0005; no se conectó ni operó producción en esta entrega.
-No se ejecutaron backups, grants ni DDL productivos. No hay datos demo.
+En esa fase no se ejecutaron backups, grants ni DDL productivos. No hay datos demo.
 
 Antes del release autorizado: fijar SHA probado, coordinar Backend que admita0006
 en readiness y confirmar inventario exacto0005, TLS, locks y tamaño de activities.
@@ -41,11 +91,11 @@ y membresías heredadas del rol real antes del release sin asumir el ensayo como
 No downgrade automático: con cualquier sesión/intervalo aborta; con esquema vacío
 se ensayó reversión sin CASCADE y con preservación de0001–0005. Priorizar corrección
 hacia adelante una vez exista evidencia. Esta preparación deja la migración lista
-para revisión/release coordinado, no acredita una operación productiva completada.
+para revisión/release coordinado que se completó el 2026-11-02.
 
-## 0005 aplicado y permisos verificados — evidencia 2026-10-24
+## Histórico — 0005 aplicado y permisos verificados — evidencia 2026-10-24
 
-Revisión productiva actual: 0005_activities. Aplicación confirmada 19:38:45Z y
+Revisión productiva en esa fecha: 0005_activities. Aplicación confirmada 19:38:45Z y
 reconfirmada READ ONLY 19:38:54Z. [Evidencia](evidence/0005-release-2026-10-24.json).
 No repetir --apply: exige exactamente0004. Para controles posteriores usar lectura
 de revisión/catálogo/permisos; ante incidentes conservar datos y reparar hacia adelante.

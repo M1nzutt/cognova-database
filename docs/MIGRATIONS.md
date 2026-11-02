@@ -2,12 +2,11 @@
 
 ## Historial de código y producción
 
-Único head de feat/0006-study-sessions: **0006_study_sessions**, aún no aplicado
-a producción. Main y producción documentada conservan **0005_activities**.
+Único head de main y producción: **0006_study_sessions**, aplicado el 2026-11-02.
 Cadena de código: 0001_create_users → 0002_auth_sessions →
 0003_onboarding_questionnaire → 0004_subjects → 0005_activities → 0006_study_sessions.
-Ver [evidencia](evidence/0005-release-2026-10-24.json) y [OPERATIONS](OPERATIONS.md).
-La descripción 0002 inferior es histórica. Integrar la rama no ejecuta migraciones.
+Ver [evidencia del release](evidence/0006-release-2026-11-02.json) y
+[OPERATIONS](OPERATIONS.md). La descripción 0002 inferior es histórica.
 
 ## 0006 — ejecución de estudio, sin temporizador automático
 
@@ -16,8 +15,7 @@ Upgrade crea checks, claves compuestas RESTRICT, índices parciales y exclusión
 GiST nativa. Añade una clave única referenciada a activities, sin alterar sus datos.
 No modifica 0001–0005 ni requiere extensión, ORM, autogenerate o nuevos servicios.
 El runner oficial acepta `upgrade 0006_study_sessions` y `upgrade head --sql`.
-Solo se ha ensayado en PostgreSQL desechable: no ejecutar esos comandos online
-contra producción sin el release separado indicado en OPERATIONS.
+El release productivo y la comprobación READ ONLY se registran en OPERATIONS.
 
 Downgrade 0006→0005 solo en entorno controlado: toma locks ACCESS EXCLUSIVE,
 rechaza cualquier sesión/intervalo y elimina únicamente objetos añadidos por0006
@@ -83,7 +81,7 @@ lock y ajustes SET LOCAL hasta commit/rollback. No usar autocommit.
   timestamptz NOT NULL; índice ix_rate_limit_buckets_expires_at.
 - alembic_version: una fila `0002_auth_sessions` al completar el upgrade.
 
-El head de código de la rama es0006; producción documentada es0005 (OPERATIONS).
+Head de código y producción es0006; las revisiones anteriores están en OPERATIONS.
 Ver [DATA_MODEL](DATA_MODEL.md).
 Para onboarding ver [SCHEMA_0003](SCHEMA_0003.md).
 Estas definiciones describen el punto de partida, no la nulabilidad actual.

@@ -38,4 +38,4 @@ FK compuestas conservan usuario/materia/actividad coherentes; RESTRICT protege
 recursos referenciados e intervalos inmutables. Índices únicos parciales y exclusión
 GiST impiden dos ejecuciones por usuario, dos intervalos abiertos y solapamientos.
 No se instala extensión. Detalle y permisos en [DATA_MODEL](DATA_MODEL.md).
-Producción documentada continúa en 0005; 0006 requiere un release separado.
+Producción quedó en 0006 el 2026-11-02; Backend conserva autorización y transiciones.

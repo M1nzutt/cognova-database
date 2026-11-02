@@ -1,14 +1,14 @@
 # Reglas para agentes
 
-## Alcance vigente — release autorizado 2026-11-02
+## Estado vigente — release 0006 cerrado 2026-11-02
 
-- Aplicar0006 a producción con preflight READ ONLY, backup fresco verificado,
-  merge --no-ff a main, runner oficial y grants mínimos; preservar todas las filas.
-- No modificar migraciones ni Backend/Frontend. DML de comportamiento en entorno
-  aislado; producción por catálogo, sin probes que creen historia o avancen secuencias.
-- Conservar permisos anteriores, incluidos TEMP heredado, sin DDL persistente,
-  ownership, TRUNCATE ni edición de alembic_version para runtime.
-- Esta autorización sustituye la exclusión productiva de la fase siguiente.
+- 0006_study_sessions aplicada en producción y publicada en main con merge --no-ff.
+- Producción exacta 0006; evidencia y grants en PROJECT_STATE/OPERATIONS.
+- No repetir operación ni tocar Backend/Frontend. No cambiar 0001–0006.
+- Runtime tiene DML limitado en sesiones/intervalos, sin DDL persistente, TRUNCATE,
+  ownership o escritura de alembic_version. TEMP vía PUBLIC ya era heredado y se
+  conserva; no se otorgó como parte de 0006.
+- Desarrollo/validación de Backend Sesiones puede comenzar contra el pin 0006.
 
 ## Histórico — desarrollo 2026-10-29
 

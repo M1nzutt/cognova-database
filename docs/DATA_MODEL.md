@@ -1,12 +1,12 @@
 # Modelo de datos
 
-Head de código de esta rama: **0006_study_sessions**. Producción documentada:
-**0005_activities**. Revisiones 0001–0005 inmutables; esta entrega no opera producción.
+Head de código y revisión productiva: **0006_study_sessions**. Aplicada el
+2026-11-02; ver [OPERATIONS](OPERATIONS.md). Revisiones 0001–0005 inmutables.
 
 ## Sesiones de estudio — contrato 0006 confirmado 2026-10-29
 
-Nueva revisión 0006_study_sessions después de 0005; desarrollo local, NO aplicada
-a producción. 0001–0005 permanecen inmutables. No datos demo ni lógica de timer.
+Revisión 0006_study_sessions después de 0005. Contrato implementado y aplicado;
+no datos demo ni lógica de timer.
 
 ### study_sessions
 - id INTEGER SERIAL PK; user_id y subject_id INTEGER NOT NULL.
@@ -75,11 +75,11 @@ edición, inicio/pausa/reanudación/finalización, cálculo de duración desde i
 precondiciones y retry transaccional acotado40001/40P01; mensajes seguros.
 La FK también impide reasignar una actividad a otra materia si tiene sesiones.
 
-Sin grants a runtime productivo en esta entrega. Contrato futuro mínimo:
+Grants runtime productivos verificados en el release 2026-11-02:
 sesiones SELECT/INSERT/UPDATE/DELETE, intervalos SELECT/INSERT/UPDATE;
-USAGE/SELECT de ambas secuencias, sin DDL/TRUNCATE/escritura de alembic_version,
-sin EXECUTE directo de funciones de trigger. Revisar roles/default privileges
-reales en release separado. PUBLIC revocado en nuevos objetos.
+USAGE/SELECT de ambas secuencias, sin CREATE persistente/TRUNCATE/escritura de
+alembic_version, sin EXECUTE directo de funciones de trigger. PUBLIC revocado
+en nuevos objetos. El TEMP preexistente se hereda de PUBLIC y no se cambió.
 
 Downgrade toma locks exclusivos y aborta si existe cualquier sesión o intervalo.
 Vacío elimina solo objetos0006 y clave compuesta añadida a activities; sin CASCADE.
@@ -90,7 +90,7 @@ Upgrade mantiene search_path, conexión inyectada, transacción y advisory lock1
 ## Modelo previo vigente en producción
 
 Cadena productiva: 0001 → 0002 → 0003_onboarding_questionnaire → 0004_subjects
-→ **0005_activities**, aplicada el 2026-10-24 según OPERATIONS.
+→ 0005_activities → **0006_study_sessions**, aplicada el 2026-11-02.
 El modelo anterior se detalla en
 [MIGRATIONS](MIGRATIONS.md) y [SCHEMA_0003](SCHEMA_0003.md).
 
