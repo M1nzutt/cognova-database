@@ -2,12 +2,13 @@
 
 ## Estado vigente — 0007 integrada; release productivo pendiente — 2026-11-03
 
-`main` integra 0007 mediante merge `--no-ff` `2715a02759957f08697ee09a6155ba54afce135e`;
-la rama de trabajo se basó en `eff87b387345a1d3f286e3a6007d41e707ec9d13`. Inicio:
-64 commits en main y 84 en todas las refs. Cierre previsto de documentación:
-86 commits en main (415 hasta la referencia histórica 501) y 106 en todas las refs.
-CI GitHub (PostgreSQL 17 y Gitleaks) pasó sobre el mismo árbol integrado en
-`dee31a14c98fa30a2c640527f446438c637e1b4b`, run `41739301929`.
+Rama `main`; integración `--no-ff` `2715a02759957f08697ee09a6155ba54afce135e`.
+Base inicial:
+`eff87b387345a1d3f286e3a6007d41e707ec9d13`, 64 commits en main y 84 en todas
+las refs. Cierre: 87 commits en main (414 hasta la referencia histórica 501) y
+107 en todas las refs. GitHub CI (PostgreSQL 17 y Gitleaks) pasó sobre el mismo
+árbol de migración en `eb4a795ca9109aa9dba9975767308e98d6b3557a`, run
+`41740103681`; los cambios posteriores son documentales.
 
 La migración `0007_study_plans_and_challenges` crea seis tablas normalizadas para
 Planes, relaciones, decisiones y Retos sin copiar recursos ni aplicar propuestas
@@ -23,11 +24,12 @@ upgrade offline hasta 0007, pruebas de release/rollback/grants y `git diff --che
 El workflow de backup comprueba revisión 0006, las 11 tablas, restauración aislada,
 cifrado, hash y expiración.
 
-Producción y el release de 2026-11-02 permanecen en `0006_study_sessions`, SHA de
-código `20c6fdc21e2a48cd8f5fb37f46545460e9b9a161`. No se conectó a producción ni se
-ejecutó DDL/grants allí. El release requiere coordinación Backend para admitir 0007,
-respaldo reciente verificable y autorización operativa separada. Las revisiones
-0001–0006 permanecen intactas.
+Producción permanece en `0006_study_sessions`, SHA de código usado en el release del
+2026-11-02: `20c6fdc21e2a48cd8f5fb37f46545460e9b9a161`. No se conectó a producción ni
+se ejecutó DDL/grants allí. El release requiere coordinación Backend para admitir
+0007, respaldo reciente descargado/verificable y autorización operativa separada.
+Las revisiones 0001–0006 permanecen intactas. Se crearon 20 commits atómicos en la
+rama, un merge y dos commits documentales; sin squash ni commits vacíos.
 
 ## Estado vigente: release Sesiones 0006 cerrado — 2026-11-02
 
