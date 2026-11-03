@@ -3,12 +3,11 @@
 ## Estado vigente — 0007 integrada; release productivo pendiente — 2026-11-03
 
 Rama `main`; integración `--no-ff` `2715a02759957f08697ee09a6155ba54afce135e`.
-Base inicial:
-`eff87b387345a1d3f286e3a6007d41e707ec9d13`, 64 commits en main y 84 en todas
-las refs. Cierre: 87 commits en main (414 hasta la referencia histórica 501) y
-107 en todas las refs. GitHub CI (PostgreSQL 17 y Gitleaks) pasó sobre el mismo
-árbol de migración en `eb4a795ca9109aa9dba9975767308e98d6b3557a`, run
-`41740103681`; los cambios posteriores son documentales.
+Base inicial: `eff87b387345a1d3f286e3a6007d41e707ec9d13`, 64 commits en main y 84
+en todas las refs. Cierre: 88 commits en main (413 hasta la referencia histórica
+501) y 108 en todas las refs. GitHub CI (PostgreSQL 17 y Gitleaks) pasó sobre
+`5c56b4e69cda248fa05d404a81733eab61764895`, run `41740585849`; el siguiente cambio
+solo actualizará este estado documental.
 
 La migración `0007_study_plans_and_challenges` crea seis tablas normalizadas para
 Planes, relaciones, decisiones y Retos sin copiar recursos ni aplicar propuestas
@@ -29,7 +28,7 @@ Producción permanece en `0006_study_sessions`, SHA de código usado en el relea
 se ejecutó DDL/grants allí. El release requiere coordinación Backend para admitir
 0007, respaldo reciente descargado/verificable y autorización operativa separada.
 Las revisiones 0001–0006 permanecen intactas. Se crearon 20 commits atómicos en la
-rama, un merge y dos commits documentales; sin squash ni commits vacíos.
+rama, un merge y tres commits documentales; sin squash ni commits vacíos.
 
 ## Estado vigente: release Sesiones 0006 cerrado — 2026-11-02
 
