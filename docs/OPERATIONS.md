@@ -1,5 +1,37 @@
 # Operación vigente, permisos y recuperación
 
+## Preparación 0007 Planes y Retos — pendiente de release
+
+La migración, comparador de catálogo y grants mínimos están implementados en
+`feat/0007-study-plans-challenges`. Producción sigue en `0006_study_sessions`;
+no se conectó a producción ni se ejecutó DDL o grants allí. El código prepara la
+operación; la aplicación productiva queda pendiente.
+
+El workflow manual `backup-pre-0003.yml`, con `plans_challenges_release=true`, exige
+exactamente 0006 antes y después, valida las once tablas existentes, cifra AES256,
+verifica roundtrip/listado/decodificación y restaura el backup en PostgreSQL 18
+aislado. Solo publica el ciphertext por siete días. Tras descargarlo, comparar el
+SHA-256 ciphertext con el manifest, registrar `download_verification=passed` y
+confirmar que el respaldo y su clave no expiren antes del corte. El helper requiere
+que la verificación de descarga se agregue a la evidencia; no acepta un artifact
+caducado, un dump incompleto o una revisión diferente.
+
+`scripts/release_0007.py --apply` está protegido por pin exacto de código en main,
+working tree limpio, host/base Render fijados, TLS, backup menor de 24 horas,
+revisión origen exacta, advisory lock y ACCESS EXCLUSIVE locks. Dentro de una
+transacción preserva filas/columnas, estructura, triggers, permisos, membresías y
+secuencias anteriores; actualiza Alembic, aplica grants mínimos, y coteja checks,
+FKs, índices y ACL contra el contrato probado. Después valida todo de nuevo con
+conexión READ ONLY. Cualquier error antes del commit revierte DDL y grants. El
+helper nunca ejecuta DML sintético productivo ni downgrade.
+
+Grants de runtime que el release concedería: `study_plans` SELECT/INSERT/UPDATE/
+DELETE; relaciones SELECT/INSERT/DELETE; decisiones SELECT/INSERT; Retos
+SELECT/INSERT/UPDATE; secuencias nuevas USAGE/SELECT. Ningún TRUNCATE, UPDATE/
+DELETE de evidencia de decisiones, DELETE de Retos, UPDATE de secuencias ni DDL.
+El código preparado no autoriza el corte: requiere coordinación Backend que admita
+0007 y autorización operativa productiva separada.
+
 ## Release 0006 aplicado — 2026-11-02
 
 Producción está exactamente en 0006_study_sessions. Aplicación atómica con

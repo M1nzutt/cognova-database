@@ -1,9 +1,35 @@
 # Migraciones, configuración y validación
 
+## 0007 — Planes de estudio y Retos (preparada, no aplicada en producción)
+
+`0007_study_plans_and_challenges` sigue a `0006_study_sessions`. Crea
+`study_plans`, `study_plan_subjects`, `study_plan_activities`,
+`study_plan_sessions`, `study_plan_decisions` y `study_challenges`. Las relaciones
+componen owner/Plan/Materia/recurso en claves foráneas RESTRICT; dos UNIQUE nuevos
+en `study_sessions` permiten comprobar la consistencia de Sesiones. No duplica
+Materias, Actividades ni Sesiones. La migración revoca PUBLIC en las tablas y
+secuencias nuevas; los grants `cognova_runtime` se aplican y comprueban mediante
+`scripts/release_0007.py`, no dentro de la migración.
+
+El contrato de columnas, checks, índices, ownership, targets JSONB y reversión está
+en [DATA_MODEL](DATA_MODEL.md). La definición física PG18 que verifica el helper es
+[0007-schema-contract.json](evidence/0007-schema-contract.json), generada de un
+upgrade dentro de transacción local desechable. CLI acepta el destino explícito
+0007 y `head`. No se aplicó DDL ni grants productivos; antes de release se requiere
+pin probado, respaldo/restauración verificados, Backend compatible, aprobación
+operativa separada y ejecución del helper bajo rol migrador.
+
+El downgrade a 0006 bloquea usuarios y recursos existentes junto con las seis
+tablas nuevas. Si hay cualquier fila 0007, falla antes de borrar; no utiliza
+CASCADE. Sin filas, elimina solo objetos añadidos por 0007 y preserva todo 0001–0006.
+Se verifican upgrade 0001→0007, downgrade/re-upgrade 0007→0006→0007, preservación,
+restricciones, permisos y catálogo con PostgreSQL real.
+
 ## Historial de código y producción
 
-Único head de main y producción: **0006_study_sessions**, aplicado el 2026-11-02.
-Cadena de código: 0001_create_users → 0002_auth_sessions →
+La rama de trabajo prepara **0007_study_plans_and_challenges**; `main` y producción
+siguen en **0006_study_sessions**, aplicado el 2026-11-02.
+Cadena de migración: 0001_create_users → 0002_auth_sessions →
 0003_onboarding_questionnaire → 0004_subjects → 0005_activities → 0006_study_sessions.
 Ver [evidencia del release](evidence/0006-release-2026-11-02.json) y
 [OPERATIONS](OPERATIONS.md). La descripción 0002 inferior es histórica.

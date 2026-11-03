@@ -1,7 +1,9 @@
 # Modelo de datos
 
-Head de código y revisión productiva: **0006_study_sessions**. Aplicada el
-2026-11-02; ver [OPERATIONS](OPERATIONS.md). Revisiones 0001–0005 inmutables.
+La rama de trabajo prepara **0007_study_plans_and_challenges**. `main` y producción
+continúan en **0006_study_sessions**, aplicada el 2026-11-02; ver
+[OPERATIONS](OPERATIONS.md).
+Revisiones 0001–0006 se conservan sin editar.
 
 ## Sesiones de estudio — contrato 0006 confirmado 2026-10-29
 
@@ -94,12 +96,12 @@ Cadena productiva: 0001 → 0002 → 0003_onboarding_questionnaire → 0004_subj
 El modelo anterior se detalla en
 [MIGRATIONS](MIGRATIONS.md) y [SCHEMA_0003](SCHEMA_0003.md).
 
-## Planes de estudio y retos — contrato propuesto para 0007
+## Planes de estudio y retos — contrato implementado en 0007
 
-Este contrato prepara la revisión `0007_study_plans_and_challenges`; no afirma
-que se haya aplicado. El estado productivo continúa en `0006_study_sessions`
-hasta un release separado y autorizado. Planes y Retos persisten relaciones y
-decisiones: no copian materias, actividades ni sesiones y no ejecutan propuestas
+La revisión `0007_study_plans_and_challenges` está implementada y ensayada localmente;
+no afirma que se haya aplicado. El estado productivo continúa en
+`0006_study_sessions` hasta un release separado y autorizado. Planes y Retos persisten
+relaciones y decisiones: no copian materias, actividades ni sesiones y no ejecutan propuestas
 de IA por sí mismos. Backend conserva el flujo de aceptación, edición, rechazo,
 regeneración y transiciones.
 
