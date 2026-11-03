@@ -16,6 +16,7 @@ def upgrade() -> None:
     _plan_decisions()
     _study_challenges()
     _indexes()
+    _revoke_public()
 
 
 def downgrade() -> None:
@@ -493,4 +494,16 @@ def _indexes() -> None:
         "ix_study_challenges_user_subject_activity_session",
         "study_challenges",
         ["user_id", "subject_id", "activity_id", "study_session_id"],
+    )
+
+
+def _revoke_public() -> None:
+    op.execute(
+        "REVOKE ALL ON TABLE study_plans, study_plan_subjects, "
+        "study_plan_activities, study_plan_sessions, study_plan_decisions, "
+        "study_challenges FROM PUBLIC"
+    )
+    op.execute(
+        "REVOKE ALL ON SEQUENCE study_plans_id_seq, "
+        "study_plan_decisions_id_seq, study_challenges_id_seq FROM PUBLIC"
     )
