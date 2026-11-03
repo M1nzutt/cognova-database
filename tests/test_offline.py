@@ -14,6 +14,7 @@ BLOBS = {
     "0003_onboarding_questionnaire.py": "5e6e5c25d631efb6d0015fabce2b64ae9866fba1",
     "0004_subjects.py": "6827c5d80d5591e2423eca6f971cde0273a5ce38",
     "0005_activities.py": "abf886ced6536cc87bbd6ef55245ef0e9f3b5955",
+    "0006_study_sessions.py": "00c06f3723cfabb2bf29295b84daee4ebc3accd8",
 }
 
 
@@ -32,8 +33,9 @@ def test_original_blobs_and_single_linear_head():
         blob = b"blob " + str(len(data)).encode() + b"\0" + data
         assert hashlib.sha1(blob).hexdigest() == expected
     script = ScriptDirectory.from_config(migration_config())
-    assert script.get_heads() == ["0006_study_sessions"]
+    assert script.get_heads() == ["0007_study_plans_and_challenges"]
     assert [(r.revision, r.down_revision) for r in script.walk_revisions()] == [
+        ("0007_study_plans_and_challenges", "0006_study_sessions"),
         ("0006_study_sessions", "0005_activities"),
         ("0005_activities", "0004_subjects"),
         ("0004_subjects", "0003_onboarding_questionnaire"),
@@ -78,6 +80,15 @@ def test_complete_postgresql_ddl_without_environment(monkeypatch):
         "SECURITY DEFINER SET search_path = pg_catalog",
         "REVOKE ALL ON FUNCTION cognova_record_activity_deadline() FROM PUBLIC",
         "UPDATE alembic_version SET version_num='0005_activities'",
+        "CREATE TABLE study_plans",
+        "CREATE TABLE study_plan_subjects",
+        "CREATE TABLE study_plan_activities",
+        "CREATE TABLE study_plan_sessions",
+        "CREATE TABLE study_plan_decisions",
+        "CREATE TABLE study_challenges",
+        "REVOKE ALL ON TABLE study_plans, study_plan_subjects",
+        "REVOKE ALL ON SEQUENCE study_plans_id_seq",
+        "UPDATE alembic_version SET version_num='0007_study_plans_and_challenges'",
     ):
         assert expected in sql
 
@@ -134,3 +145,44 @@ def test_study_same_revision_is_noop_and_downgrade_is_guarded():
     assert sql.index("Downgrade blocked") < sql.index("DROP TABLE")
     assert "IN ACCESS EXCLUSIVE MODE" in sql
     assert "CASCADE" not in sql
+
+
+def test_plan_revision_is_additive_and_downgrade_is_guarded():
+    sql = sql_for("0006_study_sessions:0007_study_plans_and_challenges")
+    for expected in (
+        "CREATE TABLE study_plans",
+        "CREATE TABLE study_plan_subjects",
+        "CREATE TABLE study_plan_activities",
+        "CREATE TABLE study_plan_sessions",
+        "CREATE TABLE study_plan_decisions",
+        "CREATE TABLE study_challenges",
+        "CONSTRAINT uq_study_sessions_user_subject_id UNIQUE",
+        "CONSTRAINT uq_study_sessions_user_subject_activity_id UNIQUE",
+        "ix_study_plans_user_status_start",
+        "ix_study_challenges_user_status_deadline",
+        "REVOKE ALL ON TABLE study_plans",
+        "REVOKE ALL ON SEQUENCE study_plans_id_seq",
+        "UPDATE alembic_version SET version_num='0007_study_plans_and_challenges'",
+    ):
+        assert expected in sql
+    for forbidden in (
+        "CREATE TABLE users",
+        "CREATE TABLE subjects",
+        "CREATE TABLE activities",
+        "CREATE TABLE study_sessions",
+        "DROP TABLE",
+        "CREATE EXTENSION",
+    ):
+        assert forbidden not in sql
+
+    config = migration_config()
+    config.output_buffer = StringIO()
+    command.downgrade(
+        config,
+        "0007_study_plans_and_challenges:0006_study_sessions",
+        sql=True,
+    )
+    downgrade = config.output_buffer.getvalue()
+    assert downgrade.index("Downgrade blocked") < downgrade.index("DROP TABLE")
+    assert "IN ACCESS EXCLUSIVE MODE" in downgrade
+    assert "CASCADE" not in downgrade
