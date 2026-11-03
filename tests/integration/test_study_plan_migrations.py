@@ -4,6 +4,7 @@ from plan_helpers import (
     END,
     HEAD,
     PREVIOUS,
+    decision,
     migrate,
     owner_subject,
     plan,
@@ -337,3 +338,94 @@ def test_resource_links_enforce_owner_plan_and_subject_consistency(pg_engine):
         plan_session(
             connection, owner_id, owner_plan_id, owner_subject_id, owner_session_id
         )
+
+
+def test_plan_decisions_preserve_ai_user_choices_without_applying_them(pg_engine):
+    engine, _ = pg_engine
+    with engine.begin() as connection:
+        migrate(connection)
+        user_id, _ = owner_subject(connection)
+        plan_id = plan(connection, user_id)
+        proposal = {"name": "AI plan", "objective": "Review algebra"}
+        cases = (
+            ("accepted", None, proposal, proposal),
+            ("edited", "/objective", proposal, {"objective": "Review geometry"}),
+            ("rejected", None, proposal, None),
+            ("regenerated", None, proposal, None),
+        )
+        for action, field_path, proposed, chosen in cases:
+            decision(
+                connection,
+                user_id,
+                plan_id,
+                action,
+                field_path=field_path,
+                proposed_value=proposed,
+                chosen_value=chosen,
+            )
+
+        rows = connection.execute(
+            text(
+                "SELECT action,field_path,proposed_value,chosen_value,created_at "
+                "FROM study_plan_decisions ORDER BY id"
+            )
+        ).all()
+        assert [(row.action, row.field_path) for row in rows] == [
+            (action, path) for action, path, _, _ in cases
+        ]
+        assert [row.proposed_value for row in rows] == [item[2] for item in cases]
+        assert [row.chosen_value for row in rows] == [item[3] for item in cases]
+        assert all(row.created_at is not None for row in rows)
+        assert connection.execute(
+            text("SELECT status,name,objective FROM study_plans WHERE id=:id"),
+            {"id": plan_id},
+        ).one() == ("draft", "Exam preparation", "Prepare for the final exam")
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"action": "ignored"},
+        {"action": "accepted", "proposed_value": None},
+        {"action": "accepted", "chosen_value": None},
+        {"action": "edited", "field_path": None},
+        {"action": "edited", "field_path": " ", "chosen_value": {"x": 1}},
+        {
+            "action": "edited",
+            "field_path": "/objective",
+            "proposed_value": {"x": 1},
+            "chosen_value": {"x": 1},
+        },
+        {"action": "edited", "field_path": "/" + "x" * 200},
+        {"action": "rejected", "proposed_value": None},
+        {"action": "rejected", "chosen_value": {"status": "draft"}},
+        {"action": "regenerated", "chosen_value": {"status": "draft"}},
+        {"action": "accepted", "proposed_value": {"value": "x" * 66000}},
+    ],
+)
+def test_invalid_plan_decisions_are_rejected(pg_engine, overrides):
+    engine, _ = pg_engine
+    with engine.begin() as connection:
+        migrate(connection)
+        user_id, _ = owner_subject(connection)
+        plan_id = plan(connection, user_id)
+        action = overrides["action"]
+        values = {key: value for key, value in overrides.items() if key != "action"}
+        with pytest.raises(IntegrityError), connection.begin_nested():
+            decision(connection, user_id, plan_id, action, **values)
+
+
+def test_plan_decisions_require_plan_ownership_and_restrict_deletion(pg_engine):
+    engine, _ = pg_engine
+    with engine.begin() as connection:
+        migrate(connection)
+        owner_id, _ = owner_subject(connection, "owner@test.io")
+        other_id, _ = owner_subject(connection, "other@test.io")
+        plan_id = plan(connection, owner_id)
+        with pytest.raises(IntegrityError), connection.begin_nested():
+            decision(connection, other_id, plan_id, "rejected")
+        decision(connection, owner_id, plan_id, "rejected")
+        with pytest.raises(IntegrityError), connection.begin_nested():
+            connection.execute(
+                text("DELETE FROM study_plans WHERE id=:id"), {"id": plan_id}
+            )

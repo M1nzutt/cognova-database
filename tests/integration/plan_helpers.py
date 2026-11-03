@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timezone
 
 from alembic import command
@@ -9,6 +10,7 @@ HEAD = "0007_study_plans_and_challenges"
 PREVIOUS = "0006_study_sessions"
 START = datetime(2030, 1, 1, 12, tzinfo=timezone.utc)
 END = datetime(2030, 1, 8, 12, tzinfo=timezone.utc)
+_DEFAULT = object()
 
 
 def migrate(connection, revision=HEAD, *, down=False):
@@ -90,6 +92,42 @@ def plan_session(connection, user_id, plan_id, subject_id, session_id):
             "plan": plan_id,
             "subject": subject_id,
             "session": session_id,
+        },
+    )
+
+
+def decision(
+    connection,
+    user_id,
+    plan_id,
+    action,
+    *,
+    field_path=None,
+    proposed_value=_DEFAULT,
+    chosen_value=_DEFAULT,
+):
+    if proposed_value is _DEFAULT:
+        proposed_value = {"status": "draft"}
+    if chosen_value is _DEFAULT:
+        chosen_value = (
+            {"status": "active"} if action in {"accepted", "edited"} else None
+        )
+    proposed_json = json.dumps(proposed_value) if proposed_value is not None else None
+    chosen_json = json.dumps(chosen_value) if chosen_value is not None else None
+    return connection.scalar(
+        text(
+            "INSERT INTO study_plan_decisions "
+            "(user_id,plan_id,action,field_path,proposed_value,chosen_value) "
+            "VALUES (:uid,:plan,:action,:path,CAST(:proposed AS jsonb),"
+            "CAST(:chosen AS jsonb)) RETURNING id"
+        ),
+        {
+            "uid": user_id,
+            "plan": plan_id,
+            "action": action,
+            "path": field_path,
+            "proposed": proposed_json,
+            "chosen": chosen_json,
         },
     )
 
