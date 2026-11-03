@@ -4,6 +4,8 @@ from plan_helpers import (
     END,
     HEAD,
     PREVIOUS,
+    START,
+    challenge,
     decision,
     migrate,
     owner_subject,
@@ -12,6 +14,7 @@ from plan_helpers import (
     plan_session,
     plan_subject,
     study_session,
+    subject,
 )
 from sqlalchemy import inspect, text
 from sqlalchemy.exc import DBAPIError, IntegrityError
@@ -429,3 +432,301 @@ def test_plan_decisions_require_plan_ownership_and_restrict_deletion(pg_engine):
             connection.execute(
                 text("DELETE FROM study_plans WHERE id=:id"), {"id": plan_id}
             )
+
+
+@pytest.mark.parametrize(
+    ("status", "source"),
+    [
+        (status, source)
+        for status in ("pending", "in_progress", "completed", "failed", "cancelled")
+        for source in ("ai", "manual")
+    ],
+)
+def test_challenge_status_source_tokens_and_optional_dates(pg_engine, status, source):
+    engine, _ = pg_engine
+    with engine.begin() as connection:
+        migrate(connection)
+        user_id, subject_id = owner_subject(connection)
+        plan_id = plan(connection, user_id)
+        plan_subject(connection, user_id, plan_id, subject_id)
+        challenge_id = challenge(
+            connection, user_id, plan_id, status=status, source=source
+        )
+        assert challenge_id > 0
+        assert connection.scalar(
+            text(
+                "SELECT start_at IS NULL AND deadline IS NULL "
+                "FROM study_challenges WHERE id=:id"
+            ),
+            {"id": challenge_id},
+        )
+
+
+def test_challenge_target_types_and_target_boundaries(pg_engine):
+    engine, _ = pg_engine
+    with engine.begin() as connection:
+        migrate(connection)
+        user_id, subject_id = owner_subject(connection)
+        activity_id = activity(connection, user_id, subject_id)
+        session_id = study_session(connection, user_id, subject_id, activity_id)
+        plan_id = plan(connection, user_id)
+        plan_subject(connection, user_id, plan_id, subject_id)
+        plan_activity(connection, user_id, plan_id, subject_id, activity_id)
+        plan_session(connection, user_id, plan_id, subject_id, session_id)
+        challenge(
+            connection,
+            user_id,
+            plan_id,
+            subject_id=subject_id,
+            target_type="study_minutes",
+            target_value={"minutes": 1},
+        )
+        challenge(
+            connection,
+            user_id,
+            plan_id,
+            subject_id=subject_id,
+            target_type="study_minutes",
+            target_value={"minutes": 1440},
+        )
+        challenge(
+            connection,
+            user_id,
+            plan_id,
+            subject_id=subject_id,
+            activity_id=activity_id,
+            target_type="activity_completion",
+            target_value={"status": "completed"},
+        )
+        challenge(
+            connection,
+            user_id,
+            plan_id,
+            subject_id=subject_id,
+            study_session_id=session_id,
+            target_type="session_completion",
+            target_value={"lifecycle": "finished"},
+        )
+        challenge(
+            connection,
+            user_id,
+            plan_id,
+            subject_id=subject_id,
+            target_type="subject_mastery",
+            target_value={"criterion": "Quadratic equations", "threshold": 75},
+        )
+        linked = challenge(
+            connection,
+            user_id,
+            plan_id,
+            subject_id=subject_id,
+            activity_id=activity_id,
+            study_session_id=session_id,
+            target_type="custom",
+        )
+        challenge(
+            connection,
+            user_id,
+            plan_id,
+            start_at=END,
+            deadline=END,
+            target_type="custom",
+        )
+        challenge(
+            connection,
+            user_id,
+            plan_id,
+            deadline=END,
+            generation_criteria={"strategy": "adapted", "reason": "missed topic"},
+        )
+        assert connection.scalar(
+            text("SELECT target_value FROM study_challenges WHERE id=:id"),
+            {"id": linked},
+        ) == {"mode": "adaptive"}
+        assert connection.scalar(text("SELECT count(*) FROM study_challenges")) == 8
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"title": ""},
+        {"title": "\t"},
+        {"title": " padded"},
+        {"title": "x" * 101},
+        {"title": None},
+        {"description": ""},
+        {"description": " "},
+        {"description": "x" * 2001},
+        {"description": None},
+        {"target_type": "generic"},
+        {"target_type": "study_minutes", "subject_id": 1, "target_value": {}},
+        {
+            "target_type": "study_minutes",
+            "subject_id": 1,
+            "target_value": {"minutes": 0},
+        },
+        {
+            "target_type": "study_minutes",
+            "subject_id": 1,
+            "target_value": {"minutes": 1441},
+        },
+        {
+            "target_type": "study_minutes",
+            "subject_id": 1,
+            "target_value": {"minutes": "30"},
+        },
+        {
+            "target_type": "study_minutes",
+            "subject_id": 1,
+            "target_value": {"minutes": 30, "unit": "minutes"},
+        },
+        {
+            "target_type": "study_minutes",
+            "subject_id": 1,
+            "target_value": {"minutes": 30.5},
+        },
+        {"target_type": "activity_completion", "target_value": {"status": "done"}},
+        {
+            "target_type": "activity_completion",
+            "subject_id": 1,
+            "activity_id": 1,
+            "target_value": {"status": "done"},
+        },
+        {"target_type": "session_completion", "target_value": {"lifecycle": "paused"}},
+        {
+            "target_type": "subject_mastery",
+            "subject_id": 1,
+            "target_value": {"criterion": "", "threshold": 80},
+        },
+        {
+            "target_type": "subject_mastery",
+            "subject_id": 1,
+            "target_value": {"criterion": "Topic", "threshold": 101},
+        },
+        {
+            "target_type": "subject_mastery",
+            "subject_id": 1,
+            "target_value": {"criterion": "Topic", "threshold": 70.5},
+        },
+        {"target_type": "custom", "target_value": {}},
+        {"target_value": None},
+        {"target_value": "not an object"},
+        {"target_value": {"payload": "x" * 5000}},
+        {"activity_id": 1},
+        {"study_session_id": 1},
+        {"start_at": "infinity"},
+        {"deadline": "infinity"},
+        {"start_at": END, "deadline": START},
+        {"status": "open"},
+        {"source": "gemini"},
+        {"generation_criteria": None},
+        {"generation_criteria": []},
+        {"generation_criteria": {}},
+        {"generation_criteria": {"reason": "x" * 16500}},
+    ],
+)
+def test_invalid_challenge_values_are_rejected(pg_engine, overrides):
+    engine, _ = pg_engine
+    with engine.begin() as connection:
+        migrate(connection)
+        user_id, subject_id = owner_subject(connection)
+        activity_id = activity(connection, user_id, subject_id)
+        session_id = study_session(connection, user_id, subject_id, activity_id)
+        plan_id = plan(connection, user_id)
+        plan_subject(connection, user_id, plan_id, subject_id)
+        plan_activity(connection, user_id, plan_id, subject_id, activity_id)
+        plan_session(connection, user_id, plan_id, subject_id, session_id)
+        resource_keys = {"subject_id", "activity_id", "study_session_id"}
+        values = {
+            key: value
+            for key, value in overrides.items()
+            if value != 1 or key not in resource_keys
+        }
+        for key in resource_keys:
+            if overrides.get(key) == 1:
+                values[key] = {
+                    "subject_id": subject_id,
+                    "activity_id": activity_id,
+                    "study_session_id": session_id,
+                }[key]
+        with pytest.raises(IntegrityError), connection.begin_nested():
+            challenge(connection, user_id, plan_id, **values)
+
+
+def test_challenge_requires_owner_plan_resource_membership_and_consistency(pg_engine):
+    engine, _ = pg_engine
+    with engine.begin() as connection:
+        migrate(connection)
+        owner_id, owner_subject_id = owner_subject(connection, "owner@test.io")
+        other_id, other_subject_id = owner_subject(connection, "other@test.io")
+        second_subject_id = subject(connection, owner_id)
+        owner_activity_id = activity(connection, owner_id, owner_subject_id)
+        second_activity_id = activity(connection, owner_id, second_subject_id)
+        other_activity_id = activity(connection, other_id, other_subject_id)
+        owner_session_id = study_session(
+            connection, owner_id, owner_subject_id, owner_activity_id
+        )
+        other_session_id = study_session(
+            connection, other_id, other_subject_id, other_activity_id
+        )
+        owner_plan_id = plan(connection, owner_id)
+        other_plan_id = plan(connection, other_id)
+        plan_subject(connection, owner_id, owner_plan_id, owner_subject_id)
+        plan_subject(connection, owner_id, owner_plan_id, second_subject_id)
+        plan_subject(connection, other_id, other_plan_id, other_subject_id)
+        plan_activity(
+            connection, owner_id, owner_plan_id, owner_subject_id, owner_activity_id
+        )
+        plan_activity(
+            connection, owner_id, owner_plan_id, second_subject_id, second_activity_id
+        )
+        plan_session(
+            connection, owner_id, owner_plan_id, owner_subject_id, owner_session_id
+        )
+
+        with pytest.raises(IntegrityError), connection.begin_nested():
+            challenge(connection, other_id, owner_plan_id)
+        with pytest.raises(IntegrityError), connection.begin_nested():
+            challenge(connection, owner_id, owner_plan_id, subject_id=other_subject_id)
+        with pytest.raises(IntegrityError), connection.begin_nested():
+            challenge(
+                connection,
+                owner_id,
+                owner_plan_id,
+                subject_id=owner_subject_id,
+                activity_id=second_activity_id,
+            )
+        with pytest.raises(IntegrityError), connection.begin_nested():
+            challenge(
+                connection,
+                owner_id,
+                owner_plan_id,
+                subject_id=owner_subject_id,
+                study_session_id=other_session_id,
+            )
+        with pytest.raises(IntegrityError), connection.begin_nested():
+            challenge(
+                connection,
+                owner_id,
+                owner_plan_id,
+                subject_id=owner_subject_id,
+                activity_id=second_activity_id,
+                study_session_id=owner_session_id,
+            )
+
+        challenge(
+            connection,
+            owner_id,
+            owner_plan_id,
+            subject_id=owner_subject_id,
+            activity_id=owner_activity_id,
+            study_session_id=owner_session_id,
+        )
+        for statement, params in (
+            ("DELETE FROM study_plans WHERE id=:id", {"id": owner_plan_id}),
+            ("DELETE FROM subjects WHERE id=:id", {"id": owner_subject_id}),
+            ("DELETE FROM activities WHERE id=:id", {"id": owner_activity_id}),
+            ("DELETE FROM study_sessions WHERE id=:id", {"id": owner_session_id}),
+        ):
+            with pytest.raises(IntegrityError), connection.begin_nested():
+                connection.execute(text(statement), params)

@@ -132,6 +132,62 @@ def decision(
     )
 
 
+def challenge(connection, user_id, plan_id, **overrides):
+    values = dict(
+        user_id=user_id,
+        plan_id=plan_id,
+        subject_id=None,
+        activity_id=None,
+        study_session_id=None,
+        title="Review an adaptive topic",
+        description="Check understanding and choose the next topic",
+        target_type="custom",
+        target_value={"mode": "adaptive"},
+        start_at=None,
+        deadline=None,
+        status="pending",
+        source="ai",
+        generation_criteria={"strategy": "contextual"},
+    )
+    values.update(overrides)
+    columns = [
+        key for key in values if key not in {"target_value", "generation_criteria"}
+    ]
+    parameters = [f":{key}" for key in columns]
+    columns.extend(("target_value", "generation_criteria"))
+    parameters.extend(("CAST(:target AS jsonb)", "CAST(:criteria AS jsonb)"))
+    return connection.scalar(
+        text(
+            "INSERT INTO study_challenges ("
+            + ",".join(columns)
+            + ") VALUES ("
+            + ",".join(parameters)
+            + ") RETURNING id"
+        ),
+        {
+            **{
+                key: values[key]
+                for key in values
+                if key
+                not in {
+                    "target_value",
+                    "generation_criteria",
+                }
+            },
+            "target": (
+                json.dumps(values["target_value"])
+                if values["target_value"] is not None
+                else None
+            ),
+            "criteria": (
+                json.dumps(values["generation_criteria"])
+                if values["generation_criteria"] is not None
+                else None
+            ),
+        },
+    )
+
+
 def owner_subject(connection, email="owner@test.io"):
     user_id = connection.scalar(
         text(
@@ -149,3 +205,14 @@ def owner_subject(connection, email="owner@test.io"):
         {"uid": user_id},
     )
     return user_id, subject_id
+
+
+def subject(connection, user_id, name="Physics II", slot=2):
+    return connection.scalar(
+        text(
+            "INSERT INTO subjects (user_id,name,status,difficulty,color_base,"
+            "color_shade,active_slot) VALUES (:uid,:name,'active','easy','blue',"
+            ":slot,:slot) RETURNING id"
+        ),
+        {"uid": user_id, "name": name, "slot": slot},
+    )
