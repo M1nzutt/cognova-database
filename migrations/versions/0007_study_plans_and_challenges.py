@@ -14,13 +14,14 @@ def upgrade() -> None:
     _study_plans()
     _plan_relationships()
     _plan_decisions()
+    _study_challenges()
 
 
 def downgrade() -> None:
     op.execute(
         "LOCK TABLE users, subjects, activities, study_sessions, study_plans, "
         "study_plan_subjects, study_plan_activities, study_plan_sessions, "
-        "study_plan_decisions "
+        "study_plan_decisions, study_challenges "
         "IN ACCESS EXCLUSIVE MODE"
     )
     op.execute("""
@@ -29,11 +30,13 @@ def downgrade() -> None:
                OR EXISTS (SELECT 1 FROM study_plan_subjects)
                OR EXISTS (SELECT 1 FROM study_plan_activities)
                OR EXISTS (SELECT 1 FROM study_plan_sessions)
-               OR EXISTS (SELECT 1 FROM study_plan_decisions) THEN
+               OR EXISTS (SELECT 1 FROM study_plan_decisions)
+               OR EXISTS (SELECT 1 FROM study_challenges) THEN
                 RAISE EXCEPTION 'Downgrade blocked: study plan data exists';
             END IF;
         END $$
     """)
+    op.drop_table("study_challenges")
     op.drop_table("study_plan_decisions")
     op.drop_table("study_plan_sessions")
     op.drop_table("study_plan_activities")
@@ -269,4 +272,168 @@ def _plan_decisions() -> None:
             name="ck_study_plan_decisions_values",
         ),
         sa.CheckConstraint("isfinite(created_at)", name="ck_study_plan_decisions_time"),
+    )
+
+
+def _study_challenges() -> None:
+    op.create_table(
+        "study_challenges",
+        sa.Column("id", sa.Integer(), primary_key=True),
+        sa.Column("user_id", sa.Integer(), nullable=False),
+        sa.Column("plan_id", sa.Integer(), nullable=False),
+        sa.Column("subject_id", sa.Integer(), nullable=True),
+        sa.Column("activity_id", sa.Integer(), nullable=True),
+        sa.Column("study_session_id", sa.Integer(), nullable=True),
+        sa.Column("title", sa.Text(), nullable=False),
+        sa.Column("description", sa.Text(), nullable=False),
+        sa.Column("target_type", sa.Text(), nullable=False),
+        sa.Column("target_value", postgresql.JSONB(), nullable=False),
+        sa.Column("start_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("deadline", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("status", sa.Text(), nullable=False),
+        sa.Column("source", sa.Text(), nullable=False),
+        sa.Column("generation_criteria", postgresql.JSONB(), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.func.now(),
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.func.now(),
+        ),
+        sa.ForeignKeyConstraint(
+            ["user_id", "plan_id"],
+            ["study_plans.user_id", "study_plans.id"],
+            name="fk_study_challenges_plan",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        sa.ForeignKeyConstraint(
+            ["user_id", "plan_id", "subject_id"],
+            [
+                "study_plan_subjects.user_id",
+                "study_plan_subjects.plan_id",
+                "study_plan_subjects.subject_id",
+            ],
+            name="fk_study_challenges_plan_subject",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        sa.ForeignKeyConstraint(
+            ["user_id", "plan_id", "subject_id", "activity_id"],
+            [
+                "study_plan_activities.user_id",
+                "study_plan_activities.plan_id",
+                "study_plan_activities.subject_id",
+                "study_plan_activities.activity_id",
+            ],
+            name="fk_study_challenges_plan_activity",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        sa.ForeignKeyConstraint(
+            ["user_id", "plan_id", "subject_id", "study_session_id"],
+            [
+                "study_plan_sessions.user_id",
+                "study_plan_sessions.plan_id",
+                "study_plan_sessions.subject_id",
+                "study_plan_sessions.study_session_id",
+            ],
+            name="fk_study_challenges_plan_session",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        sa.ForeignKeyConstraint(
+            ["user_id", "subject_id", "activity_id", "study_session_id"],
+            [
+                "study_sessions.user_id",
+                "study_sessions.subject_id",
+                "study_sessions.activity_id",
+                "study_sessions.id",
+            ],
+            name="fk_study_challenges_session_activity_consistency",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        sa.CheckConstraint(
+            "char_length(title) BETWEEN 1 AND 100 AND title = btrim(title) "
+            "AND title !~ '^[[:space:]]*$'",
+            name="ck_study_challenges_title",
+        ),
+        sa.CheckConstraint(
+            "char_length(description) BETWEEN 1 AND 2000 "
+            "AND description = btrim(description) "
+            "AND description !~ '^[[:space:]]*$'",
+            name="ck_study_challenges_description",
+        ),
+        sa.CheckConstraint(
+            "target_type IN ('study_minutes','activity_completion',"
+            "'session_completion','subject_mastery','custom')",
+            name="ck_study_challenges_target_type",
+        ),
+        sa.CheckConstraint(
+            "CASE WHEN jsonb_typeof(target_value) <> 'object' "
+            "OR octet_length(target_value::text) NOT BETWEEN 2 AND 4096 "
+            "THEN false "
+            "WHEN target_type = 'study_minutes' THEN "
+            "(subject_id IS NOT NULL OR study_session_id IS NOT NULL) "
+            "AND target_value ? 'minutes' "
+            "AND target_value - 'minutes' = '{}'::jsonb "
+            "AND jsonb_typeof(target_value->'minutes') = 'number' "
+            "AND CASE WHEN target_value->>'minutes' ~ '^[1-9][0-9]{0,3}$' "
+            "THEN (target_value->>'minutes')::integer BETWEEN 1 AND 1440 "
+            "ELSE false END "
+            "WHEN target_type = 'activity_completion' THEN "
+            "activity_id IS NOT NULL "
+            'AND target_value = \'{"status":"completed"}\'::jsonb '
+            "WHEN target_type = 'session_completion' THEN "
+            "study_session_id IS NOT NULL "
+            'AND target_value = \'{"lifecycle":"finished"}\'::jsonb '
+            "WHEN target_type = 'subject_mastery' THEN "
+            "subject_id IS NOT NULL "
+            "AND target_value ?& ARRAY['criterion','threshold'] "
+            "AND target_value - 'criterion' - 'threshold' = '{}'::jsonb "
+            "AND jsonb_typeof(target_value->'criterion') = 'string' "
+            "AND char_length(btrim(target_value->>'criterion')) BETWEEN 1 AND 200 "
+            "AND CASE WHEN jsonb_typeof(target_value->'threshold') = 'number' "
+            "AND target_value->>'threshold' ~ '^(100|[1-9]?[0-9])$' "
+            "THEN (target_value->>'threshold')::integer BETWEEN 1 AND 100 "
+            "ELSE false END "
+            "WHEN target_type = 'custom' THEN target_value <> '{}'::jsonb "
+            "ELSE false END",
+            name="ck_study_challenges_target_value",
+        ),
+        sa.CheckConstraint(
+            "(subject_id IS NOT NULL) OR "
+            "(activity_id IS NULL AND study_session_id IS NULL)",
+            name="ck_study_challenges_resource_subject",
+        ),
+        sa.CheckConstraint(
+            "(start_at IS NULL OR isfinite(start_at)) AND "
+            "(deadline IS NULL OR isfinite(deadline)) AND "
+            "(start_at IS NULL OR deadline IS NULL OR deadline >= start_at)",
+            name="ck_study_challenges_dates",
+        ),
+        sa.CheckConstraint(
+            "status IN ('pending','in_progress','completed','failed','cancelled')",
+            name="ck_study_challenges_status",
+        ),
+        sa.CheckConstraint(
+            "source IN ('ai','manual')", name="ck_study_challenges_source"
+        ),
+        sa.CheckConstraint(
+            "jsonb_typeof(generation_criteria) = 'object' "
+            "AND generation_criteria <> '{}'::jsonb "
+            "AND octet_length(generation_criteria::text) <= 16384",
+            name="ck_study_challenges_generation_criteria",
+        ),
+        sa.CheckConstraint(
+            "isfinite(created_at) AND isfinite(updated_at) "
+            "AND updated_at >= created_at",
+            name="ck_study_challenges_timestamps",
+        ),
     )
