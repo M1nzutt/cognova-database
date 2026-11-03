@@ -1,14 +1,19 @@
 # Reglas para agentes
 
-## Estado vigente — release 0006 cerrado 2026-11-02
+## Estado vigente — 0007 integrada; producción 0006 — 2026-11-03
 
-- 0006_study_sessions aplicada en producción y publicada en main con merge --no-ff.
-- Producción exacta 0006; evidencia y grants en PROJECT_STATE/OPERATIONS.
-- No repetir operación ni tocar Backend/Frontend. No cambiar 0001–0006.
-- Runtime tiene DML limitado en sesiones/intervalos, sin DDL persistente, TRUNCATE,
-  ownership o escritura de alembic_version. TEMP vía PUBLIC ya era heredado y se
-  conserva; no se otorgó como parte de 0006.
-- Desarrollo/validación de Backend Sesiones puede comenzar contra el pin 0006.
+- `0007_study_plans_and_challenges` está en main con merge --no-ff
+  `2715a02759957f08697ee09a6155ba54afce135e`; migración y release tooling pasaron CI.
+- Producción permanece exactamente en `0006_study_sessions`. Esta preparación no
+  ejecutó ni autoriza DDL/grants productivos; el release requiere coordinación y
+  autorización operativa separada.
+- Modificar únicamente cognova-database. Backend/Frontend solo se consultan en
+  lectura cuando ayude a verificar integración. No cambiar revisiones 0001–0006.
+- Runtime 0006 tiene DML limitado en sesiones/intervalos, sin DDL persistente,
+  TRUNCATE, ownership o escritura de alembic_version. TEMP vía PUBLIC ya era
+  heredado y se conserva; no se otorgó como parte de 0006.
+- Antes de release, coordinar Backend compatible con 0007, backup/restauración
+  recientes y autorización explícita. No volver a operar 0006.
 
 ## Histórico — desarrollo 2026-10-29
 

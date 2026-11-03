@@ -27,11 +27,11 @@ restricciones, permisos y catálogo con PostgreSQL real.
 
 ## Historial de código y producción
 
-La rama de trabajo prepara **0007_study_plans_and_challenges**; `main` y producción
-siguen en **0006_study_sessions**, aplicado el 2026-11-02.
-Cadena de migración: 0001_create_users → 0002_auth_sessions →
-0003_onboarding_questionnaire → 0004_subjects → 0005_activities → 0006_study_sessions.
-Ver [evidencia del release](evidence/0006-release-2026-11-02.json) y
+`main` tiene **0007_study_plans_and_challenges**. Producción continúa en
+**0006_study_sessions**, aplicado el 2026-11-02.
+Cadena: 0001_create_users → 0002_auth_sessions → 0003_onboarding_questionnaire →
+0004_subjects → 0005_activities → 0006_study_sessions → 0007_study_plans_and_challenges.
+Ver [evidencia del release 0006](evidence/0006-release-2026-11-02.json) y
 [OPERATIONS](OPERATIONS.md). La descripción 0002 inferior es histórica.
 
 ## 0006 — ejecución de estudio, sin temporizador automático
@@ -107,7 +107,8 @@ lock y ajustes SET LOCAL hasta commit/rollback. No usar autocommit.
   timestamptz NOT NULL; índice ix_rate_limit_buckets_expires_at.
 - alembic_version: una fila `0002_auth_sessions` al completar el upgrade.
 
-Head de código y producción es0006; las revisiones anteriores están en OPERATIONS.
+Ese historial 0002 es solo el punto de partida histórico; el head de código es 0007
+y producción permanece en 0006. Revisiones aplicadas y release en OPERATIONS.
 Ver [DATA_MODEL](DATA_MODEL.md).
 Para onboarding ver [SCHEMA_0003](SCHEMA_0003.md).
 Estas definiciones describen el punto de partida, no la nulabilidad actual.
@@ -150,7 +151,7 @@ el contrato de manejo de conexión, nunca comportamiento real del motor.
 
 El runner acepta destinos explícitos 0001_create_users, 0002_auth_sessions,
 0003_onboarding_questionnaire, 0004_subjects, 0005_activities,
-0006_study_sessions y head.
+0006_study_sessions, 0007_study_plans_and_challenges y head.
 Backend debe fijar la revisión admitida;
 no inferir compatibilidad por orden numérico de IDs.
 

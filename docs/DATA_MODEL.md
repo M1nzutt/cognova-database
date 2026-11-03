@@ -1,8 +1,7 @@
 # Modelo de datos
 
-La rama de trabajo prepara **0007_study_plans_and_challenges**. `main` y producción
-continúan en **0006_study_sessions**, aplicada el 2026-11-02; ver
-[OPERATIONS](OPERATIONS.md).
+`main` contiene **0007_study_plans_and_challenges**. Producción continúa en
+**0006_study_sessions**, aplicada el 2026-11-02; ver [OPERATIONS](OPERATIONS.md).
 Revisiones 0001–0006 se conservan sin editar.
 
 ## Sesiones de estudio — contrato 0006 confirmado 2026-10-29

@@ -2,10 +2,10 @@
 
 ## Preparación 0007 Planes y Retos — pendiente de release
 
-La migración, comparador de catálogo y grants mínimos están implementados en
-`feat/0007-study-plans-challenges`. Producción sigue en `0006_study_sessions`;
-no se conectó a producción ni se ejecutó DDL o grants allí. El código prepara la
-operación; la aplicación productiva queda pendiente.
+La migración, comparador de catálogo y grants mínimos están en main mediante merge
+`--no-ff` `2715a02759957f08697ee09a6155ba54afce135e`. Producción sigue en
+`0006_study_sessions`; no se conectó a producción ni se ejecutó DDL o grants allí.
+El código prepara la operación; la aplicación productiva queda pendiente.
 
 El workflow manual `backup-pre-0003.yml`, con `plans_challenges_release=true`, exige
 exactamente 0006 antes y después, valida las once tablas existentes, cifra AES256,
