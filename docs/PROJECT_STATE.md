@@ -1,5 +1,31 @@
 # Estado de Cognova Database
 
+## En curso — integración preparada 0007 Planes y Retos
+
+Rama `feat/0007-study-plans-challenges`, basada en main inicial
+`eff87b387345a1d3f286e3a6007d41e707ec9d13`. Al inicio: 64 commits en main y 84 en
+todas las refs; working tree limpio. Main y producción siguen en
+`0006_study_sessions`; release productivo del 2026-11-02, SHA de código
+`20c6fdc21e2a48cd8f5fb37f46545460e9b9a161`.
+
+Implementados en `0007_study_plans_and_challenges` seis tablas normalizadas para
+Planes, sus relaciones, decisiones y Retos, sin copiar recursos ni lógica de IA.
+Ownership y consistencia se imponen mediante FKs compuestas RESTRICT; checks
+validan estados, origen, fechas, longitudes y targets JSONB. Once índices cubren
+owners, estados, fechas y joins. La migración revoca PUBLIC; el runner de release
+concede únicamente los grants runtime acordados y verifica el catálogo contra la
+referencia PostgreSQL 18 local.
+
+Suite completa aprobada en PostgreSQL 18 desechable: **395 tests, 328 PostgreSQL,
+0 omitidos**. También pasaron Ruff, formato, `pip check`, checker de JUnit, heads,
+upgrade offline hasta 0007, pruebas de release/rollback/grants y `git diff --check`.
+El test de backup cubre evidencia exacta 0006, las 11 tablas, restauración aislada,
+cifrado, hash y expiración. CI remoto aún debe ejecutarse sobre el SHA integrado.
+
+No se conectó a producción ni se ejecutó DDL/grants allí. Un release requiere
+coordinación Backend para aceptar 0007, respaldo reciente verificable y autorización
+operativa separada. Las revisiones 0001–0006 permanecen intactas.
+
 ## Estado vigente: release Sesiones 0006 cerrado — 2026-11-02
 
 **Producción y main están en 0006_study_sessions.** Merge no-ff

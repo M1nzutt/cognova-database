@@ -3,6 +3,7 @@
 import ast
 import hashlib
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -35,6 +36,7 @@ def backup_code(monkeypatch, tmp_path):
         "SUBJECTS_RELEASE": "false",
         "ACTIVITIES_RELEASE": "false",
         "STUDY_SESSIONS_RELEASE": "false",
+        "PLANS_CHALLENGES_RELEASE": "false",
     }.items():
         monkeypatch.setenv(name, value)
     # Synthetic credential; never use the local .env in workflow tests.
@@ -86,6 +88,8 @@ def fake_commands(monkeypatch, namespace, failure=None):
                 output = b"0"
             elif namespace["os"].environ.get("STUDY_SESSIONS_RELEASE") == "true":
                 output = b"t" if "pg_stat_ssl" in args[-1] else b"0005_activities"
+            elif namespace["os"].environ.get("PLANS_CHALLENGES_RELEASE") == "true":
+                output = b"t" if "pg_stat_ssl" in args[-1] else b"0006_study_sessions"
             if failure == "revision" and "alembic_version" in args[-1]:
                 output = b"0003_onboarding_questionnaire"
         elif binary == "pg_dump":
@@ -113,6 +117,8 @@ def fake_commands(monkeypatch, namespace, failure=None):
                     "subjects",
                     "activities",
                     "activity_deadline_events",
+                    "study_sessions",
+                    "study_session_intervals",
                 )
             )
             if failure == "toc":
@@ -372,9 +378,50 @@ def test_study_backup_includes_activities_and_history(backup_code, monkeypatch, 
     assert any("--exit-on-error" in call for call in calls)
 
 
-@pytest.mark.parametrize("other", ["SUBJECTS_RELEASE", "ACTIVITIES_RELEASE"])
+@pytest.mark.parametrize(
+    "other",
+    ["SUBJECTS_RELEASE", "ACTIVITIES_RELEASE"],
+)
 def test_study_backup_rejects_mixed_release(backup_code, monkeypatch, other):
     monkeypatch.setenv("STUDY_SESSIONS_RELEASE", "true")
+    monkeypatch.setenv(other, "true")
+    calls = fake_commands(monkeypatch, backup_code)
+    with pytest.raises(ValueError):
+        backup_code["backup"]()
+    assert not calls
+
+
+def test_plans_challenges_backup_includes_all_existing_history(
+    backup_code, monkeypatch, capsys
+):
+    monkeypatch.setenv("PLANS_CHALLENGES_RELEASE", "true")
+    calls = fake_commands(monkeypatch, backup_code)
+    backup_code["backup"]()
+    manifest = json.loads(capsys.readouterr().out)
+    assert (
+        manifest["revision_before"]
+        == manifest["revision_after"]
+        == "0006_study_sessions"
+    )
+    assert manifest["restore_rehearsal"] == "passed"
+    assert len(manifest["restored_counts"]) == 11
+    assert {
+        "subjects",
+        "activities",
+        "activity_deadline_events",
+        "study_sessions",
+        "study_session_intervals",
+    } <= manifest["restored_counts"].keys()
+    assert manifest["encrypted_file"] == "cognova-pre-0007.dump.gpg"
+    assert datetime.fromisoformat(manifest["expires_at"]) > datetime.now(timezone.utc)
+    assert any("--exit-on-error" in call for call in calls)
+
+
+@pytest.mark.parametrize(
+    "other", ["SUBJECTS_RELEASE", "ACTIVITIES_RELEASE", "STUDY_SESSIONS_RELEASE"]
+)
+def test_plans_challenges_backup_rejects_mixed_release(backup_code, monkeypatch, other):
+    monkeypatch.setenv("PLANS_CHALLENGES_RELEASE", "true")
     monkeypatch.setenv(other, "true")
     calls = fake_commands(monkeypatch, backup_code)
     with pytest.raises(ValueError):

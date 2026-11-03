@@ -112,26 +112,27 @@ def test_atomic_activities_release_and_permissions(pg_engine, reject_contract):
             ),
             {"id": aid},
         )
-        for sql, code in (
-            ("UPDATE activities SET original_deadline=deadline", "23514"),
-            ("DELETE FROM subjects", "23503"),
-            ("DELETE FROM activities", "23503"),
+        for sql, codes in (
+            ("UPDATE activities SET original_deadline=deadline", {"23514"}),
+            # PG18 reports RESTRICT as 23001; PG17 reports the same violation as 23503.
+            ("DELETE FROM subjects", {"23001", "23503"}),
+            ("DELETE FROM activities", {"23001", "23503"}),
             (
                 "INSERT INTO activity_deadline_events "
                 "SELECT * FROM activity_deadline_events",
-                "42501",
+                {"42501"},
             ),
-            ("UPDATE activity_deadline_events SET revision=1", "42501"),
-            ("DELETE FROM activity_deadline_events", "42501"),
-            ("UPDATE alembic_version SET version_num='bad'", "42501"),
-            ("ALTER TABLE activities ADD COLUMN bad int", "42501"),
-            ("CREATE TABLE public.bad(id int)", "42501"),
-            ("SELECT cognova_record_activity_deadline()", "42501"),
+            ("UPDATE activity_deadline_events SET revision=1", {"42501"}),
+            ("DELETE FROM activity_deadline_events", {"42501"}),
+            ("UPDATE alembic_version SET version_num='bad'", {"42501"}),
+            ("ALTER TABLE activities ADD COLUMN bad int", {"42501"}),
+            ("CREATE TABLE public.bad(id int)", {"42501"}),
+            ("SELECT cognova_record_activity_deadline()", {"42501"}),
         ):
             with c.begin_nested() as savepoint:
                 with pytest.raises(DBAPIError) as error:
                     c.execute(text(sql))
-                assert error.value.orig.sqlstate == code
+                assert error.value.orig.sqlstate in codes
                 savepoint.rollback()
         c.execute(text("UPDATE subjects SET status='archived',active_slot=NULL"))
         assert c.scalar(text("SELECT count(*) FROM activities")) == 1

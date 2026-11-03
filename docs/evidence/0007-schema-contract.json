@@ -1,0 +1,1549 @@
+{
+  "tables": {
+    "study_plans": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": "nextval('\"public\".study_plans_id_seq'::regclass)",
+          "autoincrement": true,
+          "comment": null
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "objective",
+          "type": "TEXT",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "start_at",
+          "type": "TIMESTAMP",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "end_at",
+          "type": "TIMESTAMP",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "status",
+          "type": "TEXT",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "source",
+          "type": "TEXT",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": false,
+          "default": "now()",
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "nullable": false,
+          "default": "now()",
+          "autoincrement": false,
+          "comment": null
+        }
+      ],
+      "checks": [
+        {
+          "name": "ck_study_plans_dates",
+          "sqltext": "isfinite(start_at) AND isfinite(end_at) AND end_at > start_at",
+          "comment": null
+        },
+        {
+          "name": "ck_study_plans_name",
+          "sqltext": "char_length(name) >= 1 AND char_length(name) <= 100 AND name = btrim(name) AND name !~ '^[[:space:]]*$'::text",
+          "comment": null
+        },
+        {
+          "name": "ck_study_plans_objective",
+          "sqltext": "char_length(objective) >= 1 AND char_length(objective) <= 2000 AND objective = btrim(objective) AND objective !~ '^[[:space:]]*$'::text",
+          "comment": null
+        },
+        {
+          "name": "ck_study_plans_source",
+          "sqltext": "source = ANY (ARRAY['ai'::text, 'manual'::text])",
+          "comment": null
+        },
+        {
+          "name": "ck_study_plans_status",
+          "sqltext": "status = ANY (ARRAY['draft'::text, 'active'::text, 'completed'::text, 'abandoned'::text])",
+          "comment": null
+        },
+        {
+          "name": "ck_study_plans_timestamps",
+          "sqltext": "isfinite(created_at) AND isfinite(updated_at) AND updated_at >= created_at",
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_study_plans_user_end",
+          "unique": false,
+          "column_names": [
+            "user_id",
+            "end_at",
+            "id"
+          ],
+          "dialect_options": {
+            "postgresql_include": []
+          }
+        },
+        {
+          "name": "ix_study_plans_user_status_start",
+          "unique": false,
+          "column_names": [
+            "user_id",
+            "status",
+            "start_at",
+            "id"
+          ],
+          "dialect_options": {
+            "postgresql_include": []
+          }
+        },
+        {
+          "name": "uq_study_plans_user_id_id",
+          "unique": true,
+          "column_names": [
+            "user_id",
+            "id"
+          ],
+          "duplicates_constraint": "uq_study_plans_user_id_id",
+          "dialect_options": {
+            "postgresql_include": []
+          }
+        }
+      ],
+      "pk": {
+        "constrained_columns": [
+          "id"
+        ],
+        "name": "study_plans_pkey",
+        "comment": null,
+        "dialect_options": {
+          "postgresql_include": []
+        }
+      },
+      "fk": [
+        {
+          "name": "fk_study_plans_user",
+          "constrained_columns": [
+            "user_id"
+          ],
+          "referred_schema": "public",
+          "referred_table": "users",
+          "referred_columns": [
+            "id"
+          ],
+          "options": {
+            "onupdate": "RESTRICT",
+            "ondelete": "RESTRICT"
+          },
+          "comment": null
+        }
+      ],
+      "unique": [
+        {
+          "column_names": [
+            "user_id",
+            "id"
+          ],
+          "name": "uq_study_plans_user_id_id",
+          "comment": null,
+          "dialect_options": {
+            "postgresql_include": [],
+            "postgresql_nulls_not_distinct": false
+          }
+        }
+      ]
+    },
+    "study_plan_subjects": {
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "plan_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "subject_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        }
+      ],
+      "checks": [],
+      "indexes": [
+        {
+          "name": "ix_study_plan_subjects_user_subject_plan",
+          "unique": false,
+          "column_names": [
+            "user_id",
+            "subject_id",
+            "plan_id"
+          ],
+          "dialect_options": {
+            "postgresql_include": []
+          }
+        }
+      ],
+      "pk": {
+        "constrained_columns": [
+          "user_id",
+          "plan_id",
+          "subject_id"
+        ],
+        "name": "pk_study_plan_subjects",
+        "comment": null,
+        "dialect_options": {
+          "postgresql_include": []
+        }
+      },
+      "fk": [
+        {
+          "name": "fk_study_plan_subjects_owner_subject",
+          "constrained_columns": [
+            "user_id",
+            "subject_id"
+          ],
+          "referred_schema": "public",
+          "referred_table": "subjects",
+          "referred_columns": [
+            "user_id",
+            "id"
+          ],
+          "options": {
+            "onupdate": "RESTRICT",
+            "ondelete": "RESTRICT"
+          },
+          "comment": null
+        },
+        {
+          "name": "fk_study_plan_subjects_plan",
+          "constrained_columns": [
+            "user_id",
+            "plan_id"
+          ],
+          "referred_schema": "public",
+          "referred_table": "study_plans",
+          "referred_columns": [
+            "user_id",
+            "id"
+          ],
+          "options": {
+            "onupdate": "RESTRICT",
+            "ondelete": "RESTRICT"
+          },
+          "comment": null
+        }
+      ],
+      "unique": []
+    },
+    "study_plan_activities": {
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "plan_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "subject_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "activity_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        }
+      ],
+      "checks": [],
+      "indexes": [
+        {
+          "name": "ix_study_plan_activities_user_subject_activity",
+          "unique": false,
+          "column_names": [
+            "user_id",
+            "subject_id",
+            "activity_id"
+          ],
+          "dialect_options": {
+            "postgresql_include": []
+          }
+        },
+        {
+          "name": "uq_study_plan_activities_owner_context",
+          "unique": true,
+          "column_names": [
+            "user_id",
+            "plan_id",
+            "subject_id",
+            "activity_id"
+          ],
+          "duplicates_constraint": "uq_study_plan_activities_owner_context",
+          "dialect_options": {
+            "postgresql_include": []
+          }
+        }
+      ],
+      "pk": {
+        "constrained_columns": [
+          "user_id",
+          "plan_id",
+          "activity_id"
+        ],
+        "name": "pk_study_plan_activities",
+        "comment": null,
+        "dialect_options": {
+          "postgresql_include": []
+        }
+      },
+      "fk": [
+        {
+          "name": "fk_study_plan_activities_owner_subject_activity",
+          "constrained_columns": [
+            "user_id",
+            "subject_id",
+            "activity_id"
+          ],
+          "referred_schema": "public",
+          "referred_table": "activities",
+          "referred_columns": [
+            "user_id",
+            "subject_id",
+            "id"
+          ],
+          "options": {
+            "onupdate": "RESTRICT",
+            "ondelete": "RESTRICT"
+          },
+          "comment": null
+        },
+        {
+          "name": "fk_study_plan_activities_plan_subject",
+          "constrained_columns": [
+            "user_id",
+            "plan_id",
+            "subject_id"
+          ],
+          "referred_schema": "public",
+          "referred_table": "study_plan_subjects",
+          "referred_columns": [
+            "user_id",
+            "plan_id",
+            "subject_id"
+          ],
+          "options": {
+            "onupdate": "RESTRICT",
+            "ondelete": "RESTRICT"
+          },
+          "comment": null
+        }
+      ],
+      "unique": [
+        {
+          "column_names": [
+            "user_id",
+            "plan_id",
+            "subject_id",
+            "activity_id"
+          ],
+          "name": "uq_study_plan_activities_owner_context",
+          "comment": null,
+          "dialect_options": {
+            "postgresql_include": [],
+            "postgresql_nulls_not_distinct": false
+          }
+        }
+      ]
+    },
+    "study_plan_sessions": {
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "plan_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "subject_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "study_session_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        }
+      ],
+      "checks": [],
+      "indexes": [
+        {
+          "name": "ix_study_plan_sessions_user_subject_session",
+          "unique": false,
+          "column_names": [
+            "user_id",
+            "subject_id",
+            "study_session_id"
+          ],
+          "dialect_options": {
+            "postgresql_include": []
+          }
+        },
+        {
+          "name": "uq_study_plan_sessions_owner_context",
+          "unique": true,
+          "column_names": [
+            "user_id",
+            "plan_id",
+            "subject_id",
+            "study_session_id"
+          ],
+          "duplicates_constraint": "uq_study_plan_sessions_owner_context",
+          "dialect_options": {
+            "postgresql_include": []
+          }
+        }
+      ],
+      "pk": {
+        "constrained_columns": [
+          "user_id",
+          "plan_id",
+          "study_session_id"
+        ],
+        "name": "pk_study_plan_sessions",
+        "comment": null,
+        "dialect_options": {
+          "postgresql_include": []
+        }
+      },
+      "fk": [
+        {
+          "name": "fk_study_plan_sessions_owner_subject_session",
+          "constrained_columns": [
+            "user_id",
+            "subject_id",
+            "study_session_id"
+          ],
+          "referred_schema": "public",
+          "referred_table": "study_sessions",
+          "referred_columns": [
+            "user_id",
+            "subject_id",
+            "id"
+          ],
+          "options": {
+            "onupdate": "RESTRICT",
+            "ondelete": "RESTRICT"
+          },
+          "comment": null
+        },
+        {
+          "name": "fk_study_plan_sessions_plan_subject",
+          "constrained_columns": [
+            "user_id",
+            "plan_id",
+            "subject_id"
+          ],
+          "referred_schema": "public",
+          "referred_table": "study_plan_subjects",
+          "referred_columns": [
+            "user_id",
+            "plan_id",
+            "subject_id"
+          ],
+          "options": {
+            "onupdate": "RESTRICT",
+            "ondelete": "RESTRICT"
+          },
+          "comment": null
+        }
+      ],
+      "unique": [
+        {
+          "column_names": [
+            "user_id",
+            "plan_id",
+            "subject_id",
+            "study_session_id"
+          ],
+          "name": "uq_study_plan_sessions_owner_context",
+          "comment": null,
+          "dialect_options": {
+            "postgresql_include": [],
+            "postgresql_nulls_not_distinct": false
+          }
+        }
+      ]
+    },
+    "study_plan_decisions": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": "nextval('\"public\".study_plan_decisions_id_seq'::regclass)",
+          "autoincrement": true,
+          "comment": null
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "plan_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "action",
+          "type": "TEXT",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "field_path",
+          "type": "TEXT",
+          "nullable": true,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "proposed_value",
+          "type": "JSONB",
+          "nullable": true,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "chosen_value",
+          "type": "JSONB",
+          "nullable": true,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": false,
+          "default": "now()",
+          "autoincrement": false,
+          "comment": null
+        }
+      ],
+      "checks": [
+        {
+          "name": "ck_study_plan_decisions_action",
+          "sqltext": "action = ANY (ARRAY['accepted'::text, 'edited'::text, 'rejected'::text, 'regenerated'::text])",
+          "comment": null
+        },
+        {
+          "name": "ck_study_plan_decisions_field_path",
+          "sqltext": "field_path IS NULL OR char_length(field_path) >= 1 AND char_length(field_path) <= 200 AND field_path = btrim(field_path) AND field_path !~ '^[[:space:]]*$'::text",
+          "comment": null
+        },
+        {
+          "name": "ck_study_plan_decisions_time",
+          "sqltext": "isfinite(created_at)",
+          "comment": null
+        },
+        {
+          "name": "ck_study_plan_decisions_value_size",
+          "sqltext": "(proposed_value IS NULL OR octet_length(proposed_value::text) <= 65536) AND (chosen_value IS NULL OR octet_length(chosen_value::text) <= 65536)",
+          "comment": null
+        },
+        {
+          "name": "ck_study_plan_decisions_values",
+          "sqltext": "action = 'accepted'::text AND proposed_value IS NOT NULL AND chosen_value IS NOT NULL OR action = 'edited'::text AND field_path IS NOT NULL AND proposed_value IS NOT NULL AND chosen_value IS NOT NULL AND proposed_value IS DISTINCT FROM chosen_value OR (action = ANY (ARRAY['rejected'::text, 'regenerated'::text])) AND proposed_value IS NOT NULL AND chosen_value IS NULL",
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_study_plan_decisions_user_plan_created",
+          "unique": false,
+          "column_names": [
+            "user_id",
+            "plan_id",
+            "created_at",
+            "id"
+          ],
+          "dialect_options": {
+            "postgresql_include": []
+          }
+        }
+      ],
+      "pk": {
+        "constrained_columns": [
+          "id"
+        ],
+        "name": "study_plan_decisions_pkey",
+        "comment": null,
+        "dialect_options": {
+          "postgresql_include": []
+        }
+      },
+      "fk": [
+        {
+          "name": "fk_study_plan_decisions_plan",
+          "constrained_columns": [
+            "user_id",
+            "plan_id"
+          ],
+          "referred_schema": "public",
+          "referred_table": "study_plans",
+          "referred_columns": [
+            "user_id",
+            "id"
+          ],
+          "options": {
+            "onupdate": "RESTRICT",
+            "ondelete": "RESTRICT"
+          },
+          "comment": null
+        }
+      ],
+      "unique": []
+    },
+    "study_challenges": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": "nextval('\"public\".study_challenges_id_seq'::regclass)",
+          "autoincrement": true,
+          "comment": null
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "plan_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "subject_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "activity_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "study_session_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "title",
+          "type": "TEXT",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "target_type",
+          "type": "TEXT",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "target_value",
+          "type": "JSONB",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "start_at",
+          "type": "TIMESTAMP",
+          "nullable": true,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "deadline",
+          "type": "TIMESTAMP",
+          "nullable": true,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "status",
+          "type": "TEXT",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "source",
+          "type": "TEXT",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "generation_criteria",
+          "type": "JSONB",
+          "nullable": false,
+          "default": null,
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "nullable": false,
+          "default": "now()",
+          "autoincrement": false,
+          "comment": null
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "nullable": false,
+          "default": "now()",
+          "autoincrement": false,
+          "comment": null
+        }
+      ],
+      "checks": [
+        {
+          "name": "ck_study_challenges_dates",
+          "sqltext": "(start_at IS NULL OR isfinite(start_at)) AND (deadline IS NULL OR isfinite(deadline)) AND (start_at IS NULL OR deadline IS NULL OR deadline >= start_at)",
+          "comment": null
+        },
+        {
+          "name": "ck_study_challenges_description",
+          "sqltext": "char_length(description) >= 1 AND char_length(description) <= 2000 AND description = btrim(description) AND description !~ '^[[:space:]]*$'::text",
+          "comment": null
+        },
+        {
+          "name": "ck_study_challenges_generation_criteria",
+          "sqltext": "jsonb_typeof(generation_criteria) = 'object'::text AND generation_criteria <> '{}'::jsonb AND octet_length(generation_criteria::text) <= 16384",
+          "comment": null
+        },
+        {
+          "name": "ck_study_challenges_resource_subject",
+          "sqltext": "subject_id IS NOT NULL OR activity_id IS NULL AND study_session_id IS NULL",
+          "comment": null
+        },
+        {
+          "name": "ck_study_challenges_source",
+          "sqltext": "source = ANY (ARRAY['ai'::text, 'manual'::text])",
+          "comment": null
+        },
+        {
+          "name": "ck_study_challenges_status",
+          "sqltext": "status = ANY (ARRAY['pending'::text, 'in_progress'::text, 'completed'::text, 'failed'::text, 'cancelled'::text])",
+          "comment": null
+        },
+        {
+          "name": "ck_study_challenges_target_type",
+          "sqltext": "target_type = ANY (ARRAY['study_minutes'::text, 'activity_completion'::text, 'session_completion'::text, 'subject_mastery'::text, 'custom'::text])",
+          "comment": null
+        },
+        {
+          "name": "ck_study_challenges_target_value",
+          "sqltext": "\nCASE\n    WHEN jsonb_typeof(target_value) <> 'object'::text OR octet_length(target_value::text) < 2 OR octet_length(target_value::text) > 4096 THEN false\n    WHEN target_type = 'study_minutes'::text THEN (subject_id IS NOT NULL OR study_session_id IS NOT NULL) AND target_value ? 'minutes'::text AND (target_value - 'minutes'::text) = '{}'::jsonb AND jsonb_typeof(target_value -> 'minutes'::text) = 'number'::text AND\n    CASE\n        WHEN (target_value ->> 'minutes'::text) ~ '^[1-9][0-9]{0,3}$'::text THEN ((target_value ->> 'minutes'::text)::integer) >= 1 AND ((target_value ->> 'minutes'::text)::integer) <= 1440\n        ELSE false\n    END\n    WHEN target_type = 'activity_completion'::text THEN activity_id IS NOT NULL AND target_value = '{\"status\": \"completed\"}'::jsonb\n    WHEN target_type = 'session_completion'::text THEN study_session_id IS NOT NULL AND target_value = '{\"lifecycle\": \"finished\"}'::jsonb\n    WHEN target_type = 'subject_mastery'::text THEN subject_id IS NOT NULL AND target_value ?& ARRAY['criterion'::text, 'threshold'::text] AND (target_value - 'criterion'::text - 'threshold'::text) = '{}'::jsonb AND jsonb_typeof(target_value -> 'criterion'::text) = 'string'::text AND char_length(btrim(target_value ->> 'criterion'::text)) >= 1 AND char_length(btrim(target_value ->> 'criterion'::text)) <= 200 AND\n    CASE\n        WHEN jsonb_typeof(target_value -> 'threshold'::text) = 'number'::text AND (target_value ->> 'threshold'::text) ~ '^(100|[1-9]?[0-9])$'::text THEN ((target_value ->> 'threshold'::text)::integer) >= 1 AND ((target_value ->> 'threshold'::text)::integer) <= 100\n        ELSE false\n    END\n    WHEN target_type = 'custom'::text THEN target_value <> '{}'::jsonb\n    ELSE false\nEND",
+          "comment": null
+        },
+        {
+          "name": "ck_study_challenges_timestamps",
+          "sqltext": "isfinite(created_at) AND isfinite(updated_at) AND updated_at >= created_at",
+          "comment": null
+        },
+        {
+          "name": "ck_study_challenges_title",
+          "sqltext": "char_length(title) >= 1 AND char_length(title) <= 100 AND title = btrim(title) AND title !~ '^[[:space:]]*$'::text",
+          "comment": null
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_study_challenges_plan_subject_activity",
+          "unique": false,
+          "column_names": [
+            "user_id",
+            "plan_id",
+            "subject_id",
+            "activity_id"
+          ],
+          "dialect_options": {
+            "postgresql_include": []
+          }
+        },
+        {
+          "name": "ix_study_challenges_plan_subject_session",
+          "unique": false,
+          "column_names": [
+            "user_id",
+            "plan_id",
+            "subject_id",
+            "study_session_id"
+          ],
+          "dialect_options": {
+            "postgresql_include": []
+          }
+        },
+        {
+          "name": "ix_study_challenges_user_plan_status_deadline",
+          "unique": false,
+          "column_names": [
+            "user_id",
+            "plan_id",
+            "status",
+            "deadline",
+            "id"
+          ],
+          "dialect_options": {
+            "postgresql_include": []
+          }
+        },
+        {
+          "name": "ix_study_challenges_user_status_deadline",
+          "unique": false,
+          "column_names": [
+            "user_id",
+            "status",
+            "deadline",
+            "id"
+          ],
+          "dialect_options": {
+            "postgresql_include": []
+          }
+        },
+        {
+          "name": "ix_study_challenges_user_subject_activity_session",
+          "unique": false,
+          "column_names": [
+            "user_id",
+            "subject_id",
+            "activity_id",
+            "study_session_id"
+          ],
+          "dialect_options": {
+            "postgresql_include": []
+          }
+        }
+      ],
+      "pk": {
+        "constrained_columns": [
+          "id"
+        ],
+        "name": "study_challenges_pkey",
+        "comment": null,
+        "dialect_options": {
+          "postgresql_include": []
+        }
+      },
+      "fk": [
+        {
+          "name": "fk_study_challenges_plan",
+          "constrained_columns": [
+            "user_id",
+            "plan_id"
+          ],
+          "referred_schema": "public",
+          "referred_table": "study_plans",
+          "referred_columns": [
+            "user_id",
+            "id"
+          ],
+          "options": {
+            "onupdate": "RESTRICT",
+            "ondelete": "RESTRICT"
+          },
+          "comment": null
+        },
+        {
+          "name": "fk_study_challenges_plan_activity",
+          "constrained_columns": [
+            "user_id",
+            "plan_id",
+            "subject_id",
+            "activity_id"
+          ],
+          "referred_schema": "public",
+          "referred_table": "study_plan_activities",
+          "referred_columns": [
+            "user_id",
+            "plan_id",
+            "subject_id",
+            "activity_id"
+          ],
+          "options": {
+            "onupdate": "RESTRICT",
+            "ondelete": "RESTRICT"
+          },
+          "comment": null
+        },
+        {
+          "name": "fk_study_challenges_plan_session",
+          "constrained_columns": [
+            "user_id",
+            "plan_id",
+            "subject_id",
+            "study_session_id"
+          ],
+          "referred_schema": "public",
+          "referred_table": "study_plan_sessions",
+          "referred_columns": [
+            "user_id",
+            "plan_id",
+            "subject_id",
+            "study_session_id"
+          ],
+          "options": {
+            "onupdate": "RESTRICT",
+            "ondelete": "RESTRICT"
+          },
+          "comment": null
+        },
+        {
+          "name": "fk_study_challenges_plan_subject",
+          "constrained_columns": [
+            "user_id",
+            "plan_id",
+            "subject_id"
+          ],
+          "referred_schema": "public",
+          "referred_table": "study_plan_subjects",
+          "referred_columns": [
+            "user_id",
+            "plan_id",
+            "subject_id"
+          ],
+          "options": {
+            "onupdate": "RESTRICT",
+            "ondelete": "RESTRICT"
+          },
+          "comment": null
+        },
+        {
+          "name": "fk_study_challenges_session_activity_consistency",
+          "constrained_columns": [
+            "user_id",
+            "subject_id",
+            "activity_id",
+            "study_session_id"
+          ],
+          "referred_schema": "public",
+          "referred_table": "study_sessions",
+          "referred_columns": [
+            "user_id",
+            "subject_id",
+            "activity_id",
+            "id"
+          ],
+          "options": {
+            "onupdate": "RESTRICT",
+            "ondelete": "RESTRICT"
+          },
+          "comment": null
+        }
+      ],
+      "unique": []
+    }
+  },
+  "session_keys": [
+    {
+      "conname": "uq_study_sessions_user_subject_activity_id",
+      "definition": "UNIQUE (user_id, subject_id, activity_id, id)"
+    },
+    {
+      "conname": "uq_study_sessions_user_subject_id",
+      "definition": "UNIQUE (user_id, subject_id, id)"
+    }
+  ],
+  "constraints": [
+    {
+      "relname": "study_challenges",
+      "conname": "ck_study_challenges_dates",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK ((((start_at IS NULL) OR isfinite(start_at)) AND ((deadline IS NULL) OR isfinite(deadline)) AND ((start_at IS NULL) OR (deadline IS NULL) OR (deadline >= start_at))))"
+    },
+    {
+      "relname": "study_challenges",
+      "conname": "ck_study_challenges_description",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK ((((char_length(description) >= 1) AND (char_length(description) <= 2000)) AND (description = btrim(description)) AND (description !~ '^[[:space:]]*$'::text)))"
+    },
+    {
+      "relname": "study_challenges",
+      "conname": "ck_study_challenges_generation_criteria",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK (((jsonb_typeof(generation_criteria) = 'object'::text) AND (generation_criteria <> '{}'::jsonb) AND (octet_length((generation_criteria)::text) <= 16384)))"
+    },
+    {
+      "relname": "study_challenges",
+      "conname": "ck_study_challenges_resource_subject",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK (((subject_id IS NOT NULL) OR ((activity_id IS NULL) AND (study_session_id IS NULL))))"
+    },
+    {
+      "relname": "study_challenges",
+      "conname": "ck_study_challenges_source",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK ((source = ANY (ARRAY['ai'::text, 'manual'::text])))"
+    },
+    {
+      "relname": "study_challenges",
+      "conname": "ck_study_challenges_status",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK ((status = ANY (ARRAY['pending'::text, 'in_progress'::text, 'completed'::text, 'failed'::text, 'cancelled'::text])))"
+    },
+    {
+      "relname": "study_challenges",
+      "conname": "ck_study_challenges_target_type",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK ((target_type = ANY (ARRAY['study_minutes'::text, 'activity_completion'::text, 'session_completion'::text, 'subject_mastery'::text, 'custom'::text])))"
+    },
+    {
+      "relname": "study_challenges",
+      "conname": "ck_study_challenges_target_value",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK (\nCASE\n    WHEN ((jsonb_typeof(target_value) <> 'object'::text) OR ((octet_length((target_value)::text) < 2) OR (octet_length((target_value)::text) > 4096))) THEN false\n    WHEN (target_type = 'study_minutes'::text) THEN (((subject_id IS NOT NULL) OR (study_session_id IS NOT NULL)) AND (target_value ? 'minutes'::text) AND ((target_value - 'minutes'::text) = '{}'::jsonb) AND (jsonb_typeof((target_value -> 'minutes'::text)) = 'number'::text) AND\n    CASE\n        WHEN ((target_value ->> 'minutes'::text) ~ '^[1-9][0-9]{0,3}$'::text) THEN ((((target_value ->> 'minutes'::text))::integer >= 1) AND (((target_value ->> 'minutes'::text))::integer <= 1440))\n        ELSE false\n    END)\n    WHEN (target_type = 'activity_completion'::text) THEN ((activity_id IS NOT NULL) AND (target_value = '{\"status\": \"completed\"}'::jsonb))\n    WHEN (target_type = 'session_completion'::text) THEN ((study_session_id IS NOT NULL) AND (target_value = '{\"lifecycle\": \"finished\"}'::jsonb))\n    WHEN (target_type = 'subject_mastery'::text) THEN ((subject_id IS NOT NULL) AND (target_value ?& ARRAY['criterion'::text, 'threshold'::text]) AND (((target_value - 'criterion'::text) - 'threshold'::text) = '{}'::jsonb) AND (jsonb_typeof((target_value -> 'criterion'::text)) = 'string'::text) AND ((char_length(btrim((target_value ->> 'criterion'::text))) >= 1) AND (char_length(btrim((target_value ->> 'criterion'::text))) <= 200)) AND\n    CASE\n        WHEN ((jsonb_typeof((target_value -> 'threshold'::text)) = 'number'::text) AND ((target_value ->> 'threshold'::text) ~ '^(100|[1-9]?[0-9])$'::text)) THEN ((((target_value ->> 'threshold'::text))::integer >= 1) AND (((target_value ->> 'threshold'::text))::integer <= 100))\n        ELSE false\n    END)\n    WHEN (target_type = 'custom'::text) THEN (target_value <> '{}'::jsonb)\n    ELSE false\nEND)"
+    },
+    {
+      "relname": "study_challenges",
+      "conname": "ck_study_challenges_timestamps",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK ((isfinite(created_at) AND isfinite(updated_at) AND (updated_at >= created_at)))"
+    },
+    {
+      "relname": "study_challenges",
+      "conname": "ck_study_challenges_title",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK ((((char_length(title) >= 1) AND (char_length(title) <= 100)) AND (title = btrim(title)) AND (title !~ '^[[:space:]]*$'::text)))"
+    },
+    {
+      "relname": "study_challenges",
+      "conname": "fk_study_challenges_plan",
+      "contype": "f",
+      "convalidated": true,
+      "definition": "FOREIGN KEY (user_id, plan_id) REFERENCES study_plans(user_id, id) ON UPDATE RESTRICT ON DELETE RESTRICT"
+    },
+    {
+      "relname": "study_challenges",
+      "conname": "fk_study_challenges_plan_activity",
+      "contype": "f",
+      "convalidated": true,
+      "definition": "FOREIGN KEY (user_id, plan_id, subject_id, activity_id) REFERENCES study_plan_activities(user_id, plan_id, subject_id, activity_id) ON UPDATE RESTRICT ON DELETE RESTRICT"
+    },
+    {
+      "relname": "study_challenges",
+      "conname": "fk_study_challenges_plan_session",
+      "contype": "f",
+      "convalidated": true,
+      "definition": "FOREIGN KEY (user_id, plan_id, subject_id, study_session_id) REFERENCES study_plan_sessions(user_id, plan_id, subject_id, study_session_id) ON UPDATE RESTRICT ON DELETE RESTRICT"
+    },
+    {
+      "relname": "study_challenges",
+      "conname": "fk_study_challenges_plan_subject",
+      "contype": "f",
+      "convalidated": true,
+      "definition": "FOREIGN KEY (user_id, plan_id, subject_id) REFERENCES study_plan_subjects(user_id, plan_id, subject_id) ON UPDATE RESTRICT ON DELETE RESTRICT"
+    },
+    {
+      "relname": "study_challenges",
+      "conname": "fk_study_challenges_session_activity_consistency",
+      "contype": "f",
+      "convalidated": true,
+      "definition": "FOREIGN KEY (user_id, subject_id, activity_id, study_session_id) REFERENCES study_sessions(user_id, subject_id, activity_id, id) ON UPDATE RESTRICT ON DELETE RESTRICT"
+    },
+    {
+      "relname": "study_challenges",
+      "conname": "study_challenges_pkey",
+      "contype": "p",
+      "convalidated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "relname": "study_plan_activities",
+      "conname": "fk_study_plan_activities_owner_subject_activity",
+      "contype": "f",
+      "convalidated": true,
+      "definition": "FOREIGN KEY (user_id, subject_id, activity_id) REFERENCES activities(user_id, subject_id, id) ON UPDATE RESTRICT ON DELETE RESTRICT"
+    },
+    {
+      "relname": "study_plan_activities",
+      "conname": "fk_study_plan_activities_plan_subject",
+      "contype": "f",
+      "convalidated": true,
+      "definition": "FOREIGN KEY (user_id, plan_id, subject_id) REFERENCES study_plan_subjects(user_id, plan_id, subject_id) ON UPDATE RESTRICT ON DELETE RESTRICT"
+    },
+    {
+      "relname": "study_plan_activities",
+      "conname": "pk_study_plan_activities",
+      "contype": "p",
+      "convalidated": true,
+      "definition": "PRIMARY KEY (user_id, plan_id, activity_id)"
+    },
+    {
+      "relname": "study_plan_activities",
+      "conname": "uq_study_plan_activities_owner_context",
+      "contype": "u",
+      "convalidated": true,
+      "definition": "UNIQUE (user_id, plan_id, subject_id, activity_id)"
+    },
+    {
+      "relname": "study_plan_decisions",
+      "conname": "ck_study_plan_decisions_action",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK ((action = ANY (ARRAY['accepted'::text, 'edited'::text, 'rejected'::text, 'regenerated'::text])))"
+    },
+    {
+      "relname": "study_plan_decisions",
+      "conname": "ck_study_plan_decisions_field_path",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK (((field_path IS NULL) OR (((char_length(field_path) >= 1) AND (char_length(field_path) <= 200)) AND (field_path = btrim(field_path)) AND (field_path !~ '^[[:space:]]*$'::text))))"
+    },
+    {
+      "relname": "study_plan_decisions",
+      "conname": "ck_study_plan_decisions_time",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK (isfinite(created_at))"
+    },
+    {
+      "relname": "study_plan_decisions",
+      "conname": "ck_study_plan_decisions_value_size",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK ((((proposed_value IS NULL) OR (octet_length((proposed_value)::text) <= 65536)) AND ((chosen_value IS NULL) OR (octet_length((chosen_value)::text) <= 65536))))"
+    },
+    {
+      "relname": "study_plan_decisions",
+      "conname": "ck_study_plan_decisions_values",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK ((((action = 'accepted'::text) AND (proposed_value IS NOT NULL) AND (chosen_value IS NOT NULL)) OR ((action = 'edited'::text) AND (field_path IS NOT NULL) AND (proposed_value IS NOT NULL) AND (chosen_value IS NOT NULL) AND (proposed_value IS DISTINCT FROM chosen_value)) OR ((action = ANY (ARRAY['rejected'::text, 'regenerated'::text])) AND (proposed_value IS NOT NULL) AND (chosen_value IS NULL))))"
+    },
+    {
+      "relname": "study_plan_decisions",
+      "conname": "fk_study_plan_decisions_plan",
+      "contype": "f",
+      "convalidated": true,
+      "definition": "FOREIGN KEY (user_id, plan_id) REFERENCES study_plans(user_id, id) ON UPDATE RESTRICT ON DELETE RESTRICT"
+    },
+    {
+      "relname": "study_plan_decisions",
+      "conname": "study_plan_decisions_pkey",
+      "contype": "p",
+      "convalidated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "relname": "study_plan_sessions",
+      "conname": "fk_study_plan_sessions_owner_subject_session",
+      "contype": "f",
+      "convalidated": true,
+      "definition": "FOREIGN KEY (user_id, subject_id, study_session_id) REFERENCES study_sessions(user_id, subject_id, id) ON UPDATE RESTRICT ON DELETE RESTRICT"
+    },
+    {
+      "relname": "study_plan_sessions",
+      "conname": "fk_study_plan_sessions_plan_subject",
+      "contype": "f",
+      "convalidated": true,
+      "definition": "FOREIGN KEY (user_id, plan_id, subject_id) REFERENCES study_plan_subjects(user_id, plan_id, subject_id) ON UPDATE RESTRICT ON DELETE RESTRICT"
+    },
+    {
+      "relname": "study_plan_sessions",
+      "conname": "pk_study_plan_sessions",
+      "contype": "p",
+      "convalidated": true,
+      "definition": "PRIMARY KEY (user_id, plan_id, study_session_id)"
+    },
+    {
+      "relname": "study_plan_sessions",
+      "conname": "uq_study_plan_sessions_owner_context",
+      "contype": "u",
+      "convalidated": true,
+      "definition": "UNIQUE (user_id, plan_id, subject_id, study_session_id)"
+    },
+    {
+      "relname": "study_plan_subjects",
+      "conname": "fk_study_plan_subjects_owner_subject",
+      "contype": "f",
+      "convalidated": true,
+      "definition": "FOREIGN KEY (user_id, subject_id) REFERENCES subjects(user_id, id) ON UPDATE RESTRICT ON DELETE RESTRICT"
+    },
+    {
+      "relname": "study_plan_subjects",
+      "conname": "fk_study_plan_subjects_plan",
+      "contype": "f",
+      "convalidated": true,
+      "definition": "FOREIGN KEY (user_id, plan_id) REFERENCES study_plans(user_id, id) ON UPDATE RESTRICT ON DELETE RESTRICT"
+    },
+    {
+      "relname": "study_plan_subjects",
+      "conname": "pk_study_plan_subjects",
+      "contype": "p",
+      "convalidated": true,
+      "definition": "PRIMARY KEY (user_id, plan_id, subject_id)"
+    },
+    {
+      "relname": "study_plans",
+      "conname": "ck_study_plans_dates",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK ((isfinite(start_at) AND isfinite(end_at) AND (end_at > start_at)))"
+    },
+    {
+      "relname": "study_plans",
+      "conname": "ck_study_plans_name",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK ((((char_length(name) >= 1) AND (char_length(name) <= 100)) AND (name = btrim(name)) AND (name !~ '^[[:space:]]*$'::text)))"
+    },
+    {
+      "relname": "study_plans",
+      "conname": "ck_study_plans_objective",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK ((((char_length(objective) >= 1) AND (char_length(objective) <= 2000)) AND (objective = btrim(objective)) AND (objective !~ '^[[:space:]]*$'::text)))"
+    },
+    {
+      "relname": "study_plans",
+      "conname": "ck_study_plans_source",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK ((source = ANY (ARRAY['ai'::text, 'manual'::text])))"
+    },
+    {
+      "relname": "study_plans",
+      "conname": "ck_study_plans_status",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK ((status = ANY (ARRAY['draft'::text, 'active'::text, 'completed'::text, 'abandoned'::text])))"
+    },
+    {
+      "relname": "study_plans",
+      "conname": "ck_study_plans_timestamps",
+      "contype": "c",
+      "convalidated": true,
+      "definition": "CHECK ((isfinite(created_at) AND isfinite(updated_at) AND (updated_at >= created_at)))"
+    },
+    {
+      "relname": "study_plans",
+      "conname": "fk_study_plans_user",
+      "contype": "f",
+      "convalidated": true,
+      "definition": "FOREIGN KEY (user_id) REFERENCES users(id) ON UPDATE RESTRICT ON DELETE RESTRICT"
+    },
+    {
+      "relname": "study_plans",
+      "conname": "study_plans_pkey",
+      "contype": "p",
+      "convalidated": true,
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "relname": "study_plans",
+      "conname": "uq_study_plans_user_id_id",
+      "contype": "u",
+      "convalidated": true,
+      "definition": "UNIQUE (user_id, id)"
+    }
+  ],
+  "all_indexes": [
+    {
+      "relname": "study_challenges",
+      "index_name": "ix_study_challenges_plan_subject_activity",
+      "indisvalid": true,
+      "indisready": true,
+      "definition": "CREATE INDEX ix_study_challenges_plan_subject_activity ON public.study_challenges USING btree (user_id, plan_id, subject_id, activity_id)"
+    },
+    {
+      "relname": "study_challenges",
+      "index_name": "ix_study_challenges_plan_subject_session",
+      "indisvalid": true,
+      "indisready": true,
+      "definition": "CREATE INDEX ix_study_challenges_plan_subject_session ON public.study_challenges USING btree (user_id, plan_id, subject_id, study_session_id)"
+    },
+    {
+      "relname": "study_challenges",
+      "index_name": "ix_study_challenges_user_plan_status_deadline",
+      "indisvalid": true,
+      "indisready": true,
+      "definition": "CREATE INDEX ix_study_challenges_user_plan_status_deadline ON public.study_challenges USING btree (user_id, plan_id, status, deadline, id)"
+    },
+    {
+      "relname": "study_challenges",
+      "index_name": "ix_study_challenges_user_status_deadline",
+      "indisvalid": true,
+      "indisready": true,
+      "definition": "CREATE INDEX ix_study_challenges_user_status_deadline ON public.study_challenges USING btree (user_id, status, deadline, id)"
+    },
+    {
+      "relname": "study_challenges",
+      "index_name": "ix_study_challenges_user_subject_activity_session",
+      "indisvalid": true,
+      "indisready": true,
+      "definition": "CREATE INDEX ix_study_challenges_user_subject_activity_session ON public.study_challenges USING btree (user_id, subject_id, activity_id, study_session_id)"
+    },
+    {
+      "relname": "study_challenges",
+      "index_name": "study_challenges_pkey",
+      "indisvalid": true,
+      "indisready": true,
+      "definition": "CREATE UNIQUE INDEX study_challenges_pkey ON public.study_challenges USING btree (id)"
+    },
+    {
+      "relname": "study_plan_activities",
+      "index_name": "ix_study_plan_activities_user_subject_activity",
+      "indisvalid": true,
+      "indisready": true,
+      "definition": "CREATE INDEX ix_study_plan_activities_user_subject_activity ON public.study_plan_activities USING btree (user_id, subject_id, activity_id)"
+    },
+    {
+      "relname": "study_plan_activities",
+      "index_name": "pk_study_plan_activities",
+      "indisvalid": true,
+      "indisready": true,
+      "definition": "CREATE UNIQUE INDEX pk_study_plan_activities ON public.study_plan_activities USING btree (user_id, plan_id, activity_id)"
+    },
+    {
+      "relname": "study_plan_activities",
+      "index_name": "uq_study_plan_activities_owner_context",
+      "indisvalid": true,
+      "indisready": true,
+      "definition": "CREATE UNIQUE INDEX uq_study_plan_activities_owner_context ON public.study_plan_activities USING btree (user_id, plan_id, subject_id, activity_id)"
+    },
+    {
+      "relname": "study_plan_decisions",
+      "index_name": "ix_study_plan_decisions_user_plan_created",
+      "indisvalid": true,
+      "indisready": true,
+      "definition": "CREATE INDEX ix_study_plan_decisions_user_plan_created ON public.study_plan_decisions USING btree (user_id, plan_id, created_at, id)"
+    },
+    {
+      "relname": "study_plan_decisions",
+      "index_name": "study_plan_decisions_pkey",
+      "indisvalid": true,
+      "indisready": true,
+      "definition": "CREATE UNIQUE INDEX study_plan_decisions_pkey ON public.study_plan_decisions USING btree (id)"
+    },
+    {
+      "relname": "study_plan_sessions",
+      "index_name": "ix_study_plan_sessions_user_subject_session",
+      "indisvalid": true,
+      "indisready": true,
+      "definition": "CREATE INDEX ix_study_plan_sessions_user_subject_session ON public.study_plan_sessions USING btree (user_id, subject_id, study_session_id)"
+    },
+    {
+      "relname": "study_plan_sessions",
+      "index_name": "pk_study_plan_sessions",
+      "indisvalid": true,
+      "indisready": true,
+      "definition": "CREATE UNIQUE INDEX pk_study_plan_sessions ON public.study_plan_sessions USING btree (user_id, plan_id, study_session_id)"
+    },
+    {
+      "relname": "study_plan_sessions",
+      "index_name": "uq_study_plan_sessions_owner_context",
+      "indisvalid": true,
+      "indisready": true,
+      "definition": "CREATE UNIQUE INDEX uq_study_plan_sessions_owner_context ON public.study_plan_sessions USING btree (user_id, plan_id, subject_id, study_session_id)"
+    },
+    {
+      "relname": "study_plan_subjects",
+      "index_name": "ix_study_plan_subjects_user_subject_plan",
+      "indisvalid": true,
+      "indisready": true,
+      "definition": "CREATE INDEX ix_study_plan_subjects_user_subject_plan ON public.study_plan_subjects USING btree (user_id, subject_id, plan_id)"
+    },
+    {
+      "relname": "study_plan_subjects",
+      "index_name": "pk_study_plan_subjects",
+      "indisvalid": true,
+      "indisready": true,
+      "definition": "CREATE UNIQUE INDEX pk_study_plan_subjects ON public.study_plan_subjects USING btree (user_id, plan_id, subject_id)"
+    },
+    {
+      "relname": "study_plans",
+      "index_name": "ix_study_plans_user_end",
+      "indisvalid": true,
+      "indisready": true,
+      "definition": "CREATE INDEX ix_study_plans_user_end ON public.study_plans USING btree (user_id, end_at, id)"
+    },
+    {
+      "relname": "study_plans",
+      "index_name": "ix_study_plans_user_status_start",
+      "indisvalid": true,
+      "indisready": true,
+      "definition": "CREATE INDEX ix_study_plans_user_status_start ON public.study_plans USING btree (user_id, status, start_at, id)"
+    },
+    {
+      "relname": "study_plans",
+      "index_name": "study_plans_pkey",
+      "indisvalid": true,
+      "indisready": true,
+      "definition": "CREATE UNIQUE INDEX study_plans_pkey ON public.study_plans USING btree (id)"
+    },
+    {
+      "relname": "study_plans",
+      "index_name": "uq_study_plans_user_id_id",
+      "indisvalid": true,
+      "indisready": true,
+      "definition": "CREATE UNIQUE INDEX uq_study_plans_user_id_id ON public.study_plans USING btree (user_id, id)"
+    }
+  ],
+  "public_acl": {
+    "study_plans": [],
+    "study_plan_subjects": [],
+    "study_plan_activities": [],
+    "study_plan_sessions": [],
+    "study_plan_decisions": [],
+    "study_challenges": [],
+    "study_plans_id_seq": [],
+    "study_plan_decisions_id_seq": [],
+    "study_challenges_id_seq": []
+  }
+}

@@ -27,6 +27,7 @@ def main(argv: list[str] | None = None) -> int:
             "0004_subjects",
             "0005_activities",
             "0006_study_sessions",
+            "0007_study_plans_and_challenges",
             "head",
         ],
     )

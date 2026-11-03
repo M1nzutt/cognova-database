@@ -8,6 +8,10 @@ on:
         description: Back up exactly 0005 before authorized 0006 release, including activities and isolated restore
         type: boolean
         default: false
+      plans_challenges_release:
+        description: Back up exactly 0006 before authorized 0007 release, including sessions and isolated restore
+        type: boolean
+        default: false
       activities_release:
         description: Back up exactly 0004 before authorized 0005 release, including isolated restore
         type: boolean
@@ -64,6 +68,7 @@ jobs:
           SUBJECTS_RELEASE: ${{ inputs.subjects_release }}
           ACTIVITIES_RELEASE: ${{ inputs.activities_release }}
           STUDY_SESSIONS_RELEASE: ${{ inputs.study_sessions_release }}
+          PLANS_CHALLENGES_RELEASE: ${{ inputs.plans_challenges_release }}
         shell: bash
         run: |
           set -euo pipefail
@@ -73,7 +78,7 @@ jobs:
           import json
           import os
           import subprocess
-          from datetime import datetime, timezone
+          from datetime import datetime, timedelta, timezone
           from pathlib import Path
           from urllib.parse import parse_qsl, unquote, urlsplit
 
@@ -129,12 +134,15 @@ jobs:
               subjects = os.environ.get('SUBJECTS_RELEASE') == 'true'
               activities = os.environ.get('ACTIVITIES_RELEASE') == 'true'
               studies = os.environ.get('STUDY_SESSIONS_RELEASE') == 'true'
-              if sum((subjects, activities, studies)) > 1:
+              plans = os.environ.get('PLANS_CHALLENGES_RELEASE') == 'true'
+              if sum((subjects, activities, studies, plans)) > 1:
                   raise BackupValidationError('Select only one release')
               expected = '0004_subjects' if activities else ('0003_onboarding_questionnaire' if subjects else '0002_auth_sessions')
               label = '0005' if activities else ('0004' if subjects else '0003')
               if studies:
                   expected, label = '0005_activities', '0006'
+              if plans:
+                  expected, label = '0006_study_sessions', '0007'
               key = os.environ.get('BACKUP_ENCRYPTION_KEY', '')
               if len(key.encode('utf-8')) < 32 or any(c in key for c in '\r\n\0'):
                   raise BackupValidationError('Encryption key must be at least 32 bytes and single-line')
@@ -195,18 +203,20 @@ jobs:
                   raise BackupValidationError('Empty backup')
               toc = run('pg_restore_list', [str(binaries / 'pg_restore'), '--list', str(dump)], env)
               tables = ('users', 'auth_sessions', 'rate_limit_buckets', 'alembic_version')
-              if subjects or activities or studies:
+              if subjects or activities or studies or plans:
                   tables += ('user_academic_goal_legacy', 'questionnaire_responses')
-              if activities or studies:
+              if activities or studies or plans:
                   tables += ('subjects',)
-              if studies:
+              if studies or plans:
                   tables += ('activities', 'activity_deadline_events')
+              if plans:
+                  tables += ('study_sessions', 'study_session_intervals')
               for table in tables:
                   if f'TABLE DATA public {table} '.encode() not in toc:
                       raise BackupValidationError('Required table data missing from backup')
               # Decode the complete archive, without connecting or executing SQL.
               run('pg_restore_decode', [str(binaries / 'pg_restore'), '--file=/dev/null', str(dump)], env)
-              if subjects or activities or studies:
+              if subjects or activities or studies or plans:
                   # Disposable container: no production credentials or network destination.
                   isolated = {k: v for k, v in env.items() if not k.startswith('PG')}
                   run('restore_server', ['docker', 'run', '--detach', '--rm', '--name',
@@ -275,11 +285,12 @@ jobs:
                   encrypted_sha256=encrypted_digest, encryption='GnuPG symmetric AES256',
                   gpg_version=gpg_version, encryption_roundtrip='passed',
                   verified_at_utc=datetime.now(timezone.utc).isoformat(),
+                  expires_at=(datetime.now(timezone.utc) + timedelta(days=7)).isoformat(),
                   pg_dump_version=dump_version, pg_restore_version=restore_version,
                   revision_before=revision, revision_after=revision,
                   pg_restore_list='passed', full_archive_decode='passed',
-                  restore_rehearsal='passed' if subjects or activities or studies else 'not_performed',
-                  restored_counts=counts if subjects or activities or studies else None,
+                  restore_rehearsal='passed' if subjects or activities or studies or plans else 'not_performed',
+                  restored_counts=counts if subjects or activities or studies or plans else None,
                   run_id=os.environ['GITHUB_RUN_ID'], attempt=os.environ['GITHUB_RUN_ATTEMPT'],
                   source_commit=os.environ['GITHUB_SHA'],
               )
@@ -300,11 +311,11 @@ jobs:
               raise SystemExit(1) from None
           PY
 
-      - name: Upload only encrypted pre-0003 backup
+      - name: Upload only encrypted pre-release backup
         if: ${{ success() && steps.backup.outputs.encrypted_file != '' }}
         uses: actions/upload-artifact@v4
         with:
-          name: cognova-production-pre-0003-encrypted-${{ github.run_id }}-${{ github.run_attempt }}
+          name: cognova-production-pre-release-encrypted-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ steps.backup.outputs.encrypted_file }}
           if-no-files-found: error
           retention-days: 7
@@ -313,4 +324,4 @@ jobs:
       - name: Remove runner-local backup files
         if: always()
         shell: bash
-        run: rm -rf -- "$RUNNER_TEMP/cognova-pre-0003" "$RUNNER_TEMP/cognova-pre-0004" "$RUNNER_TEMP/cognova-pre-0005" "$RUNNER_TEMP/cognova-pre-0006"
+          run: rm -rf -- "$RUNNER_TEMP/cognova-pre-0003" "$RUNNER_TEMP/cognova-pre-0004" "$RUNNER_TEMP/cognova-pre-0005" "$RUNNER_TEMP/cognova-pre-0006" "$RUNNER_TEMP/cognova-pre-0007"

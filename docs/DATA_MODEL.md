@@ -1,7 +1,9 @@
 # Modelo de datos
 
-Head de código y revisión productiva: **0006_study_sessions**. Aplicada el
-2026-11-02; ver [OPERATIONS](OPERATIONS.md). Revisiones 0001–0005 inmutables.
+La rama de trabajo prepara **0007_study_plans_and_challenges**. `main` y producción
+continúan en **0006_study_sessions**, aplicada el 2026-11-02; ver
+[OPERATIONS](OPERATIONS.md).
+Revisiones 0001–0006 se conservan sin editar.
 
 ## Sesiones de estudio — contrato 0006 confirmado 2026-10-29
 
@@ -93,6 +95,87 @@ Cadena productiva: 0001 → 0002 → 0003_onboarding_questionnaire → 0004_subj
 → 0005_activities → **0006_study_sessions**, aplicada el 2026-11-02.
 El modelo anterior se detalla en
 [MIGRATIONS](MIGRATIONS.md) y [SCHEMA_0003](SCHEMA_0003.md).
+
+## Planes de estudio y retos — contrato implementado en 0007
+
+La revisión `0007_study_plans_and_challenges` está implementada y ensayada localmente;
+no afirma que se haya aplicado. El estado productivo continúa en
+`0006_study_sessions` hasta un release separado y autorizado. Planes y Retos persisten
+relaciones y decisiones: no copian materias, actividades ni sesiones y no ejecutan propuestas
+de IA por sí mismos. Backend conserva el flujo de aceptación, edición, rechazo,
+regeneración y transiciones.
+
+### `study_plans`
+
+- `id` INTEGER SERIAL PK; `user_id` INTEGER NOT NULL, FK a users con RESTRICT.
+- `name` TEXT NOT NULL, 1–100 caracteres, recortado y no blanco.
+- `objective` TEXT NOT NULL, 1–2000 caracteres, recortado y no blanco.
+- `start_at` y `end_at` TIMESTAMPTZ NOT NULL, finitos y `end_at > start_at`.
+- `status`: draft/active/completed/abandoned; `source`: ai/manual.
+- `created_at`/`updated_at` TIMESTAMPTZ NOT NULL, finitos y monotónicos.
+- UNIQUE `(user_id,id)` habilita referencias compuestas de mismo dueño.
+
+### Relaciones con recursos existentes
+
+`study_plan_subjects` relaciona `(user_id,plan_id,subject_id)`; su PK impide
+duplicados. `study_plan_activities` conserva también `subject_id` como clave
+referencial: una FK exige que la materia esté vinculada al Plan y otra valida
+que la Actividad pertenezca a esa misma materia/usuario. `study_plan_sessions`
+relaciona Sesión, Plan y Materia; sus FKs exigen la misma propiedad y que la
+Materia esté relacionada con el Plan. Una clave compuesta nueva en `study_sessions`
+permite verificar ownership sin duplicar el recurso. Una Sesión puede mantener
+su relación original con Actividad nullable como dispone 0006.
+
+Las claves físicas `user_id` y `subject_id` de tablas puente se repiten solo para
+que PostgreSQL pueda imponer las FKs compuestas; no son copias de recursos.
+Todas las referencias usan `ON DELETE RESTRICT ON UPDATE RESTRICT`. Las relaciones
+únicas se respaldan con UNIQUE y FKs, incluidas las combinaciones requeridas por
+Retos. No se crea ninguna cascada.
+
+### `study_plan_decisions`
+
+Registra evidencia append-only por `(user_id,plan_id)`: `action` accepted/edited/
+rejected/regenerated, `field_path` nullable, `proposed_value` y `chosen_value`
+JSONB nullable y `created_at` generado al insertar. `accepted` exige ambos valores;
+`edited` exige ruta y valores distintos; `rejected` y `regenerated` conservan la
+propuesta y no declaran un valor elegido. La tabla admite SELECT/INSERT para el
+runtime; no UPDATE/DELETE/TRUNCATE. La evidencia se conserva después de decisiones
+posteriores y ninguna propuesta se aplica automáticamente.
+
+### `study_challenges`
+
+Cada Reto pertenece a un Plan y al mismo usuario. Referencias opcionales a Materia,
+Actividad y Sesión deben apuntar a recursos ya relacionados con ese Plan. Actividad
+y Sesión requieren Materia; si ambas se indican, una clave compuesta comprueba que
+la Sesión esté asociada a esa misma Actividad. Todos los enlaces son RESTRICT.
+
+- `title`: 1–100 caracteres; `description`: 1–2000, ambos sin blancos extremos.
+- `target_type`: `study_minutes`, `activity_completion`, `session_completion`,
+  `subject_mastery` o `custom`; `target_value` JSONB es un objeto acotado y su
+  configuración depende del tipo (minutos 1–1440, terminación de Actividad/Sesión,
+  criterio y umbral de dominio de Materia, o configuración no vacía custom).
+- `start_at`/`deadline` son TIMESTAMPTZ nullable, finitos y ordenados si existen.
+- `status`: pending/in_progress/completed/failed/cancelled; `source`: ai/manual.
+- `generation_criteria` JSONB obligatorio conserva criterios de origen/adaptación.
+- `created_at`/`updated_at` son finitos y monotónicos. Runtime no puede borrar retos.
+
+La DB valida tokens, longitudes, fechas, JSON requerido y ownership físico. Backend
+decide transiciones, quién modifica una propuesta y el significado adaptativo de
+los criterios. No se añaden triggers de flujo ni estructuras de datos de dominio.
+
+### Índices, grants y reversión
+
+Índices cubren usuario/estado/fechas de Planes, joins por Plan y por recurso,
+decisiones por Plan/fecha y Retos por usuario/estado/deadline y Plan. Migración
+revoca acceso PUBLIC en tablas y secuencias nuevas. El release concede al runtime
+solo DML necesario: CRUD de Planes; SELECT/INSERT/DELETE de relaciones; SELECT/
+INSERT de decisiones; SELECT/INSERT/UPDATE de Retos; USAGE/SELECT de secuencias.
+No TRUNCATE, escritura de decisiones, DELETE de Retos ni DDL persistente.
+
+Downgrade 0007→0006 toma locks ACCESS EXCLUSIVE, aborta si hay filas en cualquiera
+de las tablas nuevas y elimina solo objetos 0007 sin CASCADE. Debe funcionar vacío
+con recursos 0006 ya existentes, preservar todas las filas anteriores y revertir
+atómicamente si hay dependencias futuras.
 
 ## Actividades — contrato 0005 confirmado 2026-10-21
 
