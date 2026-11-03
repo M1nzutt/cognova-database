@@ -15,6 +15,7 @@ def upgrade() -> None:
     _plan_relationships()
     _plan_decisions()
     _study_challenges()
+    _indexes()
 
 
 def downgrade() -> None:
@@ -436,4 +437,60 @@ def _study_challenges() -> None:
             "AND updated_at >= created_at",
             name="ck_study_challenges_timestamps",
         ),
+    )
+
+
+def _indexes() -> None:
+    op.create_index(
+        "ix_study_plans_user_status_start",
+        "study_plans",
+        ["user_id", "status", "start_at", "id"],
+    )
+    op.create_index(
+        "ix_study_plans_user_end", "study_plans", ["user_id", "end_at", "id"]
+    )
+    op.create_index(
+        "ix_study_plan_subjects_user_subject_plan",
+        "study_plan_subjects",
+        ["user_id", "subject_id", "plan_id"],
+    )
+    op.create_index(
+        "ix_study_plan_activities_user_subject_activity",
+        "study_plan_activities",
+        ["user_id", "subject_id", "activity_id"],
+    )
+    op.create_index(
+        "ix_study_plan_sessions_user_subject_session",
+        "study_plan_sessions",
+        ["user_id", "subject_id", "study_session_id"],
+    )
+    op.create_index(
+        "ix_study_plan_decisions_user_plan_created",
+        "study_plan_decisions",
+        ["user_id", "plan_id", "created_at", "id"],
+    )
+    op.create_index(
+        "ix_study_challenges_user_status_deadline",
+        "study_challenges",
+        ["user_id", "status", "deadline", "id"],
+    )
+    op.create_index(
+        "ix_study_challenges_user_plan_status_deadline",
+        "study_challenges",
+        ["user_id", "plan_id", "status", "deadline", "id"],
+    )
+    op.create_index(
+        "ix_study_challenges_plan_subject_activity",
+        "study_challenges",
+        ["user_id", "plan_id", "subject_id", "activity_id"],
+    )
+    op.create_index(
+        "ix_study_challenges_plan_subject_session",
+        "study_challenges",
+        ["user_id", "plan_id", "subject_id", "study_session_id"],
+    )
+    op.create_index(
+        "ix_study_challenges_user_subject_activity_session",
+        "study_challenges",
+        ["user_id", "subject_id", "activity_id", "study_session_id"],
     )
