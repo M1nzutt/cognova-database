@@ -306,6 +306,39 @@ def test_0007_indexes_cover_owners_dates_status_and_resource_joins(pg_engine):
         )
 
 
+def test_0007_revokes_public_on_new_tables_and_sequences(pg_engine):
+    engine, _ = pg_engine
+    tables = (
+        "study_plans",
+        "study_plan_subjects",
+        "study_plan_activities",
+        "study_plan_sessions",
+        "study_plan_decisions",
+        "study_challenges",
+    )
+    sequences = (
+        "study_plans_id_seq",
+        "study_plan_decisions_id_seq",
+        "study_challenges_id_seq",
+    )
+    with engine.begin() as connection:
+        migrate(connection)
+        for relation in (*tables, *sequences):
+            assert (
+                connection.scalar(
+                    text(
+                        "SELECT count(*) FROM pg_class c "
+                        "JOIN pg_namespace n ON n.oid=c.relnamespace "
+                        "CROSS JOIN LATERAL aclexplode(c.relacl) acl "
+                        "WHERE n.nspname=current_schema() AND c.relname=:name "
+                        "AND acl.grantee=0"
+                    ),
+                    {"name": relation},
+                )
+                == 0
+            )
+
+
 def test_plan_subject_activity_session_links_and_duplicates(pg_engine):
     engine, _ = pg_engine
     with engine.begin() as connection:
