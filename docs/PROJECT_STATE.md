@@ -1,5 +1,22 @@
 # Estado de Cognova Database
 
+## En curso — preparación 0007 Planes y Retos
+
+Trabajo en `feat/0007-study-plans-challenges`, basado en `main` HEAD
+`eff87b387345a1d3f286e3a6007d41e707ec9d13`. Inicio: 64 commits alcanzables desde
+main (84 commits contando todas las refs), árbol limpio antes de crear la rama.
+Producción permanece en `0006_study_sessions`, aplicada el 2026-11-02; SHA de
+código usado en ese release `20c6fdc21e2a48cd8f5fb37f46545460e9b9a161`.
+
+Objetivo de esta rama: diseñar, implementar y validar localmente
+`0007_study_plans_and_challenges`, sin modificar 0001–0006 ni ejecutar DDL/grants
+en producción. El contrato de DATA_MODEL especifica tablas normalizadas, ownership
+compuesto, evidencia de decisiones, Retos contextuales, grants mínimos y downgrade
+que solo funciona sin datos nuevos. Release productivo requiere una autorización y
+preparación operativa separadas. Todavía no se declara migración implementada,
+integrada, desplegada ni lista para aplicarse; actualizar este estado con cada gate
+completado y registrar el SHA final tras merge/CI.
+
 ## Estado vigente: release Sesiones 0006 cerrado — 2026-11-02
 
 **Producción y main están en 0006_study_sessions.** Merge no-ff
