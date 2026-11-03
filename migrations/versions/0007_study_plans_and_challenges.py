@@ -11,18 +11,37 @@ depends_on = None
 
 def upgrade() -> None:
     _study_plans()
+    _plan_relationships()
 
 
 def downgrade() -> None:
-    op.execute("LOCK TABLE users, study_plans IN ACCESS EXCLUSIVE MODE")
+    op.execute(
+        "LOCK TABLE users, subjects, activities, study_sessions, study_plans, "
+        "study_plan_subjects, study_plan_activities, study_plan_sessions "
+        "IN ACCESS EXCLUSIVE MODE"
+    )
     op.execute("""
         DO $$ BEGIN
-            IF EXISTS (SELECT 1 FROM study_plans) THEN
-                RAISE EXCEPTION 'Downgrade blocked: study plans exist';
+            IF EXISTS (SELECT 1 FROM study_plans)
+               OR EXISTS (SELECT 1 FROM study_plan_subjects)
+               OR EXISTS (SELECT 1 FROM study_plan_activities)
+               OR EXISTS (SELECT 1 FROM study_plan_sessions) THEN
+                RAISE EXCEPTION 'Downgrade blocked: study plan data exists';
             END IF;
         END $$
     """)
+    op.drop_table("study_plan_sessions")
+    op.drop_table("study_plan_activities")
+    op.drop_table("study_plan_subjects")
     op.drop_table("study_plans")
+    op.drop_constraint(
+        "uq_study_sessions_user_subject_activity_id",
+        "study_sessions",
+        type_="unique",
+    )
+    op.drop_constraint(
+        "uq_study_sessions_user_subject_id", "study_sessions", type_="unique"
+    )
 
 
 def _study_plans() -> None:
@@ -80,5 +99,115 @@ def _study_plans() -> None:
             "isfinite(created_at) AND isfinite(updated_at) "
             "AND updated_at >= created_at",
             name="ck_study_plans_timestamps",
+        ),
+    )
+
+
+def _plan_relationships() -> None:
+    op.create_unique_constraint(
+        "uq_study_sessions_user_subject_id",
+        "study_sessions",
+        ["user_id", "subject_id", "id"],
+    )
+    op.create_unique_constraint(
+        "uq_study_sessions_user_subject_activity_id",
+        "study_sessions",
+        ["user_id", "subject_id", "activity_id", "id"],
+    )
+    op.create_table(
+        "study_plan_subjects",
+        sa.Column("user_id", sa.Integer(), nullable=False),
+        sa.Column("plan_id", sa.Integer(), nullable=False),
+        sa.Column("subject_id", sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["user_id", "plan_id"],
+            ["study_plans.user_id", "study_plans.id"],
+            name="fk_study_plan_subjects_plan",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        sa.ForeignKeyConstraint(
+            ["user_id", "subject_id"],
+            ["subjects.user_id", "subjects.id"],
+            name="fk_study_plan_subjects_owner_subject",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        sa.PrimaryKeyConstraint(
+            "user_id", "plan_id", "subject_id", name="pk_study_plan_subjects"
+        ),
+    )
+    op.create_table(
+        "study_plan_activities",
+        sa.Column("user_id", sa.Integer(), nullable=False),
+        sa.Column("plan_id", sa.Integer(), nullable=False),
+        sa.Column("subject_id", sa.Integer(), nullable=False),
+        sa.Column("activity_id", sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["user_id", "plan_id", "subject_id"],
+            [
+                "study_plan_subjects.user_id",
+                "study_plan_subjects.plan_id",
+                "study_plan_subjects.subject_id",
+            ],
+            name="fk_study_plan_activities_plan_subject",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        sa.ForeignKeyConstraint(
+            ["user_id", "subject_id", "activity_id"],
+            ["activities.user_id", "activities.subject_id", "activities.id"],
+            name="fk_study_plan_activities_owner_subject_activity",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        sa.PrimaryKeyConstraint(
+            "user_id", "plan_id", "activity_id", name="pk_study_plan_activities"
+        ),
+        sa.UniqueConstraint(
+            "user_id",
+            "plan_id",
+            "subject_id",
+            "activity_id",
+            name="uq_study_plan_activities_owner_context",
+        ),
+    )
+    op.create_table(
+        "study_plan_sessions",
+        sa.Column("user_id", sa.Integer(), nullable=False),
+        sa.Column("plan_id", sa.Integer(), nullable=False),
+        sa.Column("subject_id", sa.Integer(), nullable=False),
+        sa.Column("study_session_id", sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["user_id", "plan_id", "subject_id"],
+            [
+                "study_plan_subjects.user_id",
+                "study_plan_subjects.plan_id",
+                "study_plan_subjects.subject_id",
+            ],
+            name="fk_study_plan_sessions_plan_subject",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        sa.ForeignKeyConstraint(
+            ["user_id", "subject_id", "study_session_id"],
+            [
+                "study_sessions.user_id",
+                "study_sessions.subject_id",
+                "study_sessions.id",
+            ],
+            name="fk_study_plan_sessions_owner_subject_session",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        sa.PrimaryKeyConstraint(
+            "user_id", "plan_id", "study_session_id", name="pk_study_plan_sessions"
+        ),
+        sa.UniqueConstraint(
+            "user_id",
+            "plan_id",
+            "subject_id",
+            "study_session_id",
+            name="uq_study_plan_sessions_owner_context",
         ),
     )
