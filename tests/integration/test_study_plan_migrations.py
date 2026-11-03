@@ -1,6 +1,17 @@
 import pytest
 from activity_helpers import activity
-from plan_helpers import END, HEAD, PREVIOUS, migrate, owner_subject, plan
+from plan_helpers import (
+    END,
+    HEAD,
+    PREVIOUS,
+    migrate,
+    owner_subject,
+    plan,
+    plan_activity,
+    plan_session,
+    plan_subject,
+    study_session,
+)
 from sqlalchemy import inspect, text
 from sqlalchemy.exc import DBAPIError, IntegrityError
 
@@ -118,7 +129,7 @@ def test_0001_to_0007_and_0007_to_0006_to_0007(pg_engine):
         user_id = connection.scalar(text("SELECT id FROM users"))
         plan_id = plan(connection, user_id)
         with (
-            pytest.raises(DBAPIError, match="study plans exist"),
+            pytest.raises(DBAPIError, match="study plan data exists"),
             connection.begin_nested(),
         ):
             migrate(connection, PREVIOUS, down=True)
@@ -156,6 +167,7 @@ def test_0007_downgrade_preserves_0006_and_blocks_future_dependencies(pg_engine)
             ),
             {"uid": user_id, "sid": subject_id, "aid": activity_id},
         )
+        connection.execute(text("SET CONSTRAINTS ALL IMMEDIATE"))
         session_before = connection.execute(
             text("SELECT * FROM study_sessions WHERE id=:id"), {"id": session_id}
         ).one()
@@ -165,7 +177,7 @@ def test_0007_downgrade_preserves_0006_and_blocks_future_dependencies(pg_engine)
         migrate(connection)
         plan_id = plan(connection, user_id)
         with (
-            pytest.raises(DBAPIError, match="study plans exist"),
+            pytest.raises(DBAPIError, match="study plan data exists"),
             connection.begin_nested(),
         ):
             migrate(connection, PREVIOUS, down=True)
@@ -193,4 +205,135 @@ def test_0007_downgrade_preserves_0006_and_blocks_future_dependencies(pg_engine)
                 text("SELECT * FROM activities WHERE id=:id"), {"id": activity_id}
             ).one()
             == activity_before
+        )
+
+
+def test_plan_subject_activity_session_links_and_duplicates(pg_engine):
+    engine, _ = pg_engine
+    with engine.begin() as connection:
+        migrate(connection)
+        user_id, subject_id = owner_subject(connection)
+        activity_id = activity(connection, user_id, subject_id)
+        session_id = study_session(connection, user_id, subject_id, activity_id)
+        plan_id = plan(connection, user_id)
+        plan_subject(connection, user_id, plan_id, subject_id)
+        plan_activity(connection, user_id, plan_id, subject_id, activity_id)
+        plan_session(connection, user_id, plan_id, subject_id, session_id)
+
+        for statement, params in (
+            (
+                "INSERT INTO study_plan_subjects VALUES (:uid,:plan,:subject)",
+                {"uid": user_id, "plan": plan_id, "subject": subject_id},
+            ),
+            (
+                "INSERT INTO study_plan_activities VALUES "
+                "(:uid,:plan,:subject,:activity)",
+                {
+                    "uid": user_id,
+                    "plan": plan_id,
+                    "subject": subject_id,
+                    "activity": activity_id,
+                },
+            ),
+            (
+                "INSERT INTO study_plan_sessions VALUES (:uid,:plan,:subject,:session)",
+                {
+                    "uid": user_id,
+                    "plan": plan_id,
+                    "subject": subject_id,
+                    "session": session_id,
+                },
+            ),
+        ):
+            with pytest.raises(IntegrityError), connection.begin_nested():
+                connection.execute(text(statement), params)
+
+        assert {
+            table: [column["name"] for column in inspect(connection).get_columns(table)]
+            for table in (
+                "study_plan_subjects",
+                "study_plan_activities",
+                "study_plan_sessions",
+            )
+        } == {
+            "study_plan_subjects": ["user_id", "plan_id", "subject_id"],
+            "study_plan_activities": [
+                "user_id",
+                "plan_id",
+                "subject_id",
+                "activity_id",
+            ],
+            "study_plan_sessions": [
+                "user_id",
+                "plan_id",
+                "subject_id",
+                "study_session_id",
+            ],
+        }
+
+        for statement, params in (
+            ("DELETE FROM study_plans WHERE id=:id", {"id": plan_id}),
+            ("DELETE FROM subjects WHERE id=:id", {"id": subject_id}),
+            ("DELETE FROM activities WHERE id=:id", {"id": activity_id}),
+            ("DELETE FROM study_sessions WHERE id=:id", {"id": session_id}),
+        ):
+            with pytest.raises(IntegrityError), connection.begin_nested():
+                connection.execute(text(statement), params)
+
+
+def test_resource_links_enforce_owner_plan_and_subject_consistency(pg_engine):
+    engine, _ = pg_engine
+    with engine.begin() as connection:
+        migrate(connection)
+        owner_id, owner_subject_id = owner_subject(connection, "owner@test.io")
+        other_id, other_subject_id = owner_subject(connection, "other@test.io")
+        owner_activity_id = activity(connection, owner_id, owner_subject_id)
+        other_activity_id = activity(connection, other_id, other_subject_id)
+        owner_session_id = study_session(
+            connection, owner_id, owner_subject_id, owner_activity_id
+        )
+        other_session_id = study_session(
+            connection, other_id, other_subject_id, other_activity_id
+        )
+        owner_plan_id = plan(connection, owner_id)
+        other_plan_id = plan(connection, other_id)
+        plan_subject(connection, owner_id, owner_plan_id, owner_subject_id)
+        plan_subject(connection, other_id, other_plan_id, other_subject_id)
+
+        with pytest.raises(IntegrityError), connection.begin_nested():
+            plan_subject(connection, other_id, owner_plan_id, other_subject_id)
+        with pytest.raises(IntegrityError), connection.begin_nested():
+            plan_subject(connection, owner_id, owner_plan_id, other_subject_id)
+        with pytest.raises(IntegrityError), connection.begin_nested():
+            plan_activity(
+                connection,
+                owner_id,
+                owner_plan_id,
+                owner_subject_id,
+                other_activity_id,
+            )
+        with pytest.raises(IntegrityError), connection.begin_nested():
+            plan_activity(
+                connection,
+                owner_id,
+                owner_plan_id,
+                other_subject_id,
+                other_activity_id,
+            )
+        with pytest.raises(IntegrityError), connection.begin_nested():
+            plan_session(
+                connection,
+                owner_id,
+                owner_plan_id,
+                owner_subject_id,
+                other_session_id,
+            )
+
+        with pytest.raises(IntegrityError), connection.begin_nested():
+            study_session(connection, owner_id, owner_subject_id, other_activity_id)
+        plan_activity(
+            connection, owner_id, owner_plan_id, owner_subject_id, owner_activity_id
+        )
+        plan_session(
+            connection, owner_id, owner_plan_id, owner_subject_id, owner_session_id
         )

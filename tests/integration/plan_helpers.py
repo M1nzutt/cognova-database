@@ -36,6 +36,64 @@ def plan(connection, user_id, **overrides):
     )
 
 
+def study_session(connection, user_id, subject_id, activity_id=None):
+    return connection.scalar(
+        text(
+            "INSERT INTO study_sessions (user_id,subject_id,activity_id,"
+            "planned_start_at,planned_duration) VALUES (:uid,:sid,:aid,:planned,30) "
+            "RETURNING id"
+        ),
+        {
+            "uid": user_id,
+            "sid": subject_id,
+            "aid": activity_id,
+            "planned": START,
+        },
+    )
+
+
+def plan_subject(connection, user_id, plan_id, subject_id):
+    connection.execute(
+        text(
+            "INSERT INTO study_plan_subjects (user_id,plan_id,subject_id) "
+            "VALUES (:uid,:plan,:subject)"
+        ),
+        {"uid": user_id, "plan": plan_id, "subject": subject_id},
+    )
+
+
+def plan_activity(connection, user_id, plan_id, subject_id, activity_id):
+    connection.execute(
+        text(
+            "INSERT INTO study_plan_activities "
+            "(user_id,plan_id,subject_id,activity_id) "
+            "VALUES (:uid,:plan,:subject,:activity)"
+        ),
+        {
+            "uid": user_id,
+            "plan": plan_id,
+            "subject": subject_id,
+            "activity": activity_id,
+        },
+    )
+
+
+def plan_session(connection, user_id, plan_id, subject_id, session_id):
+    connection.execute(
+        text(
+            "INSERT INTO study_plan_sessions "
+            "(user_id,plan_id,subject_id,study_session_id) "
+            "VALUES (:uid,:plan,:subject,:session)"
+        ),
+        {
+            "uid": user_id,
+            "plan": plan_id,
+            "subject": subject_id,
+            "session": session_id,
+        },
+    )
+
+
 def owner_subject(connection, email="owner@test.io"):
     user_id = connection.scalar(
         text(
