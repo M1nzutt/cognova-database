@@ -212,6 +212,100 @@ def test_0007_downgrade_preserves_0006_and_blocks_future_dependencies(pg_engine)
         )
 
 
+def test_0007_indexes_cover_owners_dates_status_and_resource_joins(pg_engine):
+    expected = {
+        "study_plans": {
+            "ix_study_plans_user_status_start": ["user_id", "status", "start_at", "id"],
+            "ix_study_plans_user_end": ["user_id", "end_at", "id"],
+        },
+        "study_plan_subjects": {
+            "ix_study_plan_subjects_user_subject_plan": [
+                "user_id",
+                "subject_id",
+                "plan_id",
+            ]
+        },
+        "study_plan_activities": {
+            "ix_study_plan_activities_user_subject_activity": [
+                "user_id",
+                "subject_id",
+                "activity_id",
+            ]
+        },
+        "study_plan_sessions": {
+            "ix_study_plan_sessions_user_subject_session": [
+                "user_id",
+                "subject_id",
+                "study_session_id",
+            ]
+        },
+        "study_plan_decisions": {
+            "ix_study_plan_decisions_user_plan_created": [
+                "user_id",
+                "plan_id",
+                "created_at",
+                "id",
+            ]
+        },
+        "study_challenges": {
+            "ix_study_challenges_user_status_deadline": [
+                "user_id",
+                "status",
+                "deadline",
+                "id",
+            ],
+            "ix_study_challenges_user_plan_status_deadline": [
+                "user_id",
+                "plan_id",
+                "status",
+                "deadline",
+                "id",
+            ],
+            "ix_study_challenges_plan_subject_activity": [
+                "user_id",
+                "plan_id",
+                "subject_id",
+                "activity_id",
+            ],
+            "ix_study_challenges_plan_subject_session": [
+                "user_id",
+                "plan_id",
+                "subject_id",
+                "study_session_id",
+            ],
+            "ix_study_challenges_user_subject_activity_session": [
+                "user_id",
+                "subject_id",
+                "activity_id",
+                "study_session_id",
+            ],
+        },
+    }
+    engine, _ = pg_engine
+    with engine.begin() as connection:
+        migrate(connection)
+        for table, definitions in expected.items():
+            actual = {
+                index["name"]: index["column_names"]
+                for index in inspect(connection).get_indexes(table)
+            }
+            assert {name: actual[name] for name in definitions} == definitions
+        assert (
+            connection.scalar(
+                text(
+                    "SELECT count(*) FROM pg_index i JOIN pg_class t "
+                    "ON t.oid=i.indrelid "
+                    "WHERE t.relnamespace=current_schema()::regnamespace "
+                    "AND t.relname IN ('study_plans','study_plan_subjects',"
+                    "'study_plan_activities','study_plan_sessions',"
+                    "'study_plan_decisions','study_challenges') "
+                    "AND (NOT i.indisvalid OR NOT i.indisready)"
+                )
+            )
+            == 0
+        )
+
+
 def test_plan_subject_activity_session_links_and_duplicates(pg_engine):
     engine, _ = pg_engine
     with engine.begin() as connection:
