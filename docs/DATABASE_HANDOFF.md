@@ -42,8 +42,9 @@ límite de alcance.
 - [Release](evidence/0007-release-2026-11-03.json): commit/rollback, conteos antes
   y después, pin y comprobaciones post-commit.
 
-CI Database checks run `41746346612` pasó sobre el código fijado al release:
-395 pruebas, incluidas 328 pruebas PostgreSQL, sin omisiones. La repetición local
-posterior no se pudo arrancar en el entorno Windows aislado: la sandbox denegó el
-arranque de PostgreSQL/Python base. El smoke productivo realizado después del
-release fue estrictamente read-only.
+CI Database checks run `41758579716` pasó sobre el cierre documental SHA
+`27c9d9780b90123cfa89dbad2c1b942da9a22c60`: 395 pruebas, incluidas 328 PostgreSQL,
+Ruff, formato, pip check, checker JUnit, heads, upgrade offline y Gitleaks. La
+repetición local posterior no se pudo arrancar en el entorno Windows aislado: la
+sandbox denegó el arranque de PostgreSQL/Python base. El smoke productivo después
+del release fue estrictamente read-only.

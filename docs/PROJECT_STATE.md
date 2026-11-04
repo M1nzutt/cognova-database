@@ -31,16 +31,18 @@ exige exactamente `0006_study_sessions` para `/ready`; por ello su readiness tra
 No se cambió Backend por el límite de alcance; hace falta compatibilidad y deploy
 separados para cerrar readiness end-to-end.
 
-CI previo sobre el pin de código: Database checks run `41746346612` success,
-395 pruebas (328 PostgreSQL), Ruff, pip check, upgrade/head y Gitleaks. En este
-entorno Windows no se pudo repetir PostgreSQL local después del release: la sandbox
-denegó el arranque de procesos restringidos de PostgreSQL y el Python del `.venv`
-apunta a una instalación base inaccesible. La validación post-release productiva
-fue de solo lectura; el cierre documental volverá a disparar CI.
+El cierre documental se publicó en `27c9d9780b90123cfa89dbad2c1b942da9a22c60`;
+Database checks run `41758579716` terminó success sobre ese SHA: 395 pruebas,
+incluidas 328 PostgreSQL, Ruff check/formato, pip check, checker JUnit, heads,
+upgrade offline y Gitleaks. En este entorno Windows no se pudo repetir PostgreSQL
+local después del release: la sandbox denegó el arranque de procesos restringidos
+de PostgreSQL y el Python del `.venv` apunta a una instalación base inaccesible.
+La validación post-release productiva fue de solo lectura.
 
-Inicio de esta continuación: 91 commits en main y 111 en todas las refs; el commit
-documental de cierre lleva main a 92 (409 hasta la referencia histórica 501) y
-112 en todas las refs, sin squash ni commits vacíos.
+Inicio de esta continuación: 91 commits en main y 111 en todas las refs. El cierre
+se registró en dos commits documentales atómicos (estado/evidencias y resultado CI):
+93 en main (408 hasta la referencia histórica 501) y 113 en todas las refs, sin
+squash ni commits vacíos.
 
 ## Histórico — preparación de 0007 previa al release — 2026-11-03
 

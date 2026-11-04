@@ -42,9 +42,10 @@ Backend. Las solicitudes HTTP desde el entorno de release expiraron. Por el lím
 de alcance no se modificó Backend; hace falta un release separado para readiness
 end-to-end. La migración aditiva no cambia tablas/columnas previas que usa Backend.
 
-CI Database checks run `41746346612` pasó sobre el pin de código (395 tests, 328
-PostgreSQL, sin omitidos). El smoke posterior a release fue read-only en producción.
-No se ejecutó downgrade productivo.
+CI Database checks run `41758579716` pasó sobre el cierre documental SHA
+`27c9d9780b90123cfa89dbad2c1b942da9a22c60`: 395 tests, incluidos 328 PostgreSQL,
+Ruff, formato, pip check, checker de JUnit, heads, upgrade offline y Gitleaks. La
+validación productiva posterior al release fue read-only. No se ejecutó downgrade.
 
 ## Release 0006 aplicado — 2026-11-02
 
