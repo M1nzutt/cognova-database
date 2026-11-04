@@ -1,6 +1,6 @@
 # Migraciones, configuración y validación
 
-## 0007 — Planes de estudio y Retos (preparada, no aplicada en producción)
+## 0007 — Planes de estudio y Retos (aplicada en producción)
 
 `0007_study_plans_and_challenges` sigue a `0006_study_sessions`. Crea
 `study_plans`, `study_plan_subjects`, `study_plan_activities`,
@@ -14,11 +14,12 @@ secuencias nuevas; los grants `cognova_runtime` se aplican y comprueban mediante
 El contrato de columnas, checks, índices, ownership, targets JSONB y reversión está
 en [DATA_MODEL](DATA_MODEL.md). La definición física PG18 que verifica el helper es
 [0007-schema-contract.json](evidence/0007-schema-contract.json), generada de un
-upgrade dentro de transacción local desechable. CLI acepta el destino explícito
-0007 y `head`. No se aplicó DDL ni grants productivos; antes de release se requiere
-pin probado, respaldo/restauración verificados, Backend compatible y ejecución del helper bajo rol migrador.
-El usuario autorizó el release en la solicitud del 2026-11-03, pero la ejecución sigue
-detenida hasta completar el backup pre-0007 y el preflight READ ONLY.
+upgrade dentro de transacción local desechable. El release se aplicó con el runner
+oficial en 2026-11-03 desde el pin
+`e750754507545efa6bc2a80515a89db07768a665`, tras backup/restore PostgreSQL 18
+verificado y preflight TLS/READ ONLY. [Evidencia del release](evidence/0007-release-2026-11-03.json).
+La revisión productiva quedó exactamente en `0007_study_plans_and_challenges`.
+Ver [OPERATIONS](OPERATIONS.md) para catálogo, grants y compatibilidad Backend.
 
 El downgrade a 0006 bloquea usuarios y recursos existentes junto con las seis
 tablas nuevas. Si hay cualquier fila 0007, falla antes de borrar; no utiliza
@@ -28,12 +29,14 @@ restricciones, permisos y catálogo con PostgreSQL real.
 
 ## Historial de código y producción
 
-`main` tiene **0007_study_plans_and_challenges**. Producción continúa en
-**0006_study_sessions**, aplicado el 2026-11-02.
+`main` y producción tienen **0007_study_plans_and_challenges**; producción se
+actualizó el 2026-11-03. Antes del release, la última revisión era
+**0006_study_sessions**, aplicada el 2026-11-02.
 Cadena: 0001_create_users → 0002_auth_sessions → 0003_onboarding_questionnaire →
 0004_subjects → 0005_activities → 0006_study_sessions → 0007_study_plans_and_challenges.
 Ver [evidencia del release 0006](evidence/0006-release-2026-11-02.json) y
-[OPERATIONS](OPERATIONS.md). La descripción 0002 inferior es histórica.
+[release 0007](evidence/0007-release-2026-11-03.json) y [OPERATIONS](OPERATIONS.md).
+La descripción 0002 inferior es histórica.
 
 ## 0006 — ejecución de estudio, sin temporizador automático
 

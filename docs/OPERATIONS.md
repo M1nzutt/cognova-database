@@ -1,44 +1,50 @@
 # Operación vigente, permisos y recuperación
 
-## Preparación 0007 Planes y Retos — pendiente de release
+## Release 0007 Planes y Retos aplicado — 2026-11-03
 
-La migración, comparador de catálogo y grants mínimos están en main mediante merge
-`--no-ff` `2715a02759957f08697ee09a6155ba54afce135e`. Producción sigue en
-`0006_study_sessions`; no se conectó a producción ni se ejecutó DDL o grants allí.
-El código prepara la operación; la aplicación productiva queda pendiente.
+La revisión productiva es exactamente `0007_study_plans_and_challenges`. El runner
+oficial aplicó el pin de código `e750754507545efa6bc2a80515a89db07768a665` con
+TLS, revisión origen 0006, backup verificado, advisory lock y bloqueos
+ACCESS EXCLUSIVE. No hubo DML sintético. [Evidencia del release](evidence/0007-release-2026-11-03.json).
 
-El fix del último run de limpieza se publicó en 2a7cb932f1bcea61f01e4bb9e55d5a4fb8540352
-y Database checks run 41745180653 pasó. La workflow de backup solo usa
-workflow_dispatch; no se pudo iniciar desde esta ejecución porque no hay una
-interfaz funcional de GitHub Actions dispatch disponible. No se produjo backup,
-artifact ni rehearsal, así que el release se detuvo antes del preflight productivo.
-Producción sigue en la última revisión documentada 0006_study_sessions; no ejecutar
-el helper de apply sin completar y verificar el backup.
+Backup pre-release: workflow run `41754539310`, artifact `13286184409`, revisión
+`0006_study_sessions` antes/después. pg_dump/pg_restore 18.6 custom, listado,
+decodificación, restore rehearsal aislado y AES256 roundtrip pasaron. SHA-256 del
+ciphertext: `b09d2da9ddd62499b87e605d02558468333e503546503e2c6f31e7c4af420d89`;
+digest ZIP del artifact descargado verificado:
+`fe2f5c6602be049ad7e9a9ae995d4c2589ce8e46cdcc0504e159e7cb5a503d2f`.
+El artifact cifrado expira 2026-11-11; conserva la clave existente bajo custodia
+del usuario. [Manifiesto](evidence/0007-backup-2026-11-03.json).
 
-El workflow manual `backup-pre-0003.yml`, con `plans_challenges_release=true`, exige
-exactamente 0006 antes y después, valida las once tablas existentes, cifra AES256,
-verifica roundtrip/listado/decodificación y restaura el backup en PostgreSQL 18
-aislado. Solo publica el ciphertext por siete días. Tras descargarlo, comparar el
-SHA-256 ciphertext con el manifest, registrar `download_verification=passed` y
-confirmar que el respaldo y su clave no expiren antes del corte. El helper requiere
-que la verificación de descarga se agregue a la evidencia; no acepta un artifact
-caducado, un dump incompleto o una revisión diferente.
+Preflight READ ONLY: TLSv1.3 activo, 11 tablas previas, inventario/cuentas tomados,
+cero transacciones idle-in-transaction, lock waiters, transacciones >30s o prepared.
+Se conservaron exactamente los conteos previos: users=39, auth_sessions=49,
+rate_limit_buckets=1, user_academic_goal_legacy=1, questionnaire_responses=46,
+subjects=21, activities=10, activity_deadline_events=8, study_sessions=20,
+study_session_intervals=21. [Preflight](evidence/0007-preflight-2026-11-03.json).
 
-`scripts/release_0007.py --apply` está protegido por pin exacto de código en main,
-working tree limpio, host/base Render fijados, TLS, backup menor de 24 horas,
-revisión origen exacta, advisory lock y ACCESS EXCLUSIVE locks. Dentro de una
-transacción preserva filas/columnas, estructura, triggers, permisos, membresías y
-secuencias anteriores; actualiza Alembic, aplica grants mínimos, y coteja checks,
-FKs, índices y ACL contra el contrato probado. Después valida todo de nuevo con
-conexión READ ONLY. Cualquier error antes del commit revierte DDL y grants. El
-helper nunca ejecuta DML sintético productivo ni downgrade.
+Verificación READ ONLY posterior: 6 tablas nuevas (`study_plans`,
+`study_plan_subjects`, `study_plan_activities`, `study_plan_sessions`,
+`study_plan_decisions`, `study_challenges`), vacías; 43 constraints (13 FKs
+compuestas con UPDATE/DELETE RESTRICT, 21 CHECK y PK/UNIQUE); 11 índices
+explícitos, 20 físicos contando backing PK/UNIQUE. FKs/ownership y catálogo
+coinciden exactamente con el contrato probado PG18. Grants runtime: planes
+SELECT/INSERT/UPDATE/DELETE; relaciones SELECT/INSERT/DELETE; decisiones
+SELECT/INSERT; retos SELECT/INSERT/UPDATE; tres secuencias USAGE/SELECT. PUBLIC
+revocado en tablas/secuencias nuevas; sin TRUNCATE, REFERENCES, TRIGGER, UPDATE de
+decisiones/secuencias, DELETE de retos, DDL persistente ni ownership runtime.
+[Smoke de catálogo](evidence/0007-postrelease-readonly-2026-11-03.json).
 
-Grants de runtime que el release concedería: `study_plans` SELECT/INSERT/UPDATE/
-DELETE; relaciones SELECT/INSERT/DELETE; decisiones SELECT/INSERT; Retos
-SELECT/INSERT/UPDATE; secuencias nuevas USAGE/SELECT. Ningún TRUNCATE, UPDATE/
-DELETE de evidencia de decisiones, DELETE de Retos, UPDATE de secuencias ni DDL.
-El código preparado no autoriza el corte: requiere coordinación Backend que admita
-0007 y autorización operativa productiva separada.
+Backend readiness no quedó aprobada: la versión desplegada
+`4735a697aed69f66f3055c902a00507b66a556e0` compara `/ready` contra exactamente
+`0006_study_sessions`, de modo que no es compatible con 0007 sin cambio y deploy
+Backend. Las solicitudes HTTP desde el entorno de release expiraron. Por el límite
+de alcance no se modificó Backend; hace falta un release separado para readiness
+end-to-end. La migración aditiva no cambia tablas/columnas previas que usa Backend.
+
+CI Database checks run `41746346612` pasó sobre el pin de código (395 tests, 328
+PostgreSQL, sin omitidos). El smoke posterior a release fue read-only en producción.
+No se ejecutó downgrade productivo.
 
 ## Release 0006 aplicado — 2026-11-02
 

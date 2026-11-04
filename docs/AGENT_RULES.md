@@ -1,19 +1,20 @@
 # Reglas para agentes
 
-## Estado vigente — 0007 integrada; producción 0006 — 2026-11-03
+## Estado vigente — 0007 aplicada en producción — 2026-11-03
 
-- `0007_study_plans_and_challenges` está en main con merge --no-ff
-  `2715a02759957f08697ee09a6155ba54afce135e`; migración y release tooling pasaron CI.
-- Producción permanece exactamente en `0006_study_sessions`. Esta preparación no
-  ejecutó ni autoriza DDL/grants productivos; el release requiere coordinación y
-  autorización operativa separada.
-- Modificar únicamente cognova-database. Backend/Frontend solo se consultan en
-  lectura cuando ayude a verificar integración. No cambiar revisiones 0001–0006.
-- Runtime 0006 tiene DML limitado en sesiones/intervalos, sin DDL persistente,
-  TRUNCATE, ownership o escritura de alembic_version. TEMP vía PUBLIC ya era
-  heredado y se conserva; no se otorgó como parte de 0006.
-- Antes de release, coordinar Backend compatible con 0007, backup/restauración
-  recientes y autorización explícita. No volver a operar 0006.
+- `main` integra `0007_study_plans_and_challenges` mediante merge --no-ff
+  `2715a02759957f08697ee09a6155ba54afce135e`. Código fijado para el release:
+  `e750754507545efa6bc2a80515a89db07768a665`.
+- Producción quedó verificada en `0007_study_plans_and_challenges`. Backup previo,
+  preflight TLS/read-only, aplicación y catálogo posterior tienen evidencia en
+  `docs/evidence/0007-*.json`.
+- Trabajar solo en cognova-database. Backend/Frontend se consultan solo en lectura.
+  No cambiar revisiones 0001–0006 ni otros repositorios.
+- El Backend productivo aún comprueba readiness contra `0006_study_sessions`;
+  no afirmar readiness posterior a 0007. La compatibilidad de Backend queda para
+  un cambio separado en su repositorio, fuera de este alcance.
+- Grants runtime de 0007 son mínimos; sin PUBLIC, TRUNCATE, DDL persistente,
+  ownership ni privilegios elevados. TEMP heredado vía PUBLIC preexistía.
 
 ## Histórico — desarrollo 2026-10-29
 

@@ -1,0 +1,227 @@
+{
+  "revision": "0007_study_plans_and_challenges",
+  "catalog_matches_tested_contract": true,
+  "new_tables": [
+    "study_plans",
+    "study_plan_subjects",
+    "study_plan_activities",
+    "study_plan_sessions",
+    "study_plan_decisions",
+    "study_challenges"
+  ],
+  "table_counts": {
+    "users": 39,
+    "auth_sessions": 49,
+    "rate_limit_buckets": 1,
+    "user_academic_goal_legacy": 1,
+    "questionnaire_responses": 46,
+    "subjects": 21,
+    "activities": 10,
+    "activity_deadline_events": 8,
+    "study_sessions": 20,
+    "study_session_intervals": 21,
+    "study_plans": 0,
+    "study_plan_subjects": 0,
+    "study_plan_activities": 0,
+    "study_plan_sessions": 0,
+    "study_plan_decisions": 0,
+    "study_challenges": 0,
+    "alembic_version": 1
+  },
+  "prior_counts_unchanged": true,
+  "count_differences": {},
+  "constraints": {
+    "new_table_total": 43,
+    "foreign_keys": 13,
+    "foreign_keys_restrict_update_delete": 13,
+    "checks": 21,
+    "session_owner_keys": [
+      {
+        "conname": "uq_study_sessions_user_subject_activity_id",
+        "definition": "UNIQUE (user_id, subject_id, activity_id, id)"
+      },
+      {
+        "conname": "uq_study_sessions_user_subject_id",
+        "definition": "UNIQUE (user_id, subject_id, id)"
+      }
+    ]
+  },
+  "indexes": {
+    "physical_total_including_pk_unique": 20,
+    "explicit_non_unique_indexes": 11,
+    "names": [
+      "ix_study_challenges_plan_subject_activity",
+      "ix_study_challenges_plan_subject_session",
+      "ix_study_challenges_user_plan_status_deadline",
+      "ix_study_challenges_user_status_deadline",
+      "ix_study_challenges_user_subject_activity_session",
+      "study_challenges_pkey",
+      "ix_study_plan_activities_user_subject_activity",
+      "pk_study_plan_activities",
+      "uq_study_plan_activities_owner_context",
+      "ix_study_plan_decisions_user_plan_created",
+      "study_plan_decisions_pkey",
+      "ix_study_plan_sessions_user_subject_session",
+      "pk_study_plan_sessions",
+      "uq_study_plan_sessions_owner_context",
+      "ix_study_plan_subjects_user_subject_plan",
+      "pk_study_plan_subjects",
+      "ix_study_plans_user_end",
+      "ix_study_plans_user_status_start",
+      "study_plans_pkey",
+      "uq_study_plans_user_id_id"
+    ]
+  },
+  "owners": {
+    "study_challenges": "cognova_user",
+    "study_challenges_id_seq": "cognova_user",
+    "study_plan_activities": "cognova_user",
+    "study_plan_decisions": "cognova_user",
+    "study_plan_decisions_id_seq": "cognova_user",
+    "study_plan_sessions": "cognova_user",
+    "study_plan_subjects": "cognova_user",
+    "study_plans": "cognova_user",
+    "study_plans_id_seq": "cognova_user"
+  },
+  "runtime": {
+    "role": {
+      "rolname": "cognova_runtime",
+      "rolsuper": false,
+      "rolcreaterole": false,
+      "rolcreatedb": false,
+      "rolcanlogin": true,
+      "rolreplication": false,
+      "rolbypassrls": false
+    },
+    "memberships": [],
+    "owned_objects": [],
+    "schema_create": [],
+    "temporary_ddl_existing": true,
+    "table_privileges": {
+      "alembic_version": {
+        "SELECT": true,
+        "INSERT": false,
+        "UPDATE": false,
+        "DELETE": false,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      },
+      "user_academic_goal_legacy": {
+        "SELECT": true,
+        "INSERT": false,
+        "UPDATE": false,
+        "DELETE": false,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      },
+      "questionnaire_responses": {
+        "SELECT": true,
+        "INSERT": true,
+        "UPDATE": false,
+        "DELETE": false,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      }
+    }
+  },
+  "runtime_table_privileges": {
+    "study_plans": {
+      "SELECT": true,
+      "INSERT": true,
+      "UPDATE": true,
+      "DELETE": true,
+      "TRUNCATE": false,
+      "REFERENCES": false,
+      "TRIGGER": false
+    },
+    "study_plan_subjects": {
+      "SELECT": true,
+      "INSERT": true,
+      "UPDATE": false,
+      "DELETE": true,
+      "TRUNCATE": false,
+      "REFERENCES": false,
+      "TRIGGER": false
+    },
+    "study_plan_activities": {
+      "SELECT": true,
+      "INSERT": true,
+      "UPDATE": false,
+      "DELETE": true,
+      "TRUNCATE": false,
+      "REFERENCES": false,
+      "TRIGGER": false
+    },
+    "study_plan_sessions": {
+      "SELECT": true,
+      "INSERT": true,
+      "UPDATE": false,
+      "DELETE": true,
+      "TRUNCATE": false,
+      "REFERENCES": false,
+      "TRIGGER": false
+    },
+    "study_plan_decisions": {
+      "SELECT": true,
+      "INSERT": true,
+      "UPDATE": false,
+      "DELETE": false,
+      "TRUNCATE": false,
+      "REFERENCES": false,
+      "TRIGGER": false
+    },
+    "study_challenges": {
+      "SELECT": true,
+      "INSERT": true,
+      "UPDATE": true,
+      "DELETE": false,
+      "TRUNCATE": false,
+      "REFERENCES": false,
+      "TRIGGER": false
+    }
+  },
+  "runtime_sequence_privileges": {
+    "study_plans_id_seq": {
+      "USAGE": true,
+      "SELECT": true,
+      "UPDATE": false
+    },
+    "study_plan_decisions_id_seq": {
+      "USAGE": true,
+      "SELECT": true,
+      "UPDATE": false
+    },
+    "study_challenges_id_seq": {
+      "USAGE": true,
+      "SELECT": true,
+      "UPDATE": false
+    }
+  },
+  "public_acl": {
+    "study_plans": [],
+    "study_plan_subjects": [],
+    "study_plan_activities": [],
+    "study_plan_sessions": [],
+    "study_plan_decisions": [],
+    "study_challenges": [],
+    "study_plans_id_seq": [],
+    "study_plan_decisions_id_seq": [],
+    "study_challenges_id_seq": []
+  },
+  "public_revoked": true,
+  "runtime_table_grants_minimal": true,
+  "sequences_exist": {
+    "study_plans_id_seq": true,
+    "study_plan_decisions_id_seq": true,
+    "study_challenges_id_seq": true
+  },
+  "calendar_read_only_source_counts": {
+    "activity": 10,
+    "study_session": 20
+  },
+  "read_only_transaction": true,
+  "observed_at_utc": "2026-11-04T01:51:20.731715+00:00"
+}

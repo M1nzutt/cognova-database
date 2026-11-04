@@ -1,9 +1,9 @@
 # Modelo de datos
 
-`main` contiene **0007_study_plans_and_challenges**. Producción continúa en
-**0006_study_sessions**, aplicada el 2026-11-02; ver [OPERATIONS](OPERATIONS.md).
-Revisiones 0001–0006 se conservan sin editar. La 0007 continúa pendiente de
-aplicación productiva hasta completar backup y preflight.
+`main` y producción están en **0007_study_plans_and_challenges**, aplicada el
+2026-11-03; ver [OPERATIONS](OPERATIONS.md) y la
+[evidencia del release](evidence/0007-release-2026-11-03.json). Revisiones
+0001–0006 se conservan sin editar.
 
 ## Sesiones de estudio — contrato 0006 confirmado 2026-10-29
 
@@ -89,19 +89,19 @@ Dependencias futuras provocan rollback atómico. Datos0001–0005 preservados.
 Upgrade mantiene search_path, conexión inyectada, transacción y advisory lock1943187001.
 
 
-## Modelo previo vigente en producción
+## Modelo previo preservado por el release 0007
 
-Cadena productiva: 0001 → 0002 → 0003_onboarding_questionnaire → 0004_subjects
-→ 0005_activities → **0006_study_sessions**, aplicada el 2026-11-02.
+La cadena productiva es 0001 → 0002 → 0003_onboarding_questionnaire → 0004_subjects
+→ 0005_activities → 0006_study_sessions → **0007_study_plans_and_challenges**.
+Los conteos de las tablas previas quedaron iguales al preflight.
 El modelo anterior se detalla en
 [MIGRATIONS](MIGRATIONS.md) y [SCHEMA_0003](SCHEMA_0003.md).
 
 ## Planes de estudio y retos — contrato implementado en 0007
 
-La revisión `0007_study_plans_and_challenges` está implementada y ensayada localmente;
-no afirma que se haya aplicado. El estado productivo continúa en
-`0006_study_sessions` hasta un release separado y autorizado. Planes y Retos persisten
-relaciones y decisiones: no copian materias, actividades ni sesiones y no ejecutan propuestas
+La revisión `0007_study_plans_and_challenges` está aplicada en producción y verificada
+contra el catálogo probado PostgreSQL 18. Planes y Retos persisten relaciones y
+decisiones: no copian materias, actividades ni sesiones y no ejecutan propuestas
 de IA por sí mismos. Backend conserva el flujo de aceptación, edición, rechazo,
 regeneración y transiciones.
 

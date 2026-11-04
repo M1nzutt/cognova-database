@@ -1,0 +1,83 @@
+{
+    "revision":  "0006_study_sessions",
+    "tls":  {
+                "ssl":  true,
+                "version":  "TLSv1.3",
+                "cipher":  "TLS_AES_256_GCM_SHA384"
+            },
+    "inventory":  [
+                      "activities",
+                      "activity_deadline_events",
+                      "alembic_version",
+                      "auth_sessions",
+                      "questionnaire_responses",
+                      "rate_limit_buckets",
+                      "study_session_intervals",
+                      "study_sessions",
+                      "subjects",
+                      "user_academic_goal_legacy",
+                      "users"
+                  ],
+    "counts":  {
+                   "activities":  10,
+                   "activity_deadline_events":  8,
+                   "alembic_version":  1,
+                   "auth_sessions":  49,
+                   "questionnaire_responses":  46,
+                   "rate_limit_buckets":  1,
+                   "study_session_intervals":  21,
+                   "study_sessions":  20,
+                   "subjects":  21,
+                   "user_academic_goal_legacy":  1,
+                   "users":  39
+               },
+    "transactions":  {
+                         "idle_in_transaction":  0,
+                         "lock_waiters":  0,
+                         "transactions_over_30s":  0,
+                         "prepared_transactions":  0
+                     },
+    "runtime_role":  "cognova_runtime",
+    "runtime_role_elevated":  false,
+    "runtime_memberships":  [
+
+                            ],
+    "runtime_owned_objects":  [
+
+                              ],
+    "runtime_schema_create":  [
+
+                              ],
+    "runtime_table_privileges":  {
+                                     "alembic_version":  {
+                                                             "SELECT":  true,
+                                                             "INSERT":  false,
+                                                             "UPDATE":  false,
+                                                             "DELETE":  false,
+                                                             "TRUNCATE":  false,
+                                                             "REFERENCES":  false,
+                                                             "TRIGGER":  false
+                                                         },
+                                     "user_academic_goal_legacy":  {
+                                                                       "SELECT":  true,
+                                                                       "INSERT":  false,
+                                                                       "UPDATE":  false,
+                                                                       "DELETE":  false,
+                                                                       "TRUNCATE":  false,
+                                                                       "REFERENCES":  false,
+                                                                       "TRIGGER":  false
+                                                                   },
+                                     "questionnaire_responses":  {
+                                                                     "SELECT":  true,
+                                                                     "INSERT":  true,
+                                                                     "UPDATE":  false,
+                                                                     "DELETE":  false,
+                                                                     "TRUNCATE":  false,
+                                                                     "REFERENCES":  false,
+                                                                     "TRIGGER":  false
+                                                                 }
+                                 },
+    "runtime_temporary_privilege_inherited":  true,
+    "read_only":  true,
+    "observed_at_utc":  "2026-11-04T01:40:33.572469+00:00"
+}

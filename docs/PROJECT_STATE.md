@@ -1,6 +1,48 @@
 # Estado de Cognova Database
 
-## Estado vigente — 0007 integrada; release productivo pendiente — 2026-11-03
+## Estado vigente — release productivo 0007 — 2026-11-03
+
+Producción está exactamente en `0007_study_plans_and_challenges`. Se aplicó de
+forma transaccional con el runner `scripts/release_0007.py`, usando como pin de
+código `e750754507545efa6bc2a80515a89db07768a665` y el backup previo satisfactorio
+run `41754539310` (artifact `13286184409`). La revisión previa y posterior al
+backup fue `0006_study_sessions`; PostgreSQL 18.6, formato custom, restore list,
+decodificación completa, restore rehearsal, roundtrip AES256 y SHA-256 pasaron.
+El artifact descargado se verificó contra su digest; ver [backup](evidence/0007-backup-2026-11-03.json).
+
+Preflight READ ONLY: revisión exacta 0006, TLSv1.3, once tablas previas y cero
+transacciones peligrosas. Las filas preexistentes se preservaron exactamente:
+users=39, auth_sessions=49, rate_limit_buckets=1, user_academic_goal_legacy=1,
+questionnaire_responses=46, subjects=21, activities=10,
+activity_deadline_events=8, study_sessions=20, study_session_intervals=21.
+Después del release hay seis tablas 0007 vacías. Catálogo PG18 idéntico al contrato:
+43 constraints, 13 FKs compuestas RESTRICT, 21 CHECK, 11 índices explícitos
+(20 físicos incluyendo PK/UNIQUE), y tres secuencias. Runtime tiene solo los grants
+de tabla/secuencia previstos; PUBLIC está revocado en todas las tablas/secuencias
+nuevas, sin DDL, ownership ni TRUNCATE. [Preflight](evidence/0007-preflight-2026-11-03.json),
+[verificación post-release](evidence/0007-postrelease-readonly-2026-11-03.json) y
+[release](evidence/0007-release-2026-11-03.json).
+
+La comprobación READ ONLY posterior confirmó conteos previos sin diferencias y
+consultas fuente de Calendario con activities=10 y study_sessions=20. El Backend
+productivo desplegado en SHA `4735a697aed69f66f3055c902a00507b66a556e0` todavía
+exige exactamente `0006_study_sessions` para `/ready`; por ello su readiness tras
+0007 no está aprobada. Los intentos HTTP desde este entorno agotaron el tiempo.
+No se cambió Backend por el límite de alcance; hace falta compatibilidad y deploy
+separados para cerrar readiness end-to-end.
+
+CI previo sobre el pin de código: Database checks run `41746346612` success,
+395 pruebas (328 PostgreSQL), Ruff, pip check, upgrade/head y Gitleaks. En este
+entorno Windows no se pudo repetir PostgreSQL local después del release: la sandbox
+denegó el arranque de procesos restringidos de PostgreSQL y el Python del `.venv`
+apunta a una instalación base inaccesible. La validación post-release productiva
+fue de solo lectura; el cierre documental volverá a disparar CI.
+
+Inicio de esta continuación: 91 commits en main y 111 en todas las refs; el commit
+documental de cierre lleva main a 92 (409 hasta la referencia histórica 501) y
+112 en todas las refs, sin squash ni commits vacíos.
+
+## Histórico — preparación de 0007 previa al release — 2026-11-03
 
 Rama `main`; integración `--no-ff` `2715a02759957f08697ee09a6155ba54afce135e`.
 Base inicial: `eff87b387345a1d3f286e3a6007d41e707ec9d13`, 64 commits en main y 84

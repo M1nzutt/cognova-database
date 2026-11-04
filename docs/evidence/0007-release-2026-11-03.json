@@ -1,0 +1,185 @@
+{
+  "revision": "0007_study_plans_and_challenges",
+  "catalog_matches_tested_contract": true,
+  "runtime": {
+    "role": {
+      "rolname": "cognova_runtime",
+      "rolsuper": false,
+      "rolcreaterole": false,
+      "rolcreatedb": false,
+      "rolcanlogin": true,
+      "rolreplication": false,
+      "rolbypassrls": false
+    },
+    "memberships": [],
+    "owned_objects": [],
+    "schema_create": [],
+    "temporary_ddl_existing": true,
+    "table_privileges": {
+      "alembic_version": {
+        "SELECT": true,
+        "INSERT": false,
+        "UPDATE": false,
+        "DELETE": false,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      },
+      "user_academic_goal_legacy": {
+        "SELECT": true,
+        "INSERT": false,
+        "UPDATE": false,
+        "DELETE": false,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      },
+      "questionnaire_responses": {
+        "SELECT": true,
+        "INSERT": true,
+        "UPDATE": false,
+        "DELETE": false,
+        "TRUNCATE": false,
+        "REFERENCES": false,
+        "TRIGGER": false
+      }
+    }
+  },
+  "table_privileges": {
+    "study_plans": {
+      "SELECT": true,
+      "INSERT": true,
+      "UPDATE": true,
+      "DELETE": true,
+      "TRUNCATE": false,
+      "REFERENCES": false,
+      "TRIGGER": false
+    },
+    "study_plan_subjects": {
+      "SELECT": true,
+      "INSERT": true,
+      "UPDATE": false,
+      "DELETE": true,
+      "TRUNCATE": false,
+      "REFERENCES": false,
+      "TRIGGER": false
+    },
+    "study_plan_activities": {
+      "SELECT": true,
+      "INSERT": true,
+      "UPDATE": false,
+      "DELETE": true,
+      "TRUNCATE": false,
+      "REFERENCES": false,
+      "TRIGGER": false
+    },
+    "study_plan_sessions": {
+      "SELECT": true,
+      "INSERT": true,
+      "UPDATE": false,
+      "DELETE": true,
+      "TRUNCATE": false,
+      "REFERENCES": false,
+      "TRIGGER": false
+    },
+    "study_plan_decisions": {
+      "SELECT": true,
+      "INSERT": true,
+      "UPDATE": false,
+      "DELETE": false,
+      "TRUNCATE": false,
+      "REFERENCES": false,
+      "TRIGGER": false
+    },
+    "study_challenges": {
+      "SELECT": true,
+      "INSERT": true,
+      "UPDATE": true,
+      "DELETE": false,
+      "TRUNCATE": false,
+      "REFERENCES": false,
+      "TRIGGER": false
+    }
+  },
+  "sequence_privileges": {
+    "study_plans_id_seq": {
+      "USAGE": true,
+      "SELECT": true,
+      "UPDATE": false
+    },
+    "study_plan_decisions_id_seq": {
+      "USAGE": true,
+      "SELECT": true,
+      "UPDATE": false
+    },
+    "study_challenges_id_seq": {
+      "USAGE": true,
+      "SELECT": true,
+      "UPDATE": false
+    }
+  },
+  "public_acl": {
+    "study_plans": [],
+    "study_plan_subjects": [],
+    "study_plan_activities": [],
+    "study_plan_sessions": [],
+    "study_plan_decisions": [],
+    "study_challenges": [],
+    "study_plans_id_seq": [],
+    "study_plan_decisions_id_seq": [],
+    "study_challenges_id_seq": []
+  },
+  "revision_before": "0006_study_sessions",
+  "rows_preserved": {
+    "users": true,
+    "auth_sessions": true,
+    "rate_limit_buckets": true,
+    "user_academic_goal_legacy": true,
+    "questionnaire_responses": true,
+    "subjects": true,
+    "activities": true,
+    "activity_deadline_events": true,
+    "study_sessions": true,
+    "study_session_intervals": true
+  },
+  "counts_before": {
+    "users": 39,
+    "auth_sessions": 49,
+    "rate_limit_buckets": 1,
+    "user_academic_goal_legacy": 1,
+    "questionnaire_responses": 46,
+    "subjects": 21,
+    "activities": 10,
+    "activity_deadline_events": 8,
+    "study_sessions": 20,
+    "study_session_intervals": 21
+  },
+  "previous_schema_preserved_except_session_composite_keys": true,
+  "previous_triggers_permissions_sequences_memberships_preserved": true,
+  "preservation_scope": "all rows/columns under exclusive locks",
+  "production_behavior_checks": "catalog matches local contract; no synthetic production writes",
+  "committed": true,
+  "backup_run": "41754539310",
+  "observed_at_utc": "2026-11-04T01:43:44.936930+00:00",
+  "code_pin": "e750754507545efa6bc2a80515a89db07768a665",
+  "counts_after_commit": {
+    "users": 39,
+    "auth_sessions": 49,
+    "rate_limit_buckets": 1,
+    "user_academic_goal_legacy": 1,
+    "questionnaire_responses": 46,
+    "subjects": 21,
+    "activities": 10,
+    "activity_deadline_events": 8,
+    "study_sessions": 20,
+    "study_session_intervals": 21,
+    "study_plans": 0,
+    "study_plan_subjects": 0,
+    "study_plan_activities": 0,
+    "study_plan_sessions": 0,
+    "study_plan_decisions": 0,
+    "study_challenges": 0
+  },
+  "post_commit_checks": "passed",
+  "post_commit_at_utc": "2026-11-04T01:43:59.459154+00:00"
+}
