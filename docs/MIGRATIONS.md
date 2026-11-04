@@ -16,8 +16,9 @@ en [DATA_MODEL](DATA_MODEL.md). La definición física PG18 que verifica el help
 [0007-schema-contract.json](evidence/0007-schema-contract.json), generada de un
 upgrade dentro de transacción local desechable. CLI acepta el destino explícito
 0007 y `head`. No se aplicó DDL ni grants productivos; antes de release se requiere
-pin probado, respaldo/restauración verificados, Backend compatible, aprobación
-operativa separada y ejecución del helper bajo rol migrador.
+pin probado, respaldo/restauración verificados, Backend compatible y ejecución del helper bajo rol migrador.
+El usuario autorizó el release en la solicitud del 2026-11-03, pero la ejecución sigue
+detenida hasta completar el backup pre-0007 y el preflight READ ONLY.
 
 El downgrade a 0006 bloquea usuarios y recursos existentes junto con las seis
 tablas nuevas. Si hay cualquier fila 0007, falla antes de borrar; no utiliza

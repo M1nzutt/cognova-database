@@ -2,7 +2,8 @@
 
 `main` contiene **0007_study_plans_and_challenges**. Producción continúa en
 **0006_study_sessions**, aplicada el 2026-11-02; ver [OPERATIONS](OPERATIONS.md).
-Revisiones 0001–0006 se conservan sin editar.
+Revisiones 0001–0006 se conservan sin editar. La 0007 continúa pendiente de
+aplicación productiva hasta completar backup y preflight.
 
 ## Sesiones de estudio — contrato 0006 confirmado 2026-10-29
 

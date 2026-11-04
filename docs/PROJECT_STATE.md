@@ -4,8 +4,8 @@
 
 Rama `main`; integración `--no-ff` `2715a02759957f08697ee09a6155ba54afce135e`.
 Base inicial: `eff87b387345a1d3f286e3a6007d41e707ec9d13`, 64 commits en main y 84
-en todas las refs. Cierre: 89 commits en main (412 hasta la referencia histórica
-501) y 109 en todas las refs. GitHub CI (PostgreSQL 17 y Gitleaks) pasó sobre el
+en todas las refs. Cierre: 91 commits en main (410 hasta la referencia histórica
+501) y 111 en todas las refs. GitHub CI (PostgreSQL 17 y Gitleaks) pasó sobre el
 árbol de migración de `5c56b4e69cda248fa05d404a81733eab61764895`, run `41740585849`;
 los commits posteriores solo registran estado/documentación.
 
@@ -23,12 +23,19 @@ upgrade offline hasta 0007, pruebas de release/rollback/grants y `git diff --che
 El workflow de backup comprueba revisión 0006, las 11 tablas, restauración aislada,
 cifrado, hash y expiración.
 
+Corrección 2026-11-03: el run de limpieza del workflow se alineó con shell en
+commit 2a7cb932f1bcea61f01e4bb9e55d5a4fb8540352. GitHub Database checks run
+41745180653 terminó success. El workflow de backup solo admite workflow_dispatch;
+no se inició la ejecución manual, por lo que no existe backup/artifact para 0007.
+El estado productivo sigue pendiente y no se hizo conexión ni cambio de esquema.
 Producción permanece en `0006_study_sessions`, SHA de código usado en el release del
 2026-11-02: `20c6fdc21e2a48cd8f5fb37f46545460e9b9a161`. No se conectó a producción ni
 se ejecutó DDL/grants allí. El release requiere coordinación Backend para admitir
-0007, respaldo reciente descargado/verificable y autorización operativa separada.
-Las revisiones 0001–0006 permanecen intactas. Se crearon 20 commits atómicos en la
-rama, un merge y cuatro commits documentales; sin squash ni commits vacíos.
+0007, respaldo reciente descargado/verificable, preflight READ ONLY y ejecución
+controlada del helper.
+Las revisiones 0001–0006 permanecen intactas. Desde la base inicial se crearon
+20 commits de implementación, un merge, cuatro commits documentales previos, el
+fix de workflow y este cierre documental; sin squash ni commits vacíos.
 
 ## Estado vigente: release Sesiones 0006 cerrado — 2026-11-02
 

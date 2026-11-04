@@ -7,6 +7,14 @@ La migración, comparador de catálogo y grants mínimos están en main mediante
 `0006_study_sessions`; no se conectó a producción ni se ejecutó DDL o grants allí.
 El código prepara la operación; la aplicación productiva queda pendiente.
 
+El fix del último run de limpieza se publicó en 2a7cb932f1bcea61f01e4bb9e55d5a4fb8540352
+y Database checks run 41745180653 pasó. La workflow de backup solo usa
+workflow_dispatch; no se pudo iniciar desde esta ejecución porque no hay una
+interfaz funcional de GitHub Actions dispatch disponible. No se produjo backup,
+artifact ni rehearsal, así que el release se detuvo antes del preflight productivo.
+Producción sigue en la última revisión documentada 0006_study_sessions; no ejecutar
+el helper de apply sin completar y verificar el backup.
+
 El workflow manual `backup-pre-0003.yml`, con `plans_challenges_release=true`, exige
 exactamente 0006 antes y después, valida las once tablas existentes, cifra AES256,
 verifica roundtrip/listado/decodificación y restaura el backup en PostgreSQL 18
