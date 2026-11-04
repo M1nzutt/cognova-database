@@ -31,18 +31,20 @@ exige exactamente `0006_study_sessions` para `/ready`; por ello su readiness tra
 No se cambió Backend por el límite de alcance; hace falta compatibilidad y deploy
 separados para cerrar readiness end-to-end.
 
-El cierre documental se publicó en `27c9d9780b90123cfa89dbad2c1b942da9a22c60`;
-Database checks run `41758579716` terminó success sobre ese SHA: 395 pruebas,
+El cierre documental se publicó en `d2e99723078eb67163bd2ad2ebb147a2a7a790bb`;
+Database checks run `41758908150` terminó success sobre ese SHA: 395 pruebas,
 incluidas 328 PostgreSQL, Ruff check/formato, pip check, checker JUnit, heads,
-upgrade offline y Gitleaks. En este entorno Windows no se pudo repetir PostgreSQL
-local después del release: la sandbox denegó el arranque de procesos restringidos
-de PostgreSQL y el Python del `.venv` apunta a una instalación base inaccesible.
-La validación post-release productiva fue de solo lectura.
+upgrade offline y Gitleaks. El workflow corre PostgreSQL 17; el backup/restore
+rehearsal y el contrato de catálogo se verificaron con PostgreSQL 18.6. En este
+entorno Windows no se pudo repetir PostgreSQL local después del release: la
+sandbox denegó el arranque de procesos restringidos de PostgreSQL y el Python del
+`.venv` apunta a una instalación base inaccesible. La validación post-release
+productiva fue de solo lectura.
 
 Inicio de esta continuación: 91 commits en main y 111 en todas las refs. El cierre
-se registró en dos commits documentales atómicos (estado/evidencias y resultado CI):
-93 en main (408 hasta la referencia histórica 501) y 113 en todas las refs, sin
-squash ni commits vacíos.
+se registró en tres commits documentales atómicos (estado/evidencias, CI y
+aclaración de versiones PostgreSQL): 94 en main (407 hasta la referencia histórica
+501) y 114 en todas las refs, sin squash ni commits vacíos.
 
 ## Histórico — preparación de 0007 previa al release — 2026-11-03
 
@@ -61,11 +63,11 @@ owners, estados, fechas y joins. La migración revoca PUBLIC; el runner de relea
 concede únicamente los grants runtime acordados y verifica el catálogo contra la
 referencia PostgreSQL 18 local.
 
-Suite completa aprobada en PostgreSQL 18 desechable: **395 tests, 328 PostgreSQL,
+Suite completa aprobada en CI contra PostgreSQL 17: **395 tests, 328 PostgreSQL,
 0 omitidos**. También pasaron Ruff, formato, `pip check`, checker de JUnit, heads,
 upgrade offline hasta 0007, pruebas de release/rollback/grants y `git diff --check`.
-El workflow de backup comprueba revisión 0006, las 11 tablas, restauración aislada,
-cifrado, hash y expiración.
+El backup/restore rehearsal se ejecutó con PostgreSQL 18.6 y comprueba revisión
+0006, las 11 tablas, restauración aislada, cifrado, hash y expiración.
 
 Corrección 2026-11-03: el run de limpieza del workflow se alineó con shell en
 commit 2a7cb932f1bcea61f01e4bb9e55d5a4fb8540352. GitHub Database checks run
