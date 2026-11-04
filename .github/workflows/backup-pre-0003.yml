@@ -324,4 +324,4 @@ jobs:
       - name: Remove runner-local backup files
         if: always()
         shell: bash
-          run: rm -rf -- "$RUNNER_TEMP/cognova-pre-0003" "$RUNNER_TEMP/cognova-pre-0004" "$RUNNER_TEMP/cognova-pre-0005" "$RUNNER_TEMP/cognova-pre-0006" "$RUNNER_TEMP/cognova-pre-0007"
+        run: rm -rf -- "$RUNNER_TEMP/cognova-pre-0003" "$RUNNER_TEMP/cognova-pre-0004" "$RUNNER_TEMP/cognova-pre-0005" "$RUNNER_TEMP/cognova-pre-0006" "$RUNNER_TEMP/cognova-pre-0007"
