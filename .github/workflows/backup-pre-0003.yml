@@ -1,9 +1,13 @@
-name: Production backup pre-0003
-run-name: Backup pre-0003 · ${{ github.run_id }}
+name: Production pre-release backup
+run-name: Backup pre-release · ${{ github.run_id }}
 
 on:
   workflow_dispatch:
     inputs:
+      ai_plan_snapshot_release:
+        description: Back up exactly 0007 before authorized 0008 release, including Plans/Challenges and isolated restore
+        type: boolean
+        default: false
       study_sessions_release:
         description: Back up exactly 0005 before authorized 0006 release, including activities and isolated restore
         type: boolean
@@ -69,6 +73,7 @@ jobs:
           ACTIVITIES_RELEASE: ${{ inputs.activities_release }}
           STUDY_SESSIONS_RELEASE: ${{ inputs.study_sessions_release }}
           PLANS_CHALLENGES_RELEASE: ${{ inputs.plans_challenges_release }}
+          AI_PLAN_SNAPSHOT_RELEASE: ${{ inputs.ai_plan_snapshot_release }}
         shell: bash
         run: |
           set -euo pipefail
@@ -135,7 +140,8 @@ jobs:
               activities = os.environ.get('ACTIVITIES_RELEASE') == 'true'
               studies = os.environ.get('STUDY_SESSIONS_RELEASE') == 'true'
               plans = os.environ.get('PLANS_CHALLENGES_RELEASE') == 'true'
-              if sum((subjects, activities, studies, plans)) > 1:
+              snapshot = os.environ.get('AI_PLAN_SNAPSHOT_RELEASE') == 'true'
+              if sum((subjects, activities, studies, plans, snapshot)) > 1:
                   raise BackupValidationError('Select only one release')
               expected = '0004_subjects' if activities else ('0003_onboarding_questionnaire' if subjects else '0002_auth_sessions')
               label = '0005' if activities else ('0004' if subjects else '0003')
@@ -143,6 +149,8 @@ jobs:
                   expected, label = '0005_activities', '0006'
               if plans:
                   expected, label = '0006_study_sessions', '0007'
+              if snapshot:
+                  expected, label = '0007_study_plans_and_challenges', '0008'
               key = os.environ.get('BACKUP_ENCRYPTION_KEY', '')
               if len(key.encode('utf-8')) < 32 or any(c in key for c in '\r\n\0'):
                   raise BackupValidationError('Encryption key must be at least 32 bytes and single-line')
@@ -203,20 +211,24 @@ jobs:
                   raise BackupValidationError('Empty backup')
               toc = run('pg_restore_list', [str(binaries / 'pg_restore'), '--list', str(dump)], env)
               tables = ('users', 'auth_sessions', 'rate_limit_buckets', 'alembic_version')
-              if subjects or activities or studies or plans:
+              if subjects or activities or studies or plans or snapshot:
                   tables += ('user_academic_goal_legacy', 'questionnaire_responses')
-              if activities or studies or plans:
+              if activities or studies or plans or snapshot:
                   tables += ('subjects',)
-              if studies or plans:
+              if studies or plans or snapshot:
                   tables += ('activities', 'activity_deadline_events')
-              if plans:
+              if plans or snapshot:
                   tables += ('study_sessions', 'study_session_intervals')
+              if snapshot:
+                  tables += ('study_plans', 'study_plan_subjects',
+                             'study_plan_activities', 'study_plan_sessions',
+                             'study_plan_decisions', 'study_challenges')
               for table in tables:
                   if f'TABLE DATA public {table} '.encode() not in toc:
                       raise BackupValidationError('Required table data missing from backup')
               # Decode the complete archive, without connecting or executing SQL.
               run('pg_restore_decode', [str(binaries / 'pg_restore'), '--file=/dev/null', str(dump)], env)
-              if subjects or activities or studies or plans:
+              if subjects or activities or studies or plans or snapshot:
                   # Disposable container: no production credentials or network destination.
                   isolated = {k: v for k, v in env.items() if not k.startswith('PG')}
                   run('restore_server', ['docker', 'run', '--detach', '--rm', '--name',
@@ -289,15 +301,15 @@ jobs:
                   pg_dump_version=dump_version, pg_restore_version=restore_version,
                   revision_before=revision, revision_after=revision,
                   pg_restore_list='passed', full_archive_decode='passed',
-                  restore_rehearsal='passed' if subjects or activities or studies or plans else 'not_performed',
-                  restored_counts=counts if subjects or activities or studies or plans else None,
+                  restore_rehearsal='passed' if subjects or activities or studies or plans or snapshot else 'not_performed',
+                  restored_counts=counts if subjects or activities or studies or plans or snapshot else None,
                   run_id=os.environ['GITHUB_RUN_ID'], attempt=os.environ['GITHUB_RUN_ATTEMPT'],
                   source_commit=os.environ['GITHUB_SHA'],
               )
               with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
                   output.write(f'encrypted_file={encrypted}\n')
               with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
-                  summary.write('### Verified pre-0003 backup\n```json\n' + json.dumps(manifest, indent=2) + '\n```\n')
+                  summary.write('### Verified pre-' + label + ' backup\n```json\n' + json.dumps(manifest, indent=2) + '\n```\n')
               print(json.dumps(manifest))
 
           try:
