@@ -1,5 +1,20 @@
 # Migraciones, configuración y validación
 
+## 0008 — propuesta IA vigente (preparada; no aplicada en producción)
+
+`0008_ai_plan_proposal_snapshot` parte exactamente de
+`0007_study_plans_and_challenges`. Agrega una columna nullable JSONB a
+`study_plans` y el CHECK `ck_study_plans_ai_proposal_snapshot`: SQL NULL o un
+objeto JSON cuyo `octet_length(ai_proposal_snapshot::text)` no supere **32768**.
+El límite es en bytes de la representación PostgreSQL, no en caracteres.
+`study_plan_decisions.proposed_value` permite 65536 bytes: queda margen de 32768
+para envolver la propuesta anterior y metadatos de la decisión. Backend deberá
+comprobar también el tamaño final de esa envoltura. No hay backfill, tablas,
+índices, triggers ni grants nuevos. Downgrade elimina solo CHECK y columna; pierde
+los snapshots 0008, pero conserva filas y relaciones 0001–0007. Re-upgrade deja
+NULL para planes existentes. No ejecutar downgrade productivo sin preservar antes
+los snapshots. Producción permanece en 0007 hasta backup y release autorizados.
+
 ## 0007 — Planes de estudio y Retos (aplicada en producción)
 
 `0007_study_plans_and_challenges` sigue a `0006_study_sessions`. Crea

@@ -1,5 +1,23 @@
 # Modelo de datos
 
+## Extensión 0008 preparada — propuesta IA visible
+
+`study_plans.ai_proposal_snapshot JSONB NULL` guarda solo la propuesta IA vigente
+u original asociada al estado actual del Plan. Para planes manuales y planes
+existentes tras upgrade, vale NULL. El objeto estructurado puede contener
+`schema_version`, `model`, `generated_at`, `explanation`, `reasoning_summary`,
+la propuesta original (`name`, `objective`, `start_date`, `end_date`, IDs de
+Materias/Actividades/Sesiones) y los Retos propuestos (título, objetivo,
+explicación, evidencia, tipo/ID de objetivo, condición medible y fechas).
+
+El CHECK físico exige objeto JSON y máximo **32768 bytes** de `jsonb::text`.
+No valida la semántica interna ni aplica propuestas: eso pertenece a Backend.
+No contiene chain-of-thought, prompts completos, respuesta cruda del proveedor,
+credenciales, tokens o contexto académico duplicado. Las versiones anteriores
+quedan bajo responsabilidad de Backend en `study_plan_decisions.proposed_value`
+durante regenerate. La migración no modifica decisiones, Retos ni relaciones.
+Producción sigue en 0007 hasta el release separado de 0008.
+
 `main` y producción están en **0007_study_plans_and_challenges**, aplicada el
 2026-11-03; ver [OPERATIONS](OPERATIONS.md) y la
 [evidencia del release](evidence/0007-release-2026-11-03.json). Revisiones

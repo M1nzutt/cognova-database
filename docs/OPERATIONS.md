@@ -1,5 +1,16 @@
 # Operación vigente, permisos y recuperación
 
+## Preparación 0008 — sin operación productiva
+
+`0008_ai_plan_proposal_snapshot` es aditiva: parte de 0007, añade una columna
+JSONB nullable con CHECK de objeto y 32768 bytes, sin backfill ni grants. Antes
+de aplicar en producción: coordinar compatibilidad Backend, backup fresco
+pre-0008 con restauración aislada, preflight READ ONLY/TLS y revisión exacta 0007.
+Verificar después columna, constraint validada, NULL en planes preexistentes,
+inventario y conteos 0001–0007, ACL de `study_plans` (DML runtime previo, PUBLIC
+revocado, sin TRUNCATE/DDL/ownership). No ejecutar downgrade productivo automático:
+eliminaría snapshots guardados. Producción permanece en 0007 en esta fase.
+
 ## Release 0007 Planes y Retos aplicado — 2026-11-03
 
 La revisión productiva es exactamente `0007_study_plans_and_challenges`. El runner

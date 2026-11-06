@@ -1,5 +1,19 @@
 # Estado de Cognova Database
 
+## Desarrollo 0008 — snapshot de propuesta IA — 2026-11-05
+
+La rama `feat/ai-plan-proposal-snapshot-0008` prepara
+`0008_ai_plan_proposal_snapshot`, hija exacta de 0007. Añade únicamente
+`study_plans.ai_proposal_snapshot JSONB NULL` y un CHECK que admite objetos JSON
+de hasta **32768 bytes** en su representación `jsonb::text`. Los planes existentes
+y manuales permanecen en NULL; no hay backfill ni cambios productivos en esta fase.
+El límite deja 32768 bytes de margen frente a los 65536 bytes permitidos
+por `study_plan_decisions.proposed_value` para archivar propuestas anteriores
+y metadatos durante regenerate. El snapshot conserva explicación visible
+y propuesta estructurada, nunca razonamiento interno, prompts, respuesta cruda
+del proveedor ni secretos. Backend controla validación semántica y decisiones.
+Producción sigue en 0007; 0008 requiere backup, preflight y release separados.
+
 ## Estado vigente — release productivo 0007 — 2026-11-03
 
 Producción está exactamente en `0007_study_plans_and_challenges`. Se aplicó de

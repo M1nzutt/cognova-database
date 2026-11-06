@@ -1,5 +1,18 @@
 # Database handoff — Planes y Retos 0007
 
+## Handoff 0008 pendiente de release
+
+La rama 0008 prepara `study_plans.ai_proposal_snapshot JSONB NULL`, objeto JSON
+de máximo 32768 bytes de `jsonb::text`. Backend podrá conservar y devolver tras
+refresh la explicación visible y propuesta estructurada vigentes. Los planes
+manuales/existentes usan NULL. En regenerate, Backend debe copiar la versión
+anterior a `study_plan_decisions.proposed_value` (límite 65536 bytes) y verificar
+el tamaño del valor final con sus metadatos antes de escribir. No se guardan
+razonamiento interno, prompts, respuesta cruda ni secretos. La migración no otorga
+permisos: `cognova_runtime` conserva el DML previo sobre `study_plans`; PUBLIC
+sigue revocado y no se conceden DDL, TRUNCATE ni ownership. Producción sigue en
+0007 y requiere backup/release 0008 separados antes de desplegar Gemini.
+
 ## Estado productivo
 
 Producción está exactamente en `0007_study_plans_and_challenges`. Se aplicó con el
