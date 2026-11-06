@@ -2,6 +2,11 @@
 
 ## Desarrollo 0008 — snapshot de propuesta IA — 2026-11-05
 
+El backup pre-0008 se prepara en el workflow existente con el modo exclusivo
+`ai_plan_snapshot_release`; exige revisión productiva exacta 0007 y cubre las seis
+tablas 0007 más el historial previo en el restore rehearsal. No se ha disparado
+el backup manual ni se ha aplicado 0008 en producción.
+
 La rama `feat/ai-plan-proposal-snapshot-0008` prepara
 `0008_ai_plan_proposal_snapshot`, hija exacta de 0007. Añade únicamente
 `study_plans.ai_proposal_snapshot JSONB NULL` y un CHECK que admite objetos JSON

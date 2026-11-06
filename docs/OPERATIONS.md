@@ -2,6 +2,15 @@
 
 ## Preparación 0008 — sin operación productiva
 
+El workflow existente `.github/workflows/backup-pre-0003.yml` admite ahora el input
+booleano `ai_plan_snapshot_release=true` para backup **pre-0008**. Exige exactamente
+`0007_study_plans_and_challenges` antes y después, y no admite combinarlo con otro
+modo de release. Comprueba en el TOC del dump las seis tablas de Planes/Retos 0007
+además de las previas, restaura en PostgreSQL 18 aislado y registra counts
+sanitizados de todas las tablas 0001–0007. Mantiene TLS, custom dump, decode,
+AES256, roundtrip, SHA-256 y artifact solo cifrado. La ejecución manual queda a
+cargo del operador; preparar workflow no ejecuta backup ni aplica DDL.
+
 `0008_ai_plan_proposal_snapshot` es aditiva: parte de 0007, añade una columna
 JSONB nullable con CHECK de objeto y 32768 bytes, sin backfill ni grants. Antes
 de aplicar en producción: coordinar compatibilidad Backend, backup fresco
