@@ -33,8 +33,9 @@ def test_original_blobs_and_single_linear_head():
         blob = b"blob " + str(len(data)).encode() + b"\0" + data
         assert hashlib.sha1(blob).hexdigest() == expected
     script = ScriptDirectory.from_config(migration_config())
-    assert script.get_heads() == ["0007_study_plans_and_challenges"]
+    assert script.get_heads() == ["0008_ai_plan_proposal_snapshot"]
     assert [(r.revision, r.down_revision) for r in script.walk_revisions()] == [
+        ("0008_ai_plan_proposal_snapshot", "0007_study_plans_and_challenges"),
         ("0007_study_plans_and_challenges", "0006_study_sessions"),
         ("0006_study_sessions", "0005_activities"),
         ("0005_activities", "0004_subjects"),
@@ -89,6 +90,9 @@ def test_complete_postgresql_ddl_without_environment(monkeypatch):
         "REVOKE ALL ON TABLE study_plans, study_plan_subjects",
         "REVOKE ALL ON SEQUENCE study_plans_id_seq",
         "UPDATE alembic_version SET version_num='0007_study_plans_and_challenges'",
+        "ALTER TABLE study_plans ADD COLUMN ai_proposal_snapshot JSONB",
+        "ck_study_plans_ai_proposal_snapshot",
+        "UPDATE alembic_version SET version_num='0008_ai_plan_proposal_snapshot'",
     ):
         assert expected in sql
 
@@ -186,3 +190,24 @@ def test_plan_revision_is_additive_and_downgrade_is_guarded():
     assert downgrade.index("Downgrade blocked") < downgrade.index("DROP TABLE")
     assert "IN ACCESS EXCLUSIVE MODE" in downgrade
     assert "CASCADE" not in downgrade
+
+
+def test_ai_snapshot_revision_is_additive_and_offline_reversible():
+    sql = sql_for("0007_study_plans_and_challenges:0008_ai_plan_proposal_snapshot")
+    assert "ALTER TABLE study_plans ADD COLUMN ai_proposal_snapshot JSONB" in sql
+    assert "jsonb_typeof(ai_proposal_snapshot) = 'object'" in sql
+    assert "octet_length(ai_proposal_snapshot::text) <= 32768" in sql
+    assert "DROP TABLE" not in sql
+    assert "GRANT" not in sql
+
+    config = migration_config()
+    config.output_buffer = StringIO()
+    command.downgrade(
+        config,
+        "0008_ai_plan_proposal_snapshot:0007_study_plans_and_challenges",
+        sql=True,
+    )
+    downgrade = config.output_buffer.getvalue()
+    assert "DROP CONSTRAINT ck_study_plans_ai_proposal_snapshot" in downgrade
+    assert "DROP COLUMN ai_proposal_snapshot" in downgrade
+    assert "DROP TABLE" not in downgrade
