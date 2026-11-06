@@ -37,6 +37,7 @@ def backup_code(monkeypatch, tmp_path):
         "ACTIVITIES_RELEASE": "false",
         "STUDY_SESSIONS_RELEASE": "false",
         "PLANS_CHALLENGES_RELEASE": "false",
+        "AI_PLAN_SNAPSHOT_RELEASE": "false",
     }.items():
         monkeypatch.setenv(name, value)
     # Synthetic credential; never use the local .env in workflow tests.
@@ -49,7 +50,7 @@ def backup_code(monkeypatch, tmp_path):
     return namespace
 
 
-def fake_commands(monkeypatch, namespace, failure=None):
+def fake_commands(monkeypatch, namespace, failure=None, missing_table=None):
     calls = []
 
     def execute(args, **kwargs):
@@ -90,6 +91,12 @@ def fake_commands(monkeypatch, namespace, failure=None):
                 output = b"t" if "pg_stat_ssl" in args[-1] else b"0005_activities"
             elif namespace["os"].environ.get("PLANS_CHALLENGES_RELEASE") == "true":
                 output = b"t" if "pg_stat_ssl" in args[-1] else b"0006_study_sessions"
+            elif namespace["os"].environ.get("AI_PLAN_SNAPSHOT_RELEASE") == "true":
+                output = (
+                    b"t"
+                    if "pg_stat_ssl" in args[-1]
+                    else b"0007_study_plans_and_challenges"
+                )
             if failure == "revision" and "alembic_version" in args[-1]:
                 output = b"0003_onboarding_questionnaire"
         elif binary == "pg_dump":
@@ -119,7 +126,14 @@ def fake_commands(monkeypatch, namespace, failure=None):
                     "activity_deadline_events",
                     "study_sessions",
                     "study_session_intervals",
+                    "study_plans",
+                    "study_plan_subjects",
+                    "study_plan_activities",
+                    "study_plan_sessions",
+                    "study_plan_decisions",
+                    "study_challenges",
                 )
+                if table != missing_table
             )
             if failure == "toc":
                 output = b""
@@ -425,5 +439,92 @@ def test_plans_challenges_backup_rejects_mixed_release(backup_code, monkeypatch,
     monkeypatch.setenv(other, "true")
     calls = fake_commands(monkeypatch, backup_code)
     with pytest.raises(ValueError):
+        backup_code["backup"]()
+    assert not calls
+
+
+PLAN_TABLES = {
+    "study_plans",
+    "study_plan_subjects",
+    "study_plan_activities",
+    "study_plan_sessions",
+    "study_plan_decisions",
+    "study_challenges",
+}
+
+
+def test_ai_snapshot_backup_checks_0007_inventory_and_restored_counts(
+    backup_code, monkeypatch, tmp_path, capsys
+):
+    monkeypatch.setenv("AI_PLAN_SNAPSHOT_RELEASE", "true")
+    calls = fake_commands(monkeypatch, backup_code)
+    backup_code["backup"]()
+    manifest = json.loads(capsys.readouterr().out)
+    assert (
+        manifest["revision_before"]
+        == manifest["revision_after"]
+        == ("0007_study_plans_and_challenges")
+    )
+    assert manifest["encrypted_file"] == "cognova-pre-0008.dump.gpg"
+    assert manifest["pg_dump_version"].startswith("pg_dump (PostgreSQL) 18.")
+    assert manifest["pg_restore_list"] == "passed"
+    assert manifest["full_archive_decode"] == "passed"
+    assert manifest["restore_rehearsal"] == "passed"
+    assert manifest["encryption_roundtrip"] == "passed"
+    assert len(manifest["restored_counts"]) == 17
+    assert PLAN_TABLES <= manifest["restored_counts"].keys()
+    assert {
+        "users",
+        "auth_sessions",
+        "subjects",
+        "activities",
+        "activity_deadline_events",
+        "study_sessions",
+        "study_session_intervals",
+    } <= manifest["restored_counts"].keys()
+    for table in manifest["restored_counts"]:
+        assert any(
+            "SELECT count(*) FROM public." + table in call
+            for call in calls
+            if Path(call[0]).name == "psql"
+        )
+    assert any("--exit-on-error" in call for call in calls)
+    assert not (tmp_path / "cognova-pre-0008/roundtrip.dump").exists()
+    assert not (tmp_path / "cognova-pre-0008/cognova-pre-0008.dump").exists()
+
+
+def test_ai_snapshot_backup_requires_exact_0007(backup_code, monkeypatch):
+    monkeypatch.setenv("AI_PLAN_SNAPSHOT_RELEASE", "true")
+    calls = fake_commands(monkeypatch, backup_code, failure="revision")
+    with pytest.raises(ValueError, match="Unexpected exact revision"):
+        backup_code["backup"]()
+    assert not any(Path(call[0]).name == "pg_dump" for call in calls)
+
+
+@pytest.mark.parametrize("missing_table", sorted(PLAN_TABLES))
+def test_ai_snapshot_backup_rejects_missing_plan_table(
+    backup_code, monkeypatch, missing_table
+):
+    monkeypatch.setenv("AI_PLAN_SNAPSHOT_RELEASE", "true")
+    calls = fake_commands(monkeypatch, backup_code, missing_table=missing_table)
+    with pytest.raises(ValueError, match="Required table data missing"):
+        backup_code["backup"]()
+    assert not any("--exit-on-error" in call for call in calls)
+
+
+@pytest.mark.parametrize(
+    "other",
+    [
+        "SUBJECTS_RELEASE",
+        "ACTIVITIES_RELEASE",
+        "STUDY_SESSIONS_RELEASE",
+        "PLANS_CHALLENGES_RELEASE",
+    ],
+)
+def test_ai_snapshot_backup_rejects_mixed_release(backup_code, monkeypatch, other):
+    monkeypatch.setenv("AI_PLAN_SNAPSHOT_RELEASE", "true")
+    monkeypatch.setenv(other, "true")
+    calls = fake_commands(monkeypatch, backup_code)
+    with pytest.raises(ValueError, match="Select only one release"):
         backup_code["backup"]()
     assert not calls
