@@ -13,6 +13,11 @@ permisos: `cognova_runtime` conserva el DML previo sobre `study_plans`; PUBLIC
 sigue revocado y no se conceden DDL, TRUNCATE ni ownership. Producción sigue en
 0007 y requiere backup/release 0008 separados antes de desplegar Gemini.
 
+La rama se validó en [CI 42164531703](https://github.com/M1nzutt/cognova-database/actions/runs/42164531703):
+400 pruebas aprobadas (332 PostgreSQL real), sin omisiones, más Ruff,
+formato, Gitleaks y SQL Alembic offline. Este resultado prepara el backup y
+release; no acredita aplicación productiva de 0008.
+
 ## Estado productivo
 
 Producción está exactamente en `0007_study_plans_and_challenges`. Se aplicó con el

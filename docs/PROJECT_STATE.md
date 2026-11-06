@@ -14,6 +14,13 @@ y propuesta estructurada, nunca razonamiento interno, prompts, respuesta cruda
 del proveedor ni secretos. Backend controla validación semántica y decisiones.
 Producción sigue en 0007; 0008 requiere backup, preflight y release separados.
 
+Validación de rama: [Database checks run 42164531703](https://github.com/M1nzutt/cognova-database/actions/runs/42164531703)
+terminó success en SHA `5af7207d97e0abadd4d9829f89556b1e0eb7e4d9`:
+400 pruebas, 332 PostgreSQL 17, cero omisiones; Gitleaks, Ruff, formato,
+`pip check`, checker JUnit, head y SQL offline aprobados. El primer run de la
+rama encontró una expectativa histórica de head 0007 en el test del runner;
+se actualizó a 0008 y se volvió a ejecutar toda la suite.
+
 ## Estado vigente — release productivo 0007 — 2026-11-03
 
 Producción está exactamente en `0007_study_plans_and_challenges`. Se aplicó de
