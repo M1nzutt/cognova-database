@@ -1,5 +1,14 @@
 # Database handoff — Planes y Retos 0007
 
+## Contenedor local — 0008 sin release productivo — 2026-11-12
+
+El entorno Docker integrado ejecutará la migración oficial hasta 0008 con el rol
+local `cognova_migrator`, luego usará `cognova_runtime` no elevado. La imagen copia
+Alembic, `cognova_database`, las migraciones y el script guardado de ACL; no copia el
+ORM Backend ni modifica tablas fuera de migraciones. No hubo release o acceso a
+producción. Falta ejecutar PostgreSQL 18/Docker, probar grants efectivos y comprobar
+persistencia/restore antes de declarar el handoff operativo cerrado.
+
 ## Handoff 0008 pendiente de release
 
 La rama 0008 prepara `study_plans.ai_proposal_snapshot JSONB NULL`, objeto JSON

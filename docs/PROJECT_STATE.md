@@ -1,5 +1,15 @@
 # Estado de Cognova Database
 
+## Entorno Docker local — preparado, runtime pendiente — 2026-11-12
+
+La rama `feat/docker-integrated-env` incorpora una imagen Database para ejecutar
+Alembic y preparar grants locales mínimos en el compose del Backend. No copia el
+modelo ORM ni define schema alternativo: `python -m cognova_database upgrade head`
+aplica las migraciones oficiales hasta 0008. No hubo conexión a producción ni
+cambios de DDL/datos productivos. Este equipo no tiene Docker CLI/runtime, así que
+build, upgrade en PostgreSQL 18, grants, restore y persistencia siguen sin prueba de
+contenedor; no se declara el entorno integrado cerrado.
+
 ## Desarrollo 0008 — snapshot de propuesta IA — 2026-11-05
 
 El backup pre-0008 se prepara en el workflow existente con el modo exclusivo
