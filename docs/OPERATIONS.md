@@ -1,5 +1,9 @@
 # Operación vigente, permisos y recuperación
 
+## Compose local — runtime grants y PostgreSQL validados — 2026-11-12
+
+En el stack Docker local, Alembic corrió como cognova_migrator no-superuser y llegó a 0008_ai_plan_proposal_snapshot. scripts/prepare_local_runtime.py concedió a cognova_runtime solo los grants DML y de secuencias previstos. El smoke real de Sesiones/timer detectó falta de permiso de secuencia para insertar intervalos; study_session_intervals_id_seq se agregó a SEQUENCES, con prueba de regresión, en commit ad2046632cb31895c7a60ca776e0f51f4372f09c. Comprobación PostgreSQL: USAGE/SELECT permitidos, UPDATE denegado y cero grants PUBLIC sobre tablas. La prueba focal fue 7/7; el restore aislado y los counts 0001–0007 pasaron. Todo fue exclusivamente local, sin acceso ni cambios a producción.
+
 ## Preparación 0008 — sin operación productiva
 
 El workflow existente `.github/workflows/backup-pre-0003.yml` admite ahora el input

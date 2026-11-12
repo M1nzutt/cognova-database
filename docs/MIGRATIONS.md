@@ -1,5 +1,9 @@
 # Migraciones, configuración y validación
 
+## Ejecución local Docker — migraciones oficiales verificadas — 2026-11-12
+
+El servicio database-migrate del Compose de Backend ejecutó python -m cognova_database upgrade head dentro de PostgreSQL 18.6 local y terminó con código 0. alembic_version quedó exactamente en 0008_ai_plan_proposal_snapshot. La imagen usa las revisiones Alembic oficiales 0001–0008, no contiene DDL paralelo ni ORM. El servicio posterior de grants terminó correctamente. cognova_pgdata se conservó en restart y down/up; restore PostgreSQL 18 aislado reprodujo versión y counts locales 0001–0007. No se conectó ni aplicó DDL en producción.
+
 ## 0008 — propuesta IA vigente (preparada; no aplicada en producción)
 
 `0008_ai_plan_proposal_snapshot` parte exactamente de
