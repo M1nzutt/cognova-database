@@ -2,6 +2,7 @@ import pytest
 
 from scripts.prepare_local_runtime import (
     RUNTIME_ROLE,
+    SEQUENCES,
     TABLE_PRIVILEGES,
     validate_local_target,
 )
@@ -21,6 +22,10 @@ def test_compose_runtime_grants_are_limited_to_application_dml():
         and "TRIGGER" not in privileges
         for privileges in TABLE_PRIVILEGES.values()
     )
+
+
+def test_interval_sequence_is_granted_for_timer_inserts():
+    assert "study_session_intervals_id_seq" in SEQUENCES
 
 
 def test_runtime_grant_tool_is_confined_to_the_compose_migrator():

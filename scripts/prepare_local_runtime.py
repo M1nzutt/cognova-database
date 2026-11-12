@@ -37,6 +37,7 @@ SEQUENCES = (
     "subjects_id_seq",
     "activities_id_seq",
     "study_sessions_id_seq",
+    "study_session_intervals_id_seq",
     "study_plans_id_seq",
     "study_plan_decisions_id_seq",
     "study_challenges_id_seq",
