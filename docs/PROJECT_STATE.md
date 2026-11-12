@@ -1,14 +1,10 @@
 # Estado de Cognova Database
 
-## Entorno Docker local — preparado, runtime pendiente — 2026-11-12
+## Entorno Docker local — PostgreSQL 18 real validado — 2026-11-12
 
-La rama `feat/docker-integrated-env` incorpora una imagen Database para ejecutar
-Alembic y preparar grants locales mínimos en el compose del Backend. No copia el
-modelo ORM ni define schema alternativo: `python -m cognova_database upgrade head`
-aplica las migraciones oficiales hasta 0008. No hubo conexión a producción ni
-cambios de DDL/datos productivos. Este equipo no tiene Docker CLI/runtime, así que
-build, upgrade en PostgreSQL 18, grants, restore y persistencia siguen sin prueba de
-contenedor; no se declara el entorno integrado cerrado.
+La rama feat/docker-integrated-env ejecutó en Docker la migración oficial 0001→0008_ai_plan_proposal_snapshot sobre el volumen local cognova_pgdata. El servicio database-migrate terminó con código 0; producción no se consultó ni modificó. database-runtime-grants aplicó ACL mínimas para cognova_runtime. Un smoke del timer encontró que faltaba USAGE/SELECT sobre study_session_intervals_id_seq; commit ad2046632cb31895c7a60ca776e0f51f4372f09c lo añadió al mapa de secuencias y cubre esa regresión. PostgreSQL confirmó USAGE/SELECT para cognova_runtime, UPDATE denegado y cero grants PUBLIC sobre tablas.
+
+La prueba focal de Database fue 7/7 aprobada en contenedor. Restore rehearsal aislado preservó revisión 0008 y counts locales de tablas 0001–0007. Los datos existentes son sintéticos locales; el volumen fue preservado y sobrevivió down/up. Backup SHA-256: 11820C0ECC41102E706B6312B69666B7ABC121C44B829FE86EB520BEF46EABAD. No se modificó la producción.
 
 ## Desarrollo 0008 — snapshot de propuesta IA — 2026-11-05
 
