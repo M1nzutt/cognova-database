@@ -31,6 +31,8 @@ TABLE_PRIVILEGES: Mapping[str, frozenset[str]] = {
     "study_plan_sessions": frozenset({"SELECT", "INSERT", "DELETE"}),
     "study_plan_decisions": frozenset({"SELECT", "INSERT"}),
     "study_challenges": frozenset({"SELECT", "INSERT", "UPDATE"}),
+    "academic_conversations": frozenset({"SELECT", "INSERT", "UPDATE", "DELETE"}),
+    "academic_messages": frozenset({"SELECT", "INSERT"}),
 }
 SEQUENCES = (
     "users_id_seq",
@@ -41,6 +43,8 @@ SEQUENCES = (
     "study_plans_id_seq",
     "study_plan_decisions_id_seq",
     "study_challenges_id_seq",
+    "academic_conversations_id_seq",
+    "academic_messages_id_seq",
 )
 TABLE_PRIVILEGE_CHECKS = (
     "SELECT",

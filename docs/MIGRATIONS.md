@@ -1,5 +1,16 @@
 # Migraciones, configuración y validación
 
+## 0009 — conversaciones académicas escritas
+
+`0009_academic_companion_chat` sigue exactamente a
+`0008_ai_plan_proposal_snapshot`. Crea `academic_conversations` y
+`academic_messages` con ownership compuesto por usuario, límites físicos de
+contenido/evidencia e índices para historial y orden por mensaje. No altera
+recursos, decisiones ni registros existentes. La migración revoca PUBLIC; los
+privilegios mínimos del runtime se preparan mediante `scripts/prepare_local_runtime.py`.
+El downgrade toma locks exclusivos y aborta antes de borrar si hay historial.
+Ver [DATA_MODEL](DATA_MODEL.md) para límites y privacidad.
+
 ## Ejecución local Docker — migraciones oficiales verificadas — 2026-11-12
 
 El servicio database-migrate del Compose de Backend ejecutó python -m cognova_database upgrade head dentro de PostgreSQL 18.6 local y terminó con código 0. alembic_version quedó exactamente en 0008_ai_plan_proposal_snapshot. La imagen usa las revisiones Alembic oficiales 0001–0008, no contiene DDL paralelo ni ORM. El servicio posterior de grants terminó correctamente. cognova_pgdata se conservó en restart y down/up; restore PostgreSQL 18 aislado reprodujo versión y counts locales 0001–0007. No se conectó ni aplicó DDL en producción.
@@ -174,7 +185,8 @@ el contrato de manejo de conexión, nunca comportamiento real del motor.
 
 El runner acepta destinos explícitos 0001_create_users, 0002_auth_sessions,
 0003_onboarding_questionnaire, 0004_subjects, 0005_activities,
-0006_study_sessions, 0007_study_plans_and_challenges y head.
+0006_study_sessions, 0007_study_plans_and_challenges,
+0008_ai_plan_proposal_snapshot, 0009_academic_companion_chat y head.
 Backend debe fijar la revisión admitida;
 no inferir compatibilidad por orden numérico de IDs.
 

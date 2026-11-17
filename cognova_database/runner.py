@@ -28,6 +28,8 @@ def main(argv: list[str] | None = None) -> int:
             "0005_activities",
             "0006_study_sessions",
             "0007_study_plans_and_challenges",
+            "0008_ai_plan_proposal_snapshot",
+            "0009_academic_companion_chat",
             "head",
         ],
     )

@@ -18,10 +18,13 @@ def test_runner_explicit_plans_studies_and_head(pg_engine, monkeypatch):
     with engine.connect() as c:
         assert c.scalar(text("SELECT current_schema()")) == schema
         assert c.scalar(text("SELECT version_num FROM alembic_version")) == (
-            "0008_ai_plan_proposal_snapshot"
+            "0009_academic_companion_chat"
         )
         assert "study_plans" in inspect(c).get_table_names()
         assert "ai_proposal_snapshot" in {
             column["name"] for column in inspect(c).get_columns("study_plans")
         }
+        assert {"academic_conversations", "academic_messages"} <= set(
+            inspect(c).get_table_names()
+        )
         assert c.scalar(text("SELECT count(*) FROM study_sessions")) == 0

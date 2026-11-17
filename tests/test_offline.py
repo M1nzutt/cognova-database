@@ -33,8 +33,9 @@ def test_original_blobs_and_single_linear_head():
         blob = b"blob " + str(len(data)).encode() + b"\0" + data
         assert hashlib.sha1(blob).hexdigest() == expected
     script = ScriptDirectory.from_config(migration_config())
-    assert script.get_heads() == ["0008_ai_plan_proposal_snapshot"]
+    assert script.get_heads() == ["0009_academic_companion_chat"]
     assert [(r.revision, r.down_revision) for r in script.walk_revisions()] == [
+        ("0009_academic_companion_chat", "0008_ai_plan_proposal_snapshot"),
         ("0008_ai_plan_proposal_snapshot", "0007_study_plans_and_challenges"),
         ("0007_study_plans_and_challenges", "0006_study_sessions"),
         ("0006_study_sessions", "0005_activities"),
@@ -211,3 +212,32 @@ def test_ai_snapshot_revision_is_additive_and_offline_reversible():
     assert "DROP CONSTRAINT ck_study_plans_ai_proposal_snapshot" in downgrade
     assert "DROP COLUMN ai_proposal_snapshot" in downgrade
     assert "DROP TABLE" not in downgrade
+
+
+def test_academic_chat_revision_is_additive_and_data_preserving():
+    sql = sql_for("0008_ai_plan_proposal_snapshot:0009_academic_companion_chat")
+    for expected in (
+        "CREATE TABLE academic_conversations",
+        "CREATE TABLE academic_messages",
+        "fk_academic_messages_owner_conversation",
+        "ix_academic_messages_user_conversation_id",
+        "char_length(content) BETWEEN 1 AND 4000",
+        "octet_length(evidence::text) <= 8192",
+        "REVOKE ALL ON TABLE academic_conversations, academic_messages FROM PUBLIC",
+        "REVOKE ALL ON SEQUENCE academic_conversations_id_seq",
+        "UPDATE alembic_version SET version_num='0009_academic_companion_chat'",
+    ):
+        assert expected in sql
+    assert "DROP TABLE" not in sql
+
+    config = migration_config()
+    config.output_buffer = StringIO()
+    command.downgrade(
+        config,
+        "0009_academic_companion_chat:0008_ai_plan_proposal_snapshot",
+        sql=True,
+    )
+    downgrade = config.output_buffer.getvalue()
+    assert downgrade.index("Downgrade blocked") < downgrade.index("DROP TABLE")
+    assert "IN ACCESS EXCLUSIVE MODE" in downgrade
+    assert "CASCADE" not in downgrade

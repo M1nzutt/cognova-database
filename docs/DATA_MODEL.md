@@ -1,5 +1,27 @@
 # Modelo de datos
 
+## Acompañante académico — 0009
+
+`academic_conversations` guarda conversaciones privadas por `user_id`, con título
+derivado del primer mensaje y marcas de creación/última actividad.
+`academic_messages` guarda mensajes `user`/`assistant`, texto y una lista JSONB
+de referencias legibles a evidencia académica. La FK compuesta
+`(user_id, conversation_id)` impide asociar mensajes a una conversación de otra
+cuenta; al eliminar expresamente una cuenta, sus conversaciones/mensajes siguen
+la cascada de identidad existente.
+
+La base comprueba título (1–80), texto de estudiante (1–4000), respuesta IA
+(1–3000), rol y tamaño de evidencia (8192 bytes). Backend limita cada cuenta a
+50 conversaciones y cada conversación a 200 mensajes; contexto y frecuencia se
+controlan también en Backend. No se guardan prompts, llamadas del proveedor ni
+contexto académico duplicado. El historial es persistente y no se envía a Gemini
+como estado remoto; cada generación usa `store=false`.
+
+La migración revoca PUBLIC; `scripts/prepare_local_runtime.py` añade únicamente
+SELECT/INSERT/UPDATE/DELETE sobre conversaciones, SELECT/INSERT sobre mensajes y
+USAGE/SELECT de secuencias para el runtime. El downgrade bloquea pérdida si existe
+cualquier conversación o mensaje.
+
 ## Extensión 0008 preparada — propuesta IA visible
 
 `study_plans.ai_proposal_snapshot JSONB NULL` guarda solo la propuesta IA vigente

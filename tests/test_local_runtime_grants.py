@@ -16,6 +16,10 @@ def test_compose_runtime_grants_are_limited_to_application_dml():
     assert TABLE_PRIVILEGES["study_challenges"] == frozenset(
         {"SELECT", "INSERT", "UPDATE"}
     )
+    assert TABLE_PRIVILEGES["academic_conversations"] == frozenset(
+        {"SELECT", "INSERT", "UPDATE", "DELETE"}
+    )
+    assert TABLE_PRIVILEGES["academic_messages"] == frozenset({"SELECT", "INSERT"})
     assert all(
         "TRUNCATE" not in privileges
         and "REFERENCES" not in privileges
@@ -26,6 +30,7 @@ def test_compose_runtime_grants_are_limited_to_application_dml():
 
 def test_interval_sequence_is_granted_for_timer_inserts():
     assert "study_session_intervals_id_seq" in SEQUENCES
+    assert "academic_messages_id_seq" in SEQUENCES
 
 
 def test_runtime_grant_tool_is_confined_to_the_compose_migrator():
