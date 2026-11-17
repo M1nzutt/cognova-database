@@ -1,5 +1,17 @@
 # Migraciones, configuración y validación
 
+## Ejecución local Docker — Database 0009 — 2026-11-16
+
+El servicio oficial de migración aplicó 0009 sobre el volumen local ya existente;
+el servicio de grants terminó correctamente tras actualizar su revisión esperada.
+PostgreSQL 18 quedó listo y Backend `/ready` y Frontend respondieron 200. Los
+conteos previos y posteriores de cuentas y recursos existentes se conservaron
+(32 cuentas antes de crear una cuenta sintética de validación; mismas cantidades
+de materias, actividades, sesiones, planes y retos). La cuenta sintética produjo
+una conversación y dos mensajes; historial y evidencias siguieron disponibles
+tras logout/login. Se realizó una única llamada real a Gemini, con resultado
+201; no hubo deploy ni cambios en producción.
+
 ## 0009 — conversaciones académicas escritas
 
 `0009_academic_companion_chat` sigue exactamente a
