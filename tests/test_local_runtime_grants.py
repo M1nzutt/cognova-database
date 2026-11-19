@@ -10,7 +10,7 @@ from scripts.prepare_local_runtime import (
 
 
 def test_compose_runtime_grants_are_limited_to_application_dml():
-    assert EXPECTED_REVISION == "0009_academic_companion_chat"
+    assert EXPECTED_REVISION == "0010_nullable_password_hash"
     assert TABLE_PRIVILEGES["study_plans"] == frozenset(
         {"SELECT", "INSERT", "UPDATE", "DELETE"}
     )

@@ -18,7 +18,7 @@ def test_runner_explicit_plans_studies_and_head(pg_engine, monkeypatch):
     with engine.connect() as c:
         assert c.scalar(text("SELECT current_schema()")) == schema
         assert c.scalar(text("SELECT version_num FROM alembic_version")) == (
-            "0009_academic_companion_chat"
+            "0010_nullable_password_hash"
         )
         assert "study_plans" in inspect(c).get_table_names()
         assert "ai_proposal_snapshot" in {

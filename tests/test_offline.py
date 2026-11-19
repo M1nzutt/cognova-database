@@ -33,8 +33,9 @@ def test_original_blobs_and_single_linear_head():
         blob = b"blob " + str(len(data)).encode() + b"\0" + data
         assert hashlib.sha1(blob).hexdigest() == expected
     script = ScriptDirectory.from_config(migration_config())
-    assert script.get_heads() == ["0009_academic_companion_chat"]
+    assert script.get_heads() == ["0010_nullable_password_hash"]
     assert [(r.revision, r.down_revision) for r in script.walk_revisions()] == [
+        ("0010_nullable_password_hash", "0009_academic_companion_chat"),
         ("0009_academic_companion_chat", "0008_ai_plan_proposal_snapshot"),
         ("0008_ai_plan_proposal_snapshot", "0007_study_plans_and_challenges"),
         ("0007_study_plans_and_challenges", "0006_study_sessions"),

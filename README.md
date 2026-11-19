@@ -35,6 +35,27 @@ verdes. Backend Sesiones puede comenzar contra el pin indicado; ver OPERATIONS.
 
 ## Instalación y comandos
 
+### Instalación inicial con datos de demostración
+
+El contenedor `database-migrate` ejecuta `python -m cognova_database initialize`.
+El inicializador identifica si `public` estaba vacío antes de migrar, aplica el
+historial oficial hasta `head` y solo entonces carga
+[`demo-academic.sql`](cognova_database/seed/demo-academic.sql). Un marcador
+transaccional evita duplicados y permite reintentar si falla una restauración.
+En bases existentes registra `skipped` y nunca importa ni reemplaza sus datos.
+Recrear contenedores o reconstruir imágenes no vuelve a cargar el seed.
+
+El seed conserva únicamente la cuenta ficticia `demo.software@example.com` y
+sus registros académicos. No incluye hash de contraseña, sesiones, conversaciones,
+límites de autenticación ni cuentas ajenas. La cuenta comienza sin contraseña:
+desde el contenedor Backend, ejecuta el comando interactivo documentado en
+[`docs/INITIAL_DEMO_BACKUP.md`](docs/INITIAL_DEMO_BACKUP.md) para definir o
+recuperar una credencial; la contraseña se solicita sin eco y nunca se guarda en Git.
+
+Para actualizar el seed, sigue el procedimiento privado de respaldo, sanitización
+y revisión descrito en esa guía. Nunca copies un dump completo de producción o
+desarrollo al repositorio.
+
 Desde un checkout completo, con Python >=3.11 (validación local en 3.14.5):
 
 ```sh

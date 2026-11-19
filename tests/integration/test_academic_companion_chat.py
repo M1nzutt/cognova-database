@@ -67,7 +67,7 @@ def test_chat_owner_relationship_limits_and_data_preserving_downgrade(pg_engine)
             command.downgrade(config, "0008_ai_plan_proposal_snapshot")
         assert connection.scalar(
             text("SELECT version_num FROM alembic_version")
-        ) == "0009_academic_companion_chat"
+        ) == "0010_nullable_password_hash"
         assert connection.scalar(
             text("SELECT count(*) FROM academic_conversations")
         ) == 1

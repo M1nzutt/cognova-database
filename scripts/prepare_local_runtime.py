@@ -10,7 +10,7 @@ from sqlalchemy import Connection, create_engine, text
 
 from cognova_database.configuration import database_url
 
-EXPECTED_REVISION = "0009_academic_companion_chat"
+EXPECTED_REVISION = "0010_nullable_password_hash"
 MIGRATOR_ROLE = "cognova_migrator"
 RUNTIME_ROLE = "cognova_runtime"
 TABLE_PRIVILEGES: Mapping[str, frozenset[str]] = {

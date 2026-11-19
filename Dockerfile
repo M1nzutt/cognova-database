@@ -18,4 +18,4 @@ COPY --chown=10001:10001 scripts/prepare_local_runtime.py ./scripts/prepare_loca
 
 USER 10001:10001
 
-CMD ["python", "-m", "cognova_database", "upgrade", "head"]
+CMD ["python", "-m", "cognova_database", "initialize"]
