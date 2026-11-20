@@ -1,5 +1,22 @@
 # Estado de Cognova Database
 
+## Estado vigente del repositorio y despliegue — 2026-11-20
+
+El repositorio `main` termina en `0010_nullable_password_hash`; la cadena completa
+es 0001–0010. 0009 crea el almacenamiento privado de conversaciones del Acompañamiento.
+0010 permite que el seed incluya la cuenta ficticia sin hash de contraseña; no
+contiene ni publica la clave demo. La clave se establece en Backend mediante el
+comando interactivo de la documentación privada/operativa.
+
+El volumen Docker observado el 2026-11-20 sigue en
+`0009_academic_companion_chat`; 0010 no se confirmó aplicada. El pin de Database
+del checkout Backend también sigue en 0009, aunque el Backend fuente actual requiere
+0010. No se aplicó 0010 ni se operó producción en este corte documental.
+
+Véanse [MIGRATIONS](MIGRATIONS.md), [DATA_MODEL](DATA_MODEL.md),
+[OPERATIONS](OPERATIONS.md) y [DATABASE_HANDOFF](DATABASE_HANDOFF.md). Los datos de
+releases descritos abajo son históricos y deben interpretarse con su fecha.
+
 ## Entorno Docker local — PostgreSQL 18 real validado — 2026-11-12
 
 La rama feat/docker-integrated-env ejecutó en Docker la migración oficial 0001→0008_ai_plan_proposal_snapshot sobre el volumen local cognova_pgdata. El servicio database-migrate terminó con código 0; producción no se consultó ni modificó. database-runtime-grants aplicó ACL mínimas para cognova_runtime. Un smoke del timer encontró que faltaba USAGE/SELECT sobre study_session_intervals_id_seq; commit ad2046632cb31895c7a60ca776e0f51f4372f09c lo añadió al mapa de secuencias y cubre esa regresión. PostgreSQL confirmó USAGE/SELECT para cognova_runtime, UPDATE denegado y cero grants PUBLIC sobre tablas.

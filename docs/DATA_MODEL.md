@@ -1,5 +1,17 @@
 # Modelo de datos
 
+## Estado vigente del esquema — 2026-11-20
+
+El head del repositorio es 0010. La cadena 0001–0008 conserva identidad,
+onboarding/cuestionario y recursos académicos, Planes/Retos y snapshot IA; 0009
+almacena conversaciones/mensajes privados del Acompañamiento; 0010 permite
+`users.password_hash IS NULL` exclusivamente para soportar cuentas seed sin
+credenciales versionadas. La credencial demo se configura por Backend fuera de Git.
+
+El volumen local inspeccionado aún estaba en 0009 y no se confirmó release
+productivo de 0010. El detalle de compatibilidad y pin se mantiene en
+[PROJECT_STATE](PROJECT_STATE.md).
+
 ## Acompañante académico — 0009
 
 `academic_conversations` guarda conversaciones privadas por `user_id`, con título
@@ -22,7 +34,7 @@ SELECT/INSERT/UPDATE/DELETE sobre conversaciones, SELECT/INSERT sobre mensajes y
 USAGE/SELECT de secuencias para el runtime. El downgrade bloquea pérdida si existe
 cualquier conversación o mensaje.
 
-## Extensión 0008 preparada — propuesta IA visible
+## Snapshot IA — 0008
 
 `study_plans.ai_proposal_snapshot JSONB NULL` guarda solo la propuesta IA vigente
 u original asociada al estado actual del Plan. Para planes manuales y planes
@@ -38,9 +50,10 @@ No contiene chain-of-thought, prompts completos, respuesta cruda del proveedor,
 credenciales, tokens o contexto académico duplicado. Las versiones anteriores
 quedan bajo responsabilidad de Backend en `study_plan_decisions.proposed_value`
 durante regenerate. La migración no modifica decisiones, Retos ni relaciones.
-Producción sigue en 0007 hasta el release separado de 0008.
+La nota de producción de 0007 en esta sección es histórica; ver el estado vigente
+al inicio de este documento.
 
-`main` y producción están en **0007_study_plans_and_challenges**, aplicada el
+En el corte anterior, `main` y producción estaban en **0007_study_plans_and_challenges**, aplicada el
 2026-11-03; ver [OPERATIONS](OPERATIONS.md) y la
 [evidencia del release](evidence/0007-release-2026-11-03.json). Revisiones
 0001–0006 se conservan sin editar.

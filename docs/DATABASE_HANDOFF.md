@@ -1,5 +1,13 @@
 # Database handoff — Planes y Retos 0007
 
+## Handoff vigente — 0010 — 2026-11-20
+
+Database `main` ya contiene 0009 (chat académico) y 0010 (hash nullable para
+cuenta demo sin contraseña en seed). El Backend fuente exige 0010, pero su pin de
+tooling aún es 0009; el volumen local inspeccionado también informa 0009. Hace falta
+actualizar el pin a un commit que contenga 0010 y aplicar/verificar esa migración
+antes de considerar alineado el entorno. No se hicieron cambios de producción.
+
 ## Contenedor local — 0008 sin release productivo — 2026-11-12
 
 El entorno Docker integrado ejecutará la migración oficial hasta 0008 con el rol

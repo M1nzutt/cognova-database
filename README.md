@@ -1,19 +1,26 @@
 # Cognova Database
 
-Repositorio operativo del esquema PostgreSQL existente de Cognova. No es una API.
-Historial: `0001_create_users` → `0002_auth_sessions` → `0003_onboarding_questionnaire`
-→ `0004_subjects` → `0005_activities` → `0006_study_sessions`
-([contrato](docs/DATA_MODEL.md)).
+Repositorio operativo del esquema PostgreSQL de Cognova. No es una API.
+Historial vigente en código: `0001_create_users` → `0002_auth_sessions` →
+`0003_onboarding_questionnaire` → `0004_subjects` → `0005_activities` →
+`0006_study_sessions` → `0007_study_plans_and_challenges` →
+`0008_ai_plan_proposal_snapshot` → `0009_academic_companion_chat` →
+`0010_nullable_password_hash` ([modelo](docs/DATA_MODEL.md)).
 Las revisiones 0001–0005 se conservan sin cambios. 0003 separa onboarding del registro y conserva
 la percepción inicial y las revisiones del cuestionario.
 Backend conserva ORM, conexiones, consultas, auth y lógica de negocio.
 
-## Estado vigente — 2026-11-02
+## Estado vigente del repositorio — 2026-11-20
 
-**Main y producción están en 0006_study_sessions.** La migración de Sesiones se
-integró con merge --no-ff y se aplicó el 2026-11-02.
-Producción sí fue operada: 0003 se aplicó el 2026-10-17, 0004 el 2026-10-19 y
-0005 el 2026-10-24. El historial no termina en 0002.
+`main` tiene como head `0010_nullable_password_hash`. La revisión 0009 fue aplicada
+y validada en Docker local el 2026-11-16; al inspeccionar el volumen integrado el
+2026-11-20, este aún reportaba 0009. La migración 0010 está en el repositorio, pero
+no se confirmó aplicada a ese volumen ni a producción.
+
+El pin que conserva Backend en `tools/database-ref.json` también apunta a 0009,
+mientras que su código fuente actual exige 0010. Coordinar actualización del pin,
+migración y verificación de Backend antes de declarar cerrada la integración. No
+hay evidencia en este corte de un release de Database 0010 en producción.
 
 - [Estado y trazabilidad](docs/PROJECT_STATE.md).
 - [Operación y permisos vigentes](docs/OPERATIONS.md).
@@ -23,15 +30,17 @@ Producción sí fue operada: 0003 se aplicó el 2026-10-17, 0004 el 2026-10-19 y
 - [Backup verificado al aplicar 0006](docs/evidence/0006-backup-2026-11-02.json).
 - [Modelo de Materias, Actividades y Sesiones](docs/DATA_MODEL.md).
 
-El pin de migraciones para Backend Sesiones es
-96daa0b6f3b1f64c4ccdc00b0d2026aad9cabd30. Las evidencias son capturas del release,
-no un inventario en vivo. No reaplicar helpers históricos.
+Las evidencias de releases anteriores son capturas fechadas, no un inventario en
+vivo. No reaplicar helpers históricos.
 
 0006 agrega planificación de estudio, ciclo técnico, resultado y segmentos reales
 de ejecución. Backend calcula segundos efectivos sin pausas; DB protege coherencia,
 unicidad concurrente y conservación de historia mediante RESTRICT. No timer automático.
-Validación:284 pruebas (228 PostgreSQL), sin omisiones; CI, Ruff/formato y pip check
-verdes. Backend Sesiones puede comenzar contra el pin indicado; ver OPERATIONS.
+La revisión actual añade además snapshot IA, historial del Acompañamiento y permite
+hash de contraseña nulo para la cuenta demo sin contraseña en el seed. Ver
+[PROJECT_STATE](docs/PROJECT_STATE.md), [OPERATIONS](docs/OPERATIONS.md) y
+[DATABASE_HANDOFF](docs/DATABASE_HANDOFF.md) para distinguir estado de código,
+validación local y despliegue.
 
 ## Instalación y comandos
 

@@ -1,5 +1,17 @@
 # Migraciones, configuración y validación
 
+## Head de código — 0010; aplicación local pendiente — 2026-11-20
+
+La cadena Alembic en `main` llega a `0010_nullable_password_hash`, hija de
+`0009_academic_companion_chat`. 0010 solo hace nullable `users.password_hash`,
+necesario para importar el registro demo sin credencial reusable; el downgrade falla
+si existen filas sin hash. No altera credenciales ni crea una contraseña.
+
+El volumen Docker revisado en esta fecha seguía en 0009. Backend fuente exige
+exactamente 0010, pero su pin `tools/database-ref.json` todavía identifica el commit
+de Database 0009. Actualizar pin, aplicar migración y reconstruir/verificar Backend
+es una operación pendiente. No consta release 0010 en producción.
+
 ## Ejecución local Docker — Database 0009 — 2026-11-16
 
 El servicio oficial de migración aplicó 0009 sobre el volumen local ya existente;
@@ -27,7 +39,7 @@ Ver [DATA_MODEL](DATA_MODEL.md) para límites y privacidad.
 
 El servicio database-migrate del Compose de Backend ejecutó python -m cognova_database upgrade head dentro de PostgreSQL 18.6 local y terminó con código 0. alembic_version quedó exactamente en 0008_ai_plan_proposal_snapshot. La imagen usa las revisiones Alembic oficiales 0001–0008, no contiene DDL paralelo ni ORM. El servicio posterior de grants terminó correctamente. cognova_pgdata se conservó en restart y down/up; restore PostgreSQL 18 aislado reprodujo versión y counts locales 0001–0007. No se conectó ni aplicó DDL en producción.
 
-## 0008 — propuesta IA vigente (preparada; no aplicada en producción)
+## 0008 — snapshot de propuesta IA (histórico)
 
 `0008_ai_plan_proposal_snapshot` parte exactamente de
 `0007_study_plans_and_challenges`. Agrega una columna nullable JSONB a
@@ -40,7 +52,8 @@ comprobar también el tamaño final de esa envoltura. No hay backfill, tablas,
 índices, triggers ni grants nuevos. Downgrade elimina solo CHECK y columna; pierde
 los snapshots 0008, pero conserva filas y relaciones 0001–0007. Re-upgrade deja
 NULL para planes existentes. No ejecutar downgrade productivo sin preservar antes
-los snapshots. Producción permanece en 0007 hasta backup y release autorizados.
+los snapshots. En el corte histórico de esta preparación, producción permanecía en
+0007; esa frase no representa el head del repositorio ni el estado de Docker 2026-11-20.
 
 ## 0007 — Planes de estudio y Retos (aplicada en producción)
 
@@ -69,7 +82,7 @@ CASCADE. Sin filas, elimina solo objetos añadidos por 0007 y preserva todo 0001
 Se verifican upgrade 0001→0007, downgrade/re-upgrade 0007→0006→0007, preservación,
 restricciones, permisos y catálogo con PostgreSQL real.
 
-## Historial de código y producción
+## Historial de código y producción — corte antiguo (0007)
 
 `main` y producción tienen **0007_study_plans_and_challenges**; producción se
 actualizó el 2026-11-03. Antes del release, la última revisión era
